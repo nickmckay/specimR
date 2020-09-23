@@ -1,38 +1,27 @@
 
-
-#' Normalize a hyperspectral image
+#function
+#' Title
 #'
-#' @param spectra a vector of wavelengths to extract from the hyperspectral image
-#' @param data.file optionally specify the path to the hyperspectral .raw image
+#' @param spectra
+#' @param data.file
 #' @param white.ref.file
 #' @param dark.ref.file
-#' @param another.param
-#' @import raster tcltk
 #'
-#' @return a normalized hyperspectral image
+#' @return
 #' @export
 #'
-
-#'
-#'
-
+#' @examples
 
 
 
 filechooseR <- function(id,
                         directory = NA,
                       spectra,
-                      data.file = NA,
-                      white.ref.file = NA,
-                      dark.ref.file = NA){
+                      data.file = NA){
     Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
 data <- file.path(directory,paste(id,".raw",sep=""))
   if(missing(data)) data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
   filen <- raster::brick(data)
-
-dark <- file.path(directory,paste("DARKREF_",id,".raw",sep=""))
-  if(missing(dark))  dark <-tcltk::tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
-
   raw <- raster::subset(filen,spectra)
 return(raw)
 }
@@ -60,7 +49,9 @@ WhiteRef <-function(stripe,directory,id){
   return(whiteRef)
 }
 
-DarkRef <- function(stripe,dark){
+DarkRef <- function(stripe,directory,id){
+  dark <- file.path(directory,paste("DARKREF_",id,".raw",sep=""))
+  if(missing(dark))  dark <-tcltk::tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
   darkRow <- createReferenceMeanRow(dark,stripe,"DarkRow.tif",spectra)
   names(darkRow) <- names(stripe)
   len <- stripe@nrows
