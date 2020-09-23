@@ -41,8 +41,8 @@ normalize <- function(spectra,
   data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
   filen <- raster::brick(data)
 
-  white <- tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
-  dark <-tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
+  white <- tcltk::tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
+  dark <-tcltk::tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
 
   raw <- raster::subset(filen,spectra)
 
@@ -52,7 +52,7 @@ normalize <- function(spectra,
   image <- raster::subset(raw,c(1,5,8))
   raster::plotRGB(raw,c(1,5,8), axes=TRUE, stretch="hist", main="Raw Image")
   cropC <- raster::drawExtent()
-  stripe <- crop(raw,cropC)
+  stripe <- raster::crop(raw,cropC)
   names(stripe) <- names(raw)
 
   #header file has to exist in same file or this breaks!
@@ -73,7 +73,7 @@ normalize <- function(spectra,
   extent(darkRef) <- extent(stripe)
 
   #normalization is fast! 47 seconds for Tutae
-  normalized <- overlay(stripe,whiteRef,darkRef,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
+  normalized <- raster::overlay(stripe,whiteRef,darkRef,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
   names(normalized) <- names(stripe)
 
   return(normalized)
