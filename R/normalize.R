@@ -14,11 +14,6 @@
 #'
 
 #'
-#'
-
-
-
-
 filechooseR <- function(id,
                         directory = NA,
                       spectra,
