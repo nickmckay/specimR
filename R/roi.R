@@ -4,8 +4,6 @@ pick_roi_simple <- function(image){
   return(cropC)
 }
 
-
-
 cropViewFun <- function(click,dblclick){
   xmin <- min(click$x,dblclick$x)
   xmax <- max(click$x,dblclick$x)
@@ -17,11 +15,9 @@ cropViewFun <- function(click,dblclick){
   clickpoints <- rbind(c(click$x,click$y),c(dblclick$x,dblclick$y))
   points(clickpoints,cex = 2)
   points(clickpoints, pch=3, col='green')
-
-
 }
 
-server <- function(input, output) {
+server <- function(input, output){
 
   brushExtent <- reactiveValues()
   click <- reactiveValues()
@@ -31,7 +27,6 @@ server <- function(input, output) {
   click$y <- 0
   dblclick$x <- 0
   dblclick$y <- 0
-
 
   brushExtent$extent <- raster::extent(image)
 
@@ -101,6 +96,8 @@ server <- function(input, output) {
   })
 
 }
+
+
 pick_roi_shiny <- function(image){
 
   ui <- fluidPage(

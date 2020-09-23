@@ -1,16 +1,21 @@
 
-#function
-#' Title
+
+#' Normalize a hyperspectral image
 #'
-#' @param spectra
-#' @param data.file
+#' @param spectra a vector of wavelengths to extract from the hyperspectral image
+#' @param data.file optionally specify the path to the hyperspectral .raw image
 #' @param white.ref.file
 #' @param dark.ref.file
+#' @param another.param
+#' @import raster tcltk
 #'
-#' @return
+#' @return a normalized hyperspectral image
 #' @export
 #'
-#' @examples
+
+#'
+#'
+
 
 
 
