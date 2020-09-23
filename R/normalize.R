@@ -19,29 +19,37 @@ setwd()
 #choose band_names
 spectra <- c("X569.71","X589.88","X615.22","X630.49","X659.89","X665.02","X689.43","X730.74","X790.43","X845.12","X899.86")
 
-#function
-#' Title
+
+#' Normalize a hyperspectral image
 #'
-#' @param spectra
-#' @param data.file
+#' @param spectra a vector of wavelengths to extract from the hyperspectral image
+#' @param data.file optionally specify the path to the hyperspectral .raw image
 #' @param white.ref.file
 #' @param dark.ref.file
+#' @param another.param
+#' @import raster tcltk
 #'
-#' @return
+#' @return a normalized hyperspectral image
 #' @export
 #'
-#' @examples
+#'
+#'
 normalize <- function(spectra,
                        data.file = NA,
                        white.ref.file = NA,
-                       dark.ref.file = NA){
+                       dark.ref.file = NA,
+                      another.param = NA){
 
     Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
+
 
   data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
   filen <- raster::brick(data)
 
-  white <- tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
+  if(is.na(white.ref.file)){#try to guess it based on data
+
+  }
+  white <- tcltk::tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
   dark <-tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
 
   raw <- raster::subset(filen,spectra)
