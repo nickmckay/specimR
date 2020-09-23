@@ -1,0 +1,82 @@
+#load libraries
+library(raster)
+library(tictoc)
+#library(devtools)
+#devtools::install_github("timelyportfolio/svgPanZoom")
+#devtools::install_github("duncantl/SVGAnnotation")
+library(svglite)
+library(svgPanZoom)
+library(SVGAnnotation)
+library(tcltk)
+library(progress)
+
+#internal functions
+source('~/Desktop/INF_550_Notes/standardize.R')
+
+#go to directory where raw files are saved
+setwd()
+
+#choose band_names
+spectra <- c("X569.71","X589.88","X615.22","X630.49","X659.89","X665.02","X689.43","X730.74","X790.43","X845.12","X899.86")
+
+#function
+#' Title
+#'
+#' @param spectra
+#' @param data.file
+#' @param white.ref.file
+#' @param dark.ref.file
+#'
+#' @return
+#' @export
+#'
+#' @examples
+normalize <- function(spectra,
+                       data.file = NA,
+                       white.ref.file = NA,
+                       dark.ref.file = NA){
+
+    Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
+
+  data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
+  filen <- raster::brick(data)
+
+  white <- tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
+  dark <-tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
+
+  raw <- raster::subset(filen,spectra)
+
+
+
+  #is there an option to add extra zoom?
+  image <- raster::subset(raw,c(1,5,8))
+  raster::plotRGB(raw,c(1,5,8), axes=TRUE, stretch="hist", main="Raw Image")
+  cropC <- raster::drawExtent()
+  stripe <- crop(raw,cropC)
+  names(stripe) <- names(raw)
+
+  #header file has to exist in same file or this breaks!
+  whiteRow <- createReferenceMeanRow(white,stripe,"WhiteRow.tif",names)
+  names(whiteRow) <- names(stripe)
+  darkRow <- createReferenceMeanRow(dark,stripe,"DarkRow.tif",names)
+  names(darkRow) <- names(stripe)
+
+  #find length of core stripe to break up white
+  len <- stripe@nrows
+
+  #disaggregate whiterow to length
+  whiteRef <- disaggregate(whiteRow,fact = c(1,len))
+  darkRef <- disaggregate(darkRow,fact = c(1,len))
+
+  #set extents to be the same between stripe and reference files
+  extent(whiteRef) <- extent(stripe)
+  extent(darkRef) <- extent(stripe)
+
+  #normalization is fast! 47 seconds for Tutae
+  normalized <- overlay(stripe,whiteRef,darkRef,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
+  names(normalized) <- names(stripe)
+
+  return(normalized)
+}
+
+core_name <- normalizeR()
