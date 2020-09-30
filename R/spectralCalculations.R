@@ -109,6 +109,7 @@ CalcIndices <- function(normalized,indices){
   R570_R630 <- R570R630(data=data,bands=bands,indices=indices)
   R590_R690 <- R590R690(data=data,bands=bands,indices = indices)
   indicesVals <- cbind(scaleY,RABD_660,RABD_845,R570_R630,R590_R690)
+  write.csv(indicesVals, paste0(id,"_Spectral_Calculations",format(Sys.time(),"%d-%b-%Y %H.%M"),".csv"))
   return(indicesVals)
 }
 
