@@ -56,6 +56,14 @@ cropImage <- function(raw){
 return(stripe)
 }
 
+coreLength <- function(stripe,length){
+  len <- stripe@nrows
+  ext <- length/len
+  scale <- seq(0,length,by = ext)
+  scaleY <- scale[-1]
+  return(scaleY)
+}
+
 createReferenceMeanRow <- function(refFile,e,outFile,spectra){
 
   refBrick <- raster::brick(refFile)
@@ -120,8 +128,8 @@ overlayR <- function(stripe,white.ref,dark.ref){
   return(normalized)
 }
 
-
-normalize <- function(id,wavelengths,directory,tif.path.to.write = NA){
+#inputs to function are core name, wavelengths of interest, directory for core data location, and visual length of core (that you are subsetting!)
+normalize <- function(id,wavelengths,directory,length,tif.path.to.write = NA){
   #choose and load the file
   filen <- filechooseR(id = id,
                      directory = directory)
@@ -139,6 +147,9 @@ normalize <- function(id,wavelengths,directory,tif.path.to.write = NA){
   #crop the image
   stripe <- cropImage(raw = raw)
 
+  #calculate length interval of each pixel (necessary for indices calculations)
+  scaleY <- coreLength(stripe = stripe, length = length)
+
   #load in the white and dark refs
   white.ref <- WhiteRef(stripe = stripe,id = id,directory = directory,spectra = spectra)
   dark.ref <- DarkRef(stripe = stripe,id = id,directory = directory,spectra = spectra)
@@ -151,6 +162,6 @@ normalize <- function(id,wavelengths,directory,tif.path.to.write = NA){
   if(!is.na(tif.path.to.write)){
     writeTif(normalized[[3]], path = tif.path.to.write)
   }
-  list(allbands,spectra,normalized)
+  list(allbands,spectra,normalized,scaleY)
 }
 
