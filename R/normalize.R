@@ -2,7 +2,7 @@
 
 #' Normalize a hyperspectral image
 #'
-#' @param spectra a vector of wavelengths to extract from the hyperspectral image
+#' @param wavelengths a vector of wavelengths to extract from the hyperspectral image (cho)
 #' @param data.file optionally specify the path to the hyperspectral .raw image
 #' @param white.ref.file
 #' @param dark.ref.file
@@ -15,13 +15,30 @@
 
 #'
 filechooseR <- function(id,
-                        directory = NA,
-                      spectra){
+                        directory = NA){
     Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
 data <- file.path(directory,paste(id,".raw",sep=""))
   if(missing(data)) data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
   filen <- raster::brick(data)
-  raw <- raster::subset(filen,spectra)
+return(filen)
+  }
+
+spectraR <- function(filen, wavelengths){
+  bands <- names(filen)
+  bands <- as.numeric(gsub("X","",bands))
+  bands <- data.table::data.table(Value=bands)
+  bands[,merge:=Value]
+  wavelengths <- data.table::data.table(Value =c(wavelengths))
+  wavelengths[,merge:=Value]
+  setkeyv(wavelengths,c('merge'))
+  setkeyv(bands,c('merge'))
+  spectrum=bands[wavelengths,roll='nearest']
+  spectra <-paste0("X",as.character(spectrum$Value))
+return(spectra)
+}
+
+subsetR <- function(filen, spectra){
+raw <- raster::subset(filen,spectra)
 return(raw)
 }
 
@@ -33,6 +50,31 @@ cropImage <- function(raw){
   names(stripe) <- names(raw)
 return(stripe)
 }
+
+createReferenceMeanRow <- function(refFile,e,outFile,spectra){
+
+  refBrick <- raster::brick(refFile)
+  refBrick <-  raster::subset(refBrick,spectra)
+  #crop it by the earlier crop width
+  ebb <- raster::extent(refBrick)
+  ex <- raster::extent(e)
+  ebb@xmin <- ex@xmin
+  ebb@xmax <- ex@xmax
+
+
+  refBrick <- raster::crop(refBrick,ebb)
+
+  rbcm <- colSums(refBrick)/nrow(refBrick)
+
+  #preallocate
+  r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
+  r <- setValues(r,rbcm)
+
+  #save row for later processing.
+  raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
+
+}
+
 
 WhiteRef <-function(stripe,directory,id){
   white <- file.path(directory,paste("WHITEREF_",id,".raw",sep=""))
@@ -59,6 +101,14 @@ DarkRef <- function(stripe,directory,id){
 return(dark.ref)
 }
 
+
+normFun <- function(data,white,dark){
+  s1 <- (data - dark)
+  s1[is.na(s1)] <- 0
+  s1[s1<0] <- 0
+  return(s1 / (white - dark))
+}
+
 overlayR <- function(stripe,white.ref,dark.ref){
   normalized <- raster::overlay(stripe,white.ref,dark.ref,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
   names(normalized) <- names(stripe)
@@ -66,11 +116,17 @@ overlayR <- function(stripe,white.ref,dark.ref){
 }
 
 
-normalize <- function(id,spectra,directory,tif.path.to.write = NA){
+normalize <- function(id,wavelengths,directory,tif.path.to.write = NA){
   #choose and load the file
-  raw <- filechooseR(id = id,
-                     spectra = spectra,
+  filen <- filechooseR(id = id,
                      directory = directory)
+
+  #find correct wavelengths
+  spectra <- spectraR(filen = filen, wavelengths = wavelengths)
+
+  #subset by wavelengths
+
+  raw <- subsetR(filen = filen, spectra = spectra)
 
   #crop the image
   stripe <- cropImage(raw = raw)
