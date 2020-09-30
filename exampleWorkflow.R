@@ -12,6 +12,7 @@ library(progress)
 
 #internal functions
 source("~/Documents/GitHub/specimR/R/normalize.R")
+source("~/Documents/GitHub/specimR/R/spectralCalculations.R")
 
 #chose wavelengths of interest
 wavelengths = c(570,590,615,630,660,665,690,730,790,845,900)
