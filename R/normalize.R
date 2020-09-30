@@ -14,14 +14,19 @@
 #'
 
 #'
-filechooseR <- function(id,
-                        directory = NA){
+filechooseR <- function(id,directory = NA){
     Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
 data <- file.path(directory,paste(id,".raw",sep=""))
   if(missing(data)) data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
   filen <- raster::brick(data)
 return(filen)
   }
+
+getBandInfo <- function(filen){
+  allbands <- names(filen)
+  allbands <- gsub("X","",allbands)%>%as.numeric()
+  return(allbands)
+}
 
 spectraR <- function(filen, wavelengths){
   bands <- names(filen)
@@ -30,10 +35,10 @@ spectraR <- function(filen, wavelengths){
   bands[,merge:=Value]
   wavelengths <- data.table::data.table(Value =c(wavelengths))
   wavelengths[,merge:=Value]
-  setkeyv(wavelengths,c('merge'))
-  setkeyv(bands,c('merge'))
-  spectrum=bands[wavelengths,roll='nearest']
-  spectra <-paste0("X",as.character(spectrum$Value))
+  data.table::setkeyv(wavelengths,c('merge'))
+  data.table::setkeyv(bands,c('merge'))
+  spectrum <- bands[wavelengths,roll='nearest']
+  spectra <- paste0("X",as.character(spectrum$Value))
 return(spectra)
 }
 
@@ -76,7 +81,7 @@ createReferenceMeanRow <- function(refFile,e,outFile,spectra){
 }
 
 
-WhiteRef <-function(stripe,directory,id){
+WhiteRef <-function(stripe,directory,id,spectra){
   white <- file.path(directory,paste("WHITEREF_",id,".raw",sep=""))
   if(missing(white))  white <- tcltk::tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
     whiteRow <- createReferenceMeanRow(refFile = white,e = stripe,outFile="WhiteRow.tif",spectra=spectra)
@@ -90,7 +95,7 @@ WhiteRef <-function(stripe,directory,id){
   return(white.ref)
 }
 
-DarkRef <- function(stripe,directory,id){
+DarkRef <- function(stripe,directory,id,spectra){
   dark <- file.path(directory,paste("DARKREF_",id,".raw",sep=""))
   if(missing(dark))  dark <- tcltk::tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
   darkRow <- createReferenceMeanRow(refFile=dark,e=stripe,outFile="DarkRow.tif",spectra=spectra)
@@ -121,6 +126,9 @@ normalize <- function(id,wavelengths,directory,tif.path.to.write = NA){
   filen <- filechooseR(id = id,
                      directory = directory)
 
+  #save all band names for later
+  allbands <- getBandInfo(filen)
+
   #find correct wavelengths
   spectra <- spectraR(filen = filen, wavelengths = wavelengths)
 
@@ -132,16 +140,17 @@ normalize <- function(id,wavelengths,directory,tif.path.to.write = NA){
   stripe <- cropImage(raw = raw)
 
   #load in the white and dark refs
-  white.ref <- WhiteRef(stripe = stripe,id = id,directory = directory)
-  dark.ref <- DarkRef(stripe = stripe,id = id,directory = directory)
+  white.ref <- WhiteRef(stripe = stripe,id = id,directory = directory,spectra = spectra)
+  dark.ref <- DarkRef(stripe = stripe,id = id,directory = directory,spectra = spectra)
 
   #now normalize
   normalized <- overlayR(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
 
+#  list(filen,normalized)
   #optionally write to a tif
   if(!is.na(tif.path.to.write)){
-    writeTif(normalized, path = tif.path.to.write)
+    writeTif(normalized[[3]], path = tif.path.to.write)
   }
-
-  return(normalized)
+  list(allbands,spectra,normalized)
 }
+

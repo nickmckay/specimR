@@ -26,25 +26,21 @@ spectra <- c("X569.71","X589.88","X615.22","X630.49","X659.89","X665.02","X689.4
 
 spectra <- c("X569.71","X589.88","X615.22","X630.49","X659.89","X665.02","X689.43","X730.74","X790.43","X845.12","X899.86")
 
+source("~/Documents/GitHub/specimR/R/normalize.R")
 wavelengths = c(570,590,615,630,660,665,690,730,790,845,900)
-
 (directory <- setwd("~/Desktop/test"))
 id <- "Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39"
 
-directory
-id
-core <- normalize(directory=directory,id=id,wavelengths = wavelengths)
+normalized <- normalize(directory=directory,id=id,wavelengths = wavelengths)
 
-filen <- filechooseR(id=id,directory=directory)
-filen <- brick("Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
-
-
-spectra
-
-subset(filen,nlayers(filen))
-
+filen <- filechooseR(id = id,directory = directory)
+spectra <- spectraR(filen = filen, wavelengths = wavelengths)
+raw <- subsetR(filen = filen, spectra = spectra)
 stripe <- cropImage(raw)
-whiteRef <-WhiteRef(stripe=stripe,directory = directory,id=id)
-darkRef <-DarkRef(stripe,directory=directory,id=id)
+whiteRef <-WhiteRef(stripe=stripe,directory = directory,id=id,spectra=spectra)
+darkRef <-DarkRef(stripe,directory=directory,id=id,spectra = spectra)
 normalized <- overlayR(stripe,whiteRef,darkRef)
+#output is a list of three items - the original
 
+gc()
+rm(list = ls(all.names = TRUE))
