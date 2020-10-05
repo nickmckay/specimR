@@ -17,7 +17,7 @@ cropViewFun <- function(click,dblclick){
   points(clickpoints, pch=3, col='green')
 }
 
-server <- function(input, output){
+server <- function(input, output, session){
 
   brushExtent <- reactiveValues()
   click <- reactiveValues()
@@ -28,21 +28,24 @@ server <- function(input, output){
   dblclick$x <- 0
   dblclick$y <- 0
 
-  brushExtent$extent <- raster::extent(image)
+  init.extent <- raster::extent(image)
+  init.extent[3] <- init.extent[4]-2000
 
-  output$plot1 <- renderPlot({
-    raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview",addfun = cropViewFun(click,dblclick))
-  })
+  brushExtent$extent <- init.extent
+
+  # output$plot1 <- renderPlot({
+  #   raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview")
+  # })
 
   output$plot2 <- renderPlot({
-    raster::plotRGB(image, axes=TRUE, stretch="hist", main="Zoom Control")
+    raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview/Zoom Control",addfun = cropViewFun(click,dblclick))
   })
 
   output$plot3 <- renderPlot({
     raster::plotRGB(image, axes=TRUE, stretch="hist", main="Select Crop Corners",ext = brushExtent$extent)
   })
 
-  # If so, zoom to the brush bounds; if not, reset the zoom.
+  # If so, zoom to the brush bounds
   observe({
     brush <- input$plot2_brush
     if (!is.null(brush)) {
@@ -63,12 +66,16 @@ server <- function(input, output){
   observeEvent(input$image_click,{
     click$x <- input$image_click$x
     click$y <- input$image_click$y
+    updateNumericInput(session, "x1", value = click$x)
+    updateNumericInput(session, "y1", value = click$y)
   }
   )
 
   observeEvent(input$image_dblclick,{
     dblclick$x <- input$image_dblclick$x
     dblclick$y <- input$image_dblclick$y
+    updateNumericInput(session, "x2", value = dblclick$x)
+    updateNumericInput(session, "y2", value = dblclick$y)
   }
   )
 
@@ -80,6 +87,27 @@ server <- function(input, output){
   output$dblclick_info <- renderPrint({
     cat("dblclick:\n")
     str(c(dblclick$x,dblclick$y))
+  })
+
+  observeEvent(input$applyWidth, {
+    if(click$x >= dblclick$x){
+      click$x <- dblclick$x+input$width
+    }else if(dblclick$x > click$x){
+      dblclick$x <- click$x+input$width
+    }
+  })
+
+  observeEvent(input$center, {
+    width <- abs(click$x - dblclick$x)
+    re <- raster::extent(image)
+    totalWidth <- re[2]-re[1]
+    mid <- round(re[2]/2)
+    if(click$x >= dblclick$x){
+      click$x <- round(mid+width/2)
+      dblclick$x <- round(mid-width/2)
+    }else if(dblclick$x > click$x){
+      dblclick$x <- round(mid+width/2)
+      click$x <- round(mid-width/2)    }
   })
 
   observeEvent(input$record, {
@@ -100,6 +128,10 @@ server <- function(input, output){
 
 pick_roi_shiny <- function(image){
 
+  #assign image into Global (hack for now)
+  assign("image",image,envir = .GlobalEnv)
+
+
   ui <- fluidPage(
     # Some custom CSS for a smaller font for preformatted text
     tags$head(
@@ -114,19 +146,16 @@ pick_roi_shiny <- function(image){
            h2("Region of interest (ROI) selector"),
            fluidRow(
              column(width = 4,
-                    plotOutput("plot1", height = 600)
-             ),
-             column(width = 4,
-                    plotOutput("plot2", height = 600,
+                    plotOutput("plot2", height = 500,
                                brush = brushOpts(
                                  id = "plot2_brush",
-                                 resetOnNew = TRUE
+                                 resetOnNew = FALSE
                                )
                     )
              ),
-             column(width = 4,
+             column(width = 8,
                     plotOutput("plot3",
-                               height = 600,
+                               height = 500,
                                click = "image_click",
                                dblclick = dblclickOpts(
                                  id = "image_dblclick"
@@ -135,14 +164,32 @@ pick_roi_shiny <- function(image){
              )
            ),
            fluidRow(
-             column(width = 6,
-                    verbatimTextOutput("click_info")
+             column(width = 3,
+                    numericInput("x1",
+                                 h4("Click x"),
+                                 value = 0),
+                    numericInput("y1",
+                                 h4("Click y"),
+                                 value = 0)
              ),
-             column(width = 6,
-                    verbatimTextOutput("dblclick_info")
-             )
-           )
+             column(width = 3,
+                    numericInput("x2",
+                                 h4("Dbl-Click x"),
+                                 value = 0),
+                    numericInput("y2",
+                                 h4("Dbl-Click y"),
+                                 value = 0)
+             ),
 
+             column(3,
+                    numericInput("width",
+                                 h4("Specify width"),
+                                 value = 200),
+                    actionButton("applyWidth", "Apply width"),
+                    actionButton("center", "Center ROI"),
+             )
+
+           )
 
     ),
     actionButton("record", "Record ROI")
