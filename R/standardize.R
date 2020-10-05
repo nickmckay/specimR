@@ -1,41 +1,27 @@
-  createReferenceMeanRow <- function(refFile,e,outFile){
+  createReferenceMeanRow <- function(refFile,e,outFile,spectra){
 
-  refBrick <- brick(refFile)
+  refBrick <- raster::brick(refFile)
+  refBrick <-  raster::subset(refBrick,spectra)
   #crop it by the earlier crop width
-  ebb <- extent(refBrick)
-  ex <- extent(e)
+  ebb <- raster::extent(refBrick)
+  ex <- raster::extent(e)
   ebb@xmin <- ex@xmin
   ebb@xmax <- ex@xmax
 
 
-  refBrick <- crop(refBrick,ebb)
+  refBrick <- raster::crop(refBrick,ebb)
 
   rbcm <- colSums(refBrick)/nrow(refBrick)
 
   #preallocate
-  r <- brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
+  r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
   r <- setValues(r,rbcm)
 
   #save row for later processing.
-  writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
+  raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
 
 }
 
-createReferenceMeanRow2 <- function(refFile,e){
-
-  refBrick <- brick(refFile)
-  #crop it by the earlier crop width
-  ebb <- extent(refBrick)
-  ex <- extent(e)
-  ebb@xmin <- ex@xmin
-  ebb@xmax <- ex@xmax
-
-
-  refBrick <- crop(refBrick,ebb)
-
-  r <- aggregate(refBrick,fact = c(1,nrow(refBrick)),fun = mean)
-  return(r)
-}
 
 createReferenceTif <- function(meanRow,targetExtent,fileOut){
   #calculate number of rows in target
