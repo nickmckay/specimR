@@ -1,26 +1,4 @@
-  createReferenceMeanRow <- function(refFile,e,outFile,spectra){
 
-  refBrick <- raster::brick(refFile)
-  refBrick <-  raster::subset(refBrick,spectra)
-  #crop it by the earlier crop width
-  ebb <- raster::extent(refBrick)
-  ex <- raster::extent(e)
-  ebb@xmin <- ex@xmin
-  ebb@xmax <- ex@xmax
-
-
-  refBrick <- raster::crop(refBrick,ebb)
-
-  rbcm <- colSums(refBrick)/nrow(refBrick)
-
-  #preallocate
-  r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
-  r <- setValues(r,rbcm)
-
-  #save row for later processing.
-  raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
-
-}
 
 
 createReferenceTif <- function(meanRow,targetExtent,fileOut){

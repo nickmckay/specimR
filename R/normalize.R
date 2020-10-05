@@ -1,19 +1,63 @@
 
 
-#' Normalize a hyperspectral image
-#'
-#' @param wavelengths a vector of wavelengths to extract from the hyperspectral image (cho)
-#' @param data.file optionally specify the path to the hyperspectral .raw image
-#' @param white.ref.file
-#' @param dark.ref.file
-#' @param another.param
-#' @import raster tcltk
-#'
-#' @return a normalized hyperspectral image
-#' @export
-#'
 
-#'
+getPaths <- function(dirPath=NA){
+  if(is.na(dirPath)){
+    cat(crayon::bold("Choose a file within the Specim core directory\n"))
+    dirPath <-  dirname(file.choose())
+  }
+
+  coreName <- stringr::str_extract(pattern = "[^/]+$",string  = dirPath)
+
+  #try to find the overview, capture, white and dark ref paths
+  paths <- list()
+
+
+  #overview
+op <- file.path(dirPath,stringr::str_c(coreName,".png"))
+
+  if(file.exists(op)){
+    paths$overview <- op
+  }else{
+    cat(crayon::bold(crayon::red("Choose the overview .png file\n")))
+    paths$overview <-  file.choose()
+  }
+
+#capture
+ca <- file.path(dirPath,"capture",stringr::str_c(coreName,".raw"))
+
+if(file.exists(ca)){
+  paths$capture <- ca
+}else{
+  cat(crayon::bold(crayon::red("Choose the capture .raw file\n")))
+  paths$capture <-  file.choose()
+}
+
+
+#white ref
+wr <- file.path(dirPath,"capture",stringr::str_c("WHITEREF_",coreName,".raw"))
+
+if(file.exists(wr)){
+  paths$whiteref <- wr
+}else{
+  cat(crayon::bold(crayon::red("Choose the WHITEREF .raw file\n")))
+  paths$whiteref <-  file.choose()
+}
+
+#dark ref
+dr <- file.path(dirPath,"capture",stringr::str_c("DARKREF_",coreName,".raw"))
+
+if(file.exists(dr)){
+  paths$darkref <- dr
+}else{
+  cat(crayon::bold(crayon::red("Choose the DARKREF .raw file\n")))
+  paths$darkref <-  file.choose()
+}
+
+return(paths)
+
+}
+
 filechooseR <- function(id,directory = NA){
     Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
 data <- file.path(directory,paste(id,".raw",sep=""))
@@ -26,6 +70,23 @@ getBandInfo <- function(filen){
   allbands <- names(filen)
   allbands <- gsub("X","",allbands)%>%as.numeric()
   return(allbands)
+}
+
+getNearestWavelengths <- function(filen, wavelengths){
+  bands <- names(filen) %>%
+    stringr::str_remove("X") %>%
+    as.numeric()
+
+  spec.ind <- c()
+  for(i in 1:length(wavelengths)){
+    spec.ind[i] <- which(abs(wavelengths[i]-bands) == min(abs(wavelengths[i]-bands)))
+  }
+
+  spec.ind <- sort(unique(spec.ind))
+
+  names(spec.ind) <- names(filen)[spec.ind]
+
+  return(spec.ind)
 }
 
 spectraR <- function(filen, wavelengths){
@@ -42,10 +103,11 @@ spectraR <- function(filen, wavelengths){
 return(spectra)
 }
 
-subsetR <- function(filen, spectra){
-raw <- raster::subset(filen,spectra)
-return(raw)
-}
+
+
+
+
+
 
 cropImage <- function(raw){
   image <- raster::subset(raw,c(1,5,8))
@@ -56,18 +118,21 @@ cropImage <- function(raw){
 return(stripe)
 }
 
-coreLength <- function(stripe,length){
+coreLength <- function(stripe,length = NA){
+  if(is.na(length)){
+    length <- readline(prompt = cat(crayon::bold("What is the length of the photographed section in cm?"))) %>% as.numeric()
+  }
   len <- stripe@nrows
   ext <- length/len
-  scale <- seq(0,length,by = ext)
-  scaleY <- scale[-1]
-  return(scaleY)
+  scale <- seq(ext/2,length-ext/2,by = ext)
+  return(scale)
 }
 
-createReferenceMeanRow <- function(refFile,e,outFile,spectra){
-
-  refBrick <- raster::brick(refFile)
-  refBrick <-  raster::subset(refBrick,spectra)
+createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
+  if(is.character(ref)){#load in if necessary
+  ref <- raster::brick(ref)
+  }
+  refBrick <-  raster::subset(ref,spectra)
   #crop it by the earlier crop width
   ebb <- raster::extent(refBrick)
   ex <- raster::extent(e)
@@ -77,22 +142,24 @@ createReferenceMeanRow <- function(refFile,e,outFile,spectra){
 
   refBrick <- raster::crop(refBrick,ebb)
 
-  rbcm <- colSums(refBrick)/nrow(refBrick)
+  rbcm <- raster::colSums(refBrick)/nrow(refBrick)
 
   #preallocate
   r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
   r <- setValues(r,rbcm)
 
   #save row for later processing.
+  if(!is.na(outFile)){
   raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
-
+  }else{
+  return(r)
+}
 }
 
 
-WhiteRef <-function(stripe,directory,id,spectra){
-  white <- file.path(directory,paste("WHITEREF_",id,".raw",sep=""))
-  if(missing(white))  white <- tcltk::tk_choose.files(caption="choose 'WHITEREF' File",filter = Filters)
-    whiteRow <- createReferenceMeanRow(refFile = white,e = stripe,outFile="WhiteRow.tif",spectra=spectra)
+WhiteRef <-function(whiteRef,stripe,spectra){
+
+  whiteRow <- createReferenceMeanRow(refFile = whiteRef,e = stripe,outFile="WhiteRow.tif",spectra=spectra)
   names(whiteRow) <- names(stripe)
   #find length of core stripe to break up white
   len <- stripe@nrows
@@ -103,15 +170,22 @@ WhiteRef <-function(stripe,directory,id,spectra){
   return(white.ref)
 }
 
-DarkRef <- function(stripe,directory,id,spectra){
-  dark <- file.path(directory,paste("DARKREF_",id,".raw",sep=""))
-  if(missing(dark))  dark <- tcltk::tk_choose.files(caption="choose 'DARKREF' File",filter = Filters)
-  darkRow <- createReferenceMeanRow(refFile=dark,e=stripe,outFile="DarkRow.tif",spectra=spectra)
+DarkRef <- function(darkRef,stripe,spectra){
+  darkRow <- createReferenceMeanRow(refFile=darkRef,e=stripe,outFile="DarkRow.tif",spectra=spectra)
   names(darkRow) <- names(stripe)
   len <- stripe@nrows
   dark.ref <- disaggregate(darkRow,fact = c(1,len))
   extent(dark.ref) <- extent(stripe)
 return(dark.ref)
+}
+
+processReference <- function(reference,stripe,spectra){
+  row <- createReferenceMeanRow(ref = reference,e=stripe,outFile=NA,spectra=spectra)
+  names(row) <- names(stripe)
+  len <- stripe@nrows
+  ref <- raster::disaggregate(row,fact = c(1,len))
+  extent(ref) <- extent(stripe)
+  return(ref)
 }
 
 
@@ -122,46 +196,75 @@ normFun <- function(data,white,dark){
   return(s1 / (white - dark))
 }
 
-overlayR <- function(stripe,white.ref,dark.ref){
-  normalized <- raster::overlay(stripe,white.ref,dark.ref,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
+whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
+  normalized <- raster::overlay(stripe,white.ref,dark.ref,fun = normFun,...)
   names(normalized) <- names(stripe)
   return(normalized)
 }
 
+
+#' Normalize a hyperspectral image
+#'
+#' @param wavelengths a vector of wavelengths to extract from the hyperspectral image (cho)
+#' @param data.file optionally specify the path to the hyperspectral .raw image
+#' @param white.ref.file
+#' @param dark.ref.file
+#' @param another.param
+#' @import raster tcltk
+#'
+#' @return a normalized hyperspectral image
+#' @export
+#'
+
 #inputs to function are core name, wavelengths of interest, directory for core data location, and visual length of core (that you are subsetting!)
-normalize <- function(id,wavelengths,directory,length,tif.path.to.write = NA){
-  #choose and load the file
-  filen <- filechooseR(id = id,
-                     directory = directory)
+normalize <- function(directory = NA,
+                      length = NA,
+                      spectra = c(615,660,670),
+                      roi = NA,#specify roi as raster extent
+                      tif.path.to.write = NA){
+  #get the appropriate paths
+  paths <- getPaths(dirPath = directory)
+
+  #load overview
+  overview <- raster::brick(paths$overview)
+
+  #choose the ROI
+  roi <- pick_roi_shiny(overview)
+
+  #load in the capture
+  filen <- raster::brick(paths$capture)
 
   #save all band names for later
   allbands <- getBandInfo(filen)
 
   #find correct wavelengths
-  spectra <- spectraR(filen = filen, wavelengths = wavelengths)
+  spectra <- getNearestWavelengths(filen = filen, wavelengths = wavelengths)
 
   #subset by wavelengths
-
-  raw <- subsetR(filen = filen, spectra = spectra)
+  raw <- raster::subset(filen,spectra)
 
   #crop the image
-  stripe <- cropImage(raw = raw)
+  stripe <- raster::crop(raw,roi)
 
   #calculate length interval of each pixel (necessary for indices calculations)
   scaleY <- coreLength(stripe = stripe, length = length)
 
   #load in the white and dark refs
-  white.ref <- WhiteRef(stripe = stripe,id = id,directory = directory,spectra = spectra)
-  dark.ref <- DarkRef(stripe = stripe,id = id,directory = directory,spectra = spectra)
+  whiteRef <- raster::brick(paths$whiteref)
+  darkRef <- raster::brick(paths$darkref)
+
+  white.ref <- processReference(whiteRef,stripe = stripe,spectra = spectra)
+  dark.ref <- processReference(darkRef,stripe = stripe,spectra = spectra)
 
   #now normalize
-  normalized <- overlayR(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
+  normalized <- whiteDarkNormalize(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
 
 #  list(filen,normalized)
   #optionally write to a tif
   if(!is.na(tif.path.to.write)){
-    writeTif(normalized[[3]], path = tif.path.to.write)
+    writeTif(normalized, path = tif.path.to.write)
   }
-  list(allbands,spectra,normalized,scaleY)
+
+  return(list(allbands = allbands,spectra = spectra,normalized = normalized,scaleY = scaleY))
 }
 
