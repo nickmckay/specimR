@@ -72,14 +72,14 @@ getBandInfo <- function(filen){
   return(allbands)
 }
 
-getNearestWavelengths <- function(filen, wavelengths){
+getNearestWavelengths <- function(filen, spectra){
   bands <- names(filen) %>%
     stringr::str_remove("X") %>%
     as.numeric()
 
   spec.ind <- c()
-  for(i in 1:length(wavelengths)){
-    spec.ind[i] <- which(abs(wavelengths[i]-bands) == min(abs(wavelengths[i]-bands)))
+  for(i in 1:length(spectra)){
+    spec.ind[i] <- which(abs(spectra[i]-bands) == min(abs(spectra[i]-bands)))
   }
 
   spec.ind <- sort(unique(spec.ind))
@@ -146,7 +146,7 @@ createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
 
   #preallocate
   r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
-  r <- setValues(r,rbcm)
+  r <- raster::setValues(r,rbcm)
 
   #save row for later processing.
   if(!is.na(outFile)){
@@ -166,7 +166,7 @@ WhiteRef <-function(whiteRef,stripe,spectra){
   #disaggregate whiterow to length
   white.ref <- disaggregate(whiteRow,fact = c(1,len))
   #set extents to be the same between stripe and reference files
-  extent(white.ref) <- extent(stripe)
+  raster::extent(white.ref) <- raster::extent(stripe)
   return(white.ref)
 }
 
@@ -175,7 +175,7 @@ DarkRef <- function(darkRef,stripe,spectra){
   names(darkRow) <- names(stripe)
   len <- stripe@nrows
   dark.ref <- disaggregate(darkRow,fact = c(1,len))
-  extent(dark.ref) <- extent(stripe)
+  raster::extent(dark.ref) <- raster::extent(stripe)
 return(dark.ref)
 }
 
@@ -193,7 +193,7 @@ processReference <- function(reference,stripe,spectra){
   names(row) <- names(stripe)
   len <- stripe@nrows
   ref <- raster::disaggregate(row,fact = c(1,len))
-  extent(ref) <- extent(stripe)
+  raster::extent(ref) <- raster::extent(stripe)
   return(ref)
 }
 
@@ -245,7 +245,7 @@ normalize <- function(directory = NA,
   allbands <- getBandInfo(filen)
 
   #find correct wavelengths
-  spectra <- getNearestWavelengths(filen = filen, wavelengths = wavelengths)
+  spectra <- getNearestWavelengths(filen = filen, spectra = spectra)
 
   #subset by wavelengths
   raw <- raster::subset(filen,spectra)

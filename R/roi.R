@@ -132,7 +132,7 @@ pick_roi_shiny <- function(image){
   assign("image",image,envir = .GlobalEnv)
 
 
-  ui <- fluidPage(
+  ui <- shiny::fluidPage(
     # Some custom CSS for a smaller font for preformatted text
     tags$head(
       tags$style(HTML("
@@ -144,7 +144,7 @@ pick_roi_shiny <- function(image){
 
     column(width = 12, class = "well",
            h2("Region of interest (ROI) selector"),
-           fluidRow(
+           shiny::fluidRow(
              column(width = 4,
                     plotOutput("plot2", height = 500,
                                brush = brushOpts(
@@ -163,7 +163,7 @@ pick_roi_shiny <- function(image){
                     )
              )
            ),
-           fluidRow(
+           shiny::fluidRow(
              column(width = 3,
                     numericInput("x1",
                                  h4("Click x"),
@@ -197,7 +197,7 @@ pick_roi_shiny <- function(image){
 
 
 
-ts <- shinyApp(ui, server)
+ts <- shiny::shinyApp(ui, server)
 runApp(ts)
 return(crpout)
 }
