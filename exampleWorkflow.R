@@ -35,6 +35,6 @@ indices <- c("RABD660","RABD845","R570R630","R590R690")
 #calculate indices and y-axis
 core_output <- CalcIndices(normalized = normalized,indices = indices)
 
-
+normalize()
 gc()
 rm(list = ls(all.names = TRUE))
