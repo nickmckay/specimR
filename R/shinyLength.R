@@ -1,5 +1,8 @@
 
 lengthserver <- function(input, output, session){
+  tr.image <- get("tr.image",envir = specimEnv)
+  br.image <- get("br.image",envir = specimEnv)
+  image.ext <- get("image.ext",envir = specimEnv)
 
   click <- reactiveValues()
   dblclick <- reactiveValues()
@@ -11,9 +14,7 @@ lengthserver <- function(input, output, session){
   click$y <- 0
   dblclick$x <- 0
   dblclick$y <- 0
-
-
-  init.extent <- raster::extent(image)
+  init.extent <- image.ext
   init.extent[3] <- init.extent[4]-2000
 
 
@@ -76,11 +77,13 @@ lengthserver <- function(input, output, session){
 }
 
 
-pick_length_shiny <- function(top.image,bot.image){
+pick_length_shiny <- function(tr.image,br.image,image.ext){
 
   #assign image into Global (hack for now)
-  assign("tr.image",top.image,envir = .GlobalEnv)
-  assign("br.image",bot.image,envir = .GlobalEnv)
+  assign("tr.image",tr.image,envir = specimEnv)
+  assign("br.image",br.image,envir = specimEnv)
+  assign("image.ext",image.ext,envir = specimEnv)
+
 
   ui <- fluidPage(
     # Some custom CSS for a smaller font for preformatted text
@@ -132,7 +135,7 @@ pick_length_shiny <- function(top.image,bot.image){
            )
 
     ),
-    actionButton("record", "Record ROI")
+    actionButton("record", "Record length")
   )
 
 

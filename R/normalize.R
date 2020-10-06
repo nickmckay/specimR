@@ -1,4 +1,5 @@
-
+#create an environment for package variables
+specimEnv <- new.env()
 
 
 getPaths <- function(dirPath=NA){
@@ -236,8 +237,9 @@ normalize <- function(directory = NA,
   overview <- raster::brick(paths$overview)
 
   #choose the ROI
+  if(is.na(roi)){
   roi <- pick_roi_shiny(overview)
-
+}
   #load in the capture
   filen <- raster::brick(paths$capture)
 
@@ -255,18 +257,17 @@ normalize <- function(directory = NA,
 
   #try cropping the image with the same height, but on the right side to look at the top bottom
   tr_roi <- roi
-  tr_roi@xmax <- raster::extent(image)@xmax
-  tr_roi@xmin <- raster::extent(image)@xmax*.75
+  tr_roi@xmax <- raster::extent(overview)@xmax
+  tr_roi@xmin <- raster::extent(overview)@xmax*.75
   tr_roi@ymin <- tr_roi@ymax - (tr_roi@xmax-tr_roi@xmin)
-  tr.image <- raster::crop(image,tr_roi)
+  tr.image <- raster::crop(overview,tr_roi)
 
   br_roi <- tr_roi
-  br_roi@ymin <- raster::extent(image)@ymin
+  br_roi@ymin <- raster::extent(overview)@ymin
   br_roi@ymax <- br_roi@ymin + (br_roi@xmax-br_roi@xmin)
-  br.image <- raster::crop(image,br_roi)
-  plotRGB(br.image,stretch = "hist",axes = TRUE)
+  br.image <- raster::crop(overview,br_roi)
 
-  cmPerPixel <- pick_length_shiny(tr.image,br.image)
+  cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
 
   if(is.finite(cmPerPixel) * cmPerPixel > 0){
     scaleY <- seq(cmPerPixel/2,(nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
