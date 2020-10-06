@@ -5,7 +5,7 @@
 
 #transpose normalized dataset and get normalized values
 getNormValues <- function(normalized){
-  norm <- t(normalized[[3]])
+  norm <- raster::t(normalized$normalized)
   data <- raster::getValues(norm,row = 1)
   colnames(data) <- as.character(normalized[[2]])
 return(data)
@@ -33,41 +33,42 @@ return(bands)
 
 #RABD660
 RABD660 <- function(data,bands, allbands,indices){
-  if (indices[grepl("RABD660",indices)]!="RABD660"){ print("next")
-} else{
-vals_660 <- data.table::data.table(Value = c(590,660,730))
-vals_660[,merge:=Value]
-data.table::setkeyv(vals_660,c('merge'))
-r660 <-bands[vals_660,roll='nearest']
-r660n <- as.character(paste0("X",r660$Value))
-r660v <- data[,r660n]
+  if (indices[grepl("RABD660",indices)]!="RABD660"){
+    print("next")
+  }else{
+    vals_660 <- data.table::data.table(Value = c(590,660,730))
+    vals_660[,merge:=Value]
+    data.table::setkeyv(vals_660,c('merge'))
+    r660 <-bands[vals_660,roll='nearest']
+    r660n <- as.character(paste0("X",r660$Value))
+    r660v <- data[,r660n]
 
-dBtwnLo <- sum(allbands < r660$Value[2] & allbands > r660$Value[1])
-dBtwnHi <- sum(allbands < r660$Value[3] & allbands > r660$Value[2])
-dBtwnTot <- sum(allbands < r660$Value[3] & allbands > r660$Value[1])
-RABD_660 <- as.data.frame((((dBtwnLo*r660v[,3])+(dBtwnHi*r660v[,1]))/dBtwnTot)/r660v[,2])
-colnames(RABD_660) <- "RABD660"
-return(RABD_660)
-}
+    dBtwnLo <- sum(allbands < r660$Value[2] & allbands > r660$Value[1])
+    dBtwnHi <- sum(allbands < r660$Value[3] & allbands > r660$Value[2])
+    dBtwnTot <- sum(allbands < r660$Value[3] & allbands > r660$Value[1])
+    RABD_660 <- as.data.frame((((dBtwnLo*r660v[,3])+(dBtwnHi*r660v[,1]))/dBtwnTot)/r660v[,2])
+    colnames(RABD_660) <- "RABD660"
+    return(RABD_660)
+  }
 }
 #RABD 845
 RABD845 <- function(data,bands, allbands,indices){
   if (indices[grepl("RABD845",indices)]!="RABD845"){ print("next")
   } else{
-vals_845 <- data.table::data.table(Value = c(790,845,900))
-vals_845[,merge:=Value]
-data.table::setkeyv(vals_845,c('merge'))
-r845 <-bands[vals_845,roll='nearest']
-r845n <- as.character(paste0("X",r845$Value))
-r845v <- data[,r845n]
+    vals_845 <- data.table::data.table(Value = c(790,845,900))
+    vals_845[,merge:=Value]
+    data.table::setkeyv(vals_845,c('merge'))
+    r845 <-bands[vals_845,roll='nearest']
+    r845n <- as.character(paste0("X",r845$Value))
+    r845v <- data[,r845n]
 
-dBtwnLo <- sum(allbands < r845$Value[2] & allbands > r845$Value[1])
-dBtwnHi <- sum(allbands < r845$Value[3] & allbands > r845$Value[2])
-dBtwnTot <- sum(allbands < r845$Value[3] & allbands > r845$Value[1])
-RABD_845 <- as.data.frame((((dBtwnLo*r845v[,3])+(dBtwnHi*r845v[,1]))/dBtwnTot)/r845v[,2])
-colnames(RABD_845) <- "RABD845"
-return(RABD_845)
-}
+    dBtwnLo <- sum(allbands < r845$Value[2] & allbands > r845$Value[1])
+    dBtwnHi <- sum(allbands < r845$Value[3] & allbands > r845$Value[2])
+    dBtwnTot <- sum(allbands < r845$Value[3] & allbands > r845$Value[1])
+    RABD_845 <- as.data.frame((((dBtwnLo*r845v[,3])+(dBtwnHi*r845v[,1]))/dBtwnTot)/r845v[,2])
+    colnames(RABD_845) <- "RABD845"
+    return(RABD_845)
+  }
 }
 
 R570R630 <-function(data,bands,indices){

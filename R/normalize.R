@@ -179,6 +179,15 @@ DarkRef <- function(darkRef,stripe,spectra){
 return(dark.ref)
 }
 
+#' Perform reference processing prior to normalizations
+#'
+#' @param reference a rasterBrick object to process
+#' @param stripe a raster whose extent you want to mirror
+#' @param spectra an index of spectra to subset
+#' @import raster
+#'
+#' @return a standardized rasterBrick the same size and thickness as stripe
+#' @export
 processReference <- function(reference,stripe,spectra){
   row <- createReferenceMeanRow(ref = reference,e=stripe,outFile=NA,spectra=spectra)
   names(row) <- names(stripe)
@@ -214,8 +223,6 @@ whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
 #'
 #' @return a normalized hyperspectral image
 #' @export
-#'
-
 #inputs to function are core name, wavelengths of interest, directory for core data location, and visual length of core (that you are subsetting!)
 normalize <- function(directory = NA,
                       length = NA,
@@ -246,8 +253,27 @@ normalize <- function(directory = NA,
   #crop the image
   stripe <- raster::crop(raw,roi)
 
+  #try cropping the image with the same height, but on the right side to look at the top bottom
+  tr_roi <- roi
+  tr_roi@xmax <- raster::extent(image)@xmax
+  tr_roi@xmin <- raster::extent(image)@xmax*.75
+  tr_roi@ymin <- tr_roi@ymax - (tr_roi@xmax-tr_roi@xmin)
+  tr.image <- raster::crop(image,tr_roi)
+
+  br_roi <- tr_roi
+  br_roi@ymin <- raster::extent(image)@ymin
+  br_roi@ymax <- br_roi@ymin + (br_roi@xmax-br_roi@xmin)
+  br.image <- raster::crop(image,br_roi)
+  plotRGB(br.image,stretch = "hist",axes = TRUE)
+
+  cmPerPixel <- pick_length_shiny(tr.image,br.image)
+
+  if(is.finite(cmPerPixel) * cmPerPixel > 0){
+    scaleY <- seq(cmPerPixel/2,(nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
+  }else{
   #calculate length interval of each pixel (necessary for indices calculations)
-  scaleY <- coreLength(stripe = stripe, length = length)
+    scaleY <- coreLength(stripe = stripe, length = length)
+  }
 
   #load in the white and dark refs
   whiteRef <- raster::brick(paths$whiteref)
