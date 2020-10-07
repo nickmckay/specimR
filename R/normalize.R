@@ -219,7 +219,7 @@ whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
 #inputs to function are core name, wavelengths of interest, directory for core data location, and visual length of core (that you are subsetting!)
 normalize <- function(directory = NA,
                       length = NA,
-                      spectra = c(615,660,670),
+                      spectra = NA,
                       roi = NA,#specify roi as raster extent
                       tif.path.to.write = NA){
   #get the appropriate paths
@@ -265,6 +265,6 @@ normalize <- function(directory = NA,
     writeTif(normalized, path = tif.path.to.write)
   }
 
-  return(list(allbands = allbands,spectra = spectra,normalized = normalized,scaleY = scaleY))
+  return(list(allbands = allbands,spectra = spectra,normalized = normalized,scaleY = scaleY,raw=raw))
 }
 

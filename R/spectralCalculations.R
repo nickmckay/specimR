@@ -5,22 +5,12 @@
 
 #transpose normalized dataset and get normalized values
 getNormValues <- function(normalized){
-  norm <- t(normalized[[3]])
+  norm <- t(normalized$normalized)
   data <- raster::getValues(norm,row = 1)
-  colnames(data) <- as.character(normalized[[2]])
+  colnames(data) <- names(normalized$spectra)
 return(data)
 }
-
-coreLengthInfo <- function(normalized){
-  scaleY <- normalized[[4]]
-  return(scaleY)
-}
-
-#collect band information for calculations-all bands first
-allBandInfo <- function(normalized){
-allbands <- normalized[[1]]
-return(allbands)
-}
+data <- getNormValues(normalized)
 
 #and subsetted bands
 subsetBands <- function(data){
@@ -32,7 +22,7 @@ return(bands)
 }
 
 #RABD660
-RABD660 <- function(data,bands, allbands,indices){
+getRABD660 <- function(data,bands, normalized,indices){
   if (indices[grepl("RABD660",indices)]!="RABD660"){ print("next")
 } else{
 vals_660 <- data.table::data.table(Value = c(590,660,730))
@@ -42,16 +32,16 @@ r660 <-bands[vals_660,roll='nearest']
 r660n <- as.character(paste0("X",r660$Value))
 r660v <- data[,r660n]
 
-dBtwnLo <- sum(allbands < r660$Value[2] & allbands > r660$Value[1])
-dBtwnHi <- sum(allbands < r660$Value[3] & allbands > r660$Value[2])
-dBtwnTot <- sum(allbands < r660$Value[3] & allbands > r660$Value[1])
+dBtwnLo <- sum(normalized$allbands < r660$Value[2] & normalized$allbands > r660$Value[1])
+dBtwnHi <- sum(normalized$allbands < r660$Value[3] & normalized$allbands > r660$Value[2])
+dBtwnTot <- sum(normalized$allbands < r660$Value[3] & normalized$allbands > r660$Value[1])
 RABD_660 <- as.data.frame((((dBtwnLo*r660v[,3])+(dBtwnHi*r660v[,1]))/dBtwnTot)/r660v[,2])
 colnames(RABD_660) <- "RABD660"
 return(RABD_660)
 }
 }
 #RABD 845
-RABD845 <- function(data,bands, allbands,indices){
+getRABD845 <- function(data,bands, normalized,indices){
   if (indices[grepl("RABD845",indices)]!="RABD845"){ print("next")
   } else{
 vals_845 <- data.table::data.table(Value = c(790,845,900))
@@ -61,16 +51,16 @@ r845 <-bands[vals_845,roll='nearest']
 r845n <- as.character(paste0("X",r845$Value))
 r845v <- data[,r845n]
 
-dBtwnLo <- sum(allbands < r845$Value[2] & allbands > r845$Value[1])
-dBtwnHi <- sum(allbands < r845$Value[3] & allbands > r845$Value[2])
-dBtwnTot <- sum(allbands < r845$Value[3] & allbands > r845$Value[1])
+dBtwnLo <- sum(normalized$allbands < r845$Value[2] & normalized$allbands > r845$Value[1])
+dBtwnHi <- sum(normalized$allbands < r845$Value[3] & normalized$allbands > r845$Value[2])
+dBtwnTot <- sum(normalized$allbands < r845$Value[3] & normalized$allbands > r845$Value[1])
 RABD_845 <- as.data.frame((((dBtwnLo*r845v[,3])+(dBtwnHi*r845v[,1]))/dBtwnTot)/r845v[,2])
 colnames(RABD_845) <- "RABD845"
 return(RABD_845)
 }
 }
 
-R570R630 <-function(data,bands,indices){
+getR570R630 <-function(data,bands,indices){
   if (indices[grepl("R570R630",indices)]!="R570R630"){ print("next")
   } else{
   vals_r570r630 <- data.table::data.table(Value = c(570,630))
@@ -85,7 +75,7 @@ return(R570_R630)
 }
 }
 
-R590R690 <-function(data,bands, indices){
+getR590R690 <-function(data,bands, indices){
   if (indices[grepl("R590R690",indices)]!="R590R690"){ print("next")
   } else{
   vals_r590r690 <- data.table::data.table(Value = c(590,690))
@@ -99,17 +89,19 @@ R590R690 <-function(data,bands, indices){
   return(R590_R690)
 }
 }
-CalcIndices <- function(normalized,indices){
+GetIndices <- function(normalized,indices){
   data <- getNormValues(normalized = normalized)
-  scaleY <-coreLengthInfo(normalized = normalized)
-  allbands <- allBandInfo(normalized = normalized)
   bands <- subsetBands(data = data)
-  RABD_660 <-RABD660(data=data,bands = bands,allbands = allbands,indices=indices)
-  RABD_845 <-RABD845(data=data,bands = bands,allbands = allbands,indices=indices)
-  R570_R630 <- R570R630(data=data,bands=bands,indices=indices)
-  R590_R690 <- R590R690(data=data,bands=bands,indices = indices)
-  indicesVals <- cbind(scaleY,RABD_660,RABD_845,R570_R630,R590_R690)
-  write.csv(indicesVals, paste0(id,"_Spectral_Calculations",format(Sys.time(),"%d-%b-%Y %H.%M"),".csv"))
-  return(indicesVals)
+  RABD_660 <-getRABD660(data=data,bands = bands,normalized = normalized,indices=indices)
+  RABD_845 <-getRABD845(data=data,bands = bands,normalized = normalized,indices=indices)
+  R570_R630 <- getR570R630(data=data,bands=bands,indices=indices)
+  R590_R690 <- getR590R690(data=data,bands=bands,indices = indices)
+  scaleY <- normalized$scaleY
+  ext <- extent(normalized$normalized)
+  yseq <- seq(ext@ymin,ext@ymax, by= 1)
+  yseq <- yseq[-1]
+  indicesVals <- cbind(yseq, scaleY,RABD_660,RABD_845,R570_R630,R590_R690)
+ # write.csv(indicesVals, paste0(id,"_Spectral_Calculations",format(Sys.time(),"%d-%b-%Y %H.%M"),".csv"))
+  list(return(indicesVals,bands))
 }
 
