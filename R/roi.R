@@ -18,6 +18,7 @@ cropViewFun <- function(click,dblclick){
 }
 
 server <- function(input, output, session){
+image <- get("image",envir = specimEnv)
 
   brushExtent <- reactiveValues()
   click <- reactiveValues()
@@ -129,7 +130,7 @@ server <- function(input, output, session){
 pick_roi_shiny <- function(image){
 
   #assign image into Global (hack for now)
-  assign("image",image,envir = .GlobalEnv)
+  assign("image",image,envir = specimEnv)
 
 
   ui <- shiny::fluidPage(

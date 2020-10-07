@@ -13,4 +13,10 @@ Encoding: UTF-8
 LazyData: true
 Imports: 
     raster,
-    tcltk
+    tcltk,
+    shiny,
+    crayon,
+    magrittr,
+    data.table,
+    stringr
+RoxygenNote: 7.1.1

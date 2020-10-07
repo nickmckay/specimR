@@ -5,7 +5,7 @@
 
 #transpose normalized dataset and get normalized values
 getNormValues <- function(normalized){
-  norm <- t(normalized$normalized)
+  norm <- raster::t(normalized$normalized)
   data <- raster::getValues(norm,row = 1)
   colnames(data) <- names(normalized$spectra)
 return(data)
@@ -44,12 +44,12 @@ return(RABD_660)
 getRABD845 <- function(data,bands, normalized,indices){
   if (indices[grepl("RABD845",indices)]!="RABD845"){ print("next")
   } else{
-vals_845 <- data.table::data.table(Value = c(790,845,900))
-vals_845[,merge:=Value]
-data.table::setkeyv(vals_845,c('merge'))
-r845 <-bands[vals_845,roll='nearest']
-r845n <- as.character(paste0("X",r845$Value))
-r845v <- data[,r845n]
+    vals_845 <- data.table::data.table(Value = c(790,845,900))
+    vals_845[,merge:=Value]
+    data.table::setkeyv(vals_845,c('merge'))
+    r845 <-bands[vals_845,roll='nearest']
+    r845n <- as.character(paste0("X",r845$Value))
+    r845v <- data[,r845n]
 
 dBtwnLo <- sum(normalized$allbands < r845$Value[2] & normalized$allbands > r845$Value[1])
 dBtwnHi <- sum(normalized$allbands < r845$Value[3] & normalized$allbands > r845$Value[2])
@@ -104,4 +104,3 @@ GetIndices <- function(normalized,indices){
  # write.csv(indicesVals, paste0(id,"_Spectral_Calculations",format(Sys.time(),"%d-%b-%Y %H.%M"),".csv"))
   list(return(indicesVals,bands))
 }
-
