@@ -10,7 +10,6 @@ getNormValues <- function(normalized){
   colnames(data) <- names(normalized$spectra)
 return(data)
 }
-data <- getNormValues(normalized)
 
 #and subsetted bands
 subsetBands <- function(data){
