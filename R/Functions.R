@@ -528,9 +528,15 @@ SpectralIndices <- function(Parameters,PATH,dims,General,cracks,nsi,graphout,Age
       }
       #Write approximated data to DATA vector
       Data <- Dataapprox$y
+
+      ####NM removed (begin)
+
       # Fill in approximated NA's
-      if (length(NA_BIN)>0){Data[NA_BIN1] <- NA}
+      #if (length(NA_BIN)>0){Data[NA_BIN1] <- NA}
       # replicate Data for compatibility with usual routine (needs to calculate a mean from rows)
+
+      ####NM removed (end)
+
       Data <- cbind(Data,Data,Data)
 
     }
@@ -543,14 +549,20 @@ SpectralIndices <- function(Parameters,PATH,dims,General,cracks,nsi,graphout,Age
 
     # remove impossible Data
     ########################
-      #  - Set infinite (INF) values to NA
-      Data[!is.finite(Data)] <-NA # "!" means "not"
 
-      if (length(cracks)==1){
-        if (is.na(cracks)==FALSE) {
-          for (j in 1:nrow(cracks)){Data[cracks[j,1]:cracks[j,2],] <- NA}
-        }
-      }else{for (j in 1:nrow(cracks)){Data[cracks[j,1]:cracks[j,2],] <- NA}}
+     ####NM removed (begin)
+
+      #  - Set infinite (INF) values to NA
+#      Data[!is.finite(Data)] <-NA # "!" means "not"
+
+      # if (length(cracks)==1){
+      #   if (is.na(cracks)==FALSE) {
+      #     for (j in 1:nrow(cracks)){Data[cracks[j,1]:cracks[j,2],] <- NA}
+      #   }
+      # }else{for (j in 1:nrow(cracks)){Data[cracks[j,1]:cracks[j,2],] <- NA}}
+
+    ####NM removed (end)
+
     # Calculate means
     ##################
       # Calculate rowMeans (Sample)

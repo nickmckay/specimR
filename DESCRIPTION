@@ -18,5 +18,6 @@ Imports:
     crayon,
     magrittr,
     data.table,
-    stringr
+    stringr,
+    dplyr
 RoxygenNote: 7.1.1
