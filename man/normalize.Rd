@@ -6,16 +6,25 @@
 \usage{
 normalize(
   directory = NA,
-  length = NA,
-  spectra = c(615, 660, 670),
+  cmPerPixel = NA,
+  spectra = NA,
   roi = NA,
-  tif.path.to.write = NA
+  output.dir = NA,
+  corename = NA
 )
 }
 \arguments{
-\item{wavelengths}{a vector of wavelengths to extract from the hyperspectral image (cho)}
+\item{directory}{path to Specim core folder}
 
-\item{data.file}{optionally specify the path to the hyperspectral .raw image}
+\item{cmPerPixel}{optionally specify the number of cm per pixel. Will determine interactively if NA. (default = NA)}
+
+\item{spectra}{which spectra to normalize}
+
+\item{roi}{rasterExtent object defining region of interest. NA will allow you to choose interactively (default = NA)}
+
+\item{output.dir}{optionally save output raster by specifyign the path}
+
+\item{corename}{optionally choose the length of the core}
 }
 \value{
 a normalized hyperspectral image

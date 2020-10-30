@@ -215,31 +215,48 @@ whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
 
 #' Normalize a hyperspectral image
 #'
-#' @param wavelengths a vector of wavelengths to extract from the hyperspectral image (cho)
-#' @param data.file optionally specify the path to the hyperspectral .raw image
-#' @param white.ref.file
-#' @param dark.ref.file
-#' @param another.param
-#' @import raster tcltk
+#' @param directory path to Specim core folder
+#' @param cmPerPixel optionally specify the number of cm per pixel. Will determine interactively if NA. (default = NA)
+#' @param spectra which spectra to normalize
+#' @param roi rasterExtent object defining region of interest. NA will allow you to choose interactively (default = NA)
+#' @param output.dir optionally save output raster by specifyign the path
+#' @param corename optionally choose the length of the core
+#'
+#' @import raster crayon
 #'
 #' @return a normalized hyperspectral image
 #' @export
-#inputs to function are core name, wavelengths of interest, directory for core data location, and visual length of core (that you are subsetting!)
 normalize <- function(directory = NA,
-                      length = NA,
+                      cmPerPixel = NA,
                       spectra = NA,
                       roi = NA,#specify roi as raster extent
-                      tif.path.to.write = NA){
+                      output.dir = NA,
+                      corename = NA){
+
+
+  if(is.na(directory)){
+    cat(crayon::bold("Choose a file within the Specim core directory\n"))
+    Sys.sleep(1)
+  }
+
   #get the appropriate paths
   paths <- getPaths(dirPath = directory)
+
+  #folder name
+  if(is.na(corename)){
+    corename <-  basename(dirname(paths$overview))
+  }
+
+
 
   #load overview
   overview <- raster::brick(paths$overview)
 
   #choose the ROI
   if(is.na(roi)){
-  roi <- pick_roi_shiny(overview)
-}
+    roi <- pick_roi_shiny(overview)
+  }
+
   #load in the capture
   filen <- raster::brick(paths$capture)
 
@@ -252,8 +269,8 @@ normalize <- function(directory = NA,
   #subset by wavelengths
   raw <- raster::subset(filen,spectra)
 
-  #crop the image
-  stripe <- raster::crop(raw,roi)
+  #get length
+  if(is.na(cmPerPixel)){
 
   #try cropping the image with the same height, but on the right side to look at the top bottom
   tr_roi <- roi
@@ -267,9 +284,12 @@ normalize <- function(directory = NA,
   br_roi@ymax <- br_roi@ymin + (br_roi@xmax-br_roi@xmin)
   br.image <- raster::crop(overview,br_roi)
 
-  cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
+    cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
+  }
+  #crop the image
+  stripe <- raster::crop(raw,roi)
 
-  if(is.finite(cmPerPixel) * cmPerPixel > 0){
+  if(is.finite(cmPerPixel) & cmPerPixel > 0){
     scaleY <- seq(cmPerPixel/2,(nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
   }else{
   #calculate length interval of each pixel (necessary for indices calculations)
@@ -286,12 +306,26 @@ normalize <- function(directory = NA,
   #now normalize
   normalized <- whiteDarkNormalize(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
 
-#  list(filen,normalized)
   #optionally write to a tif
-  if(!is.na(tif.path.to.write)){
-    writeTif(normalized, path = tif.path.to.write)
+  if(!is.na(output.dir)){
+
+    if(!dir.exists(file.path(output.dir))){
+      dir.create(file.path(output.dir))
+    }
+    if(!dir.exists(file.path(output.dir,corename))){
+      dir.create(file.path(output.dir,corename))
+    }
+    raster::writeRaster(normalized,file.path(output.dir,corename,"normalized.tif"),overwrite = TRUE)
+    #save normalized data for future reference
+    save(normalized,file = file.path(output.dir,corename,"normalized.RData"))
+
   }
-#save paths for images too?
-  return(list(allbands = allbands,spectra = spectra,normalized = normalized,scaleY = scaleY,raw=raw,stripe=stripe))
+  #save paths for images too?
+  return(list(allbands = allbands,
+              spectra = spectra,
+              normalized = normalized,
+              scaleY = scaleY,
+              stripe=stripe,
+              corename = corename))
 }
 

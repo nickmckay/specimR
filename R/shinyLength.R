@@ -96,7 +96,7 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
     ),
 
     column(width = 12, class = "well",
-           h2("Region of interest (ROI) selector"),
+           h2("Depth selector"),
            fluidRow(
              column(width = 4,
                     plotOutput("plot2", height = 300,
@@ -115,7 +115,7 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
                     #             h4("Click x"),
                     #             value = 0),
                     numericInput("y1",
-                                 h4("Click y"),
+                                 h4("Top Click y"),
                                  value = 0),
                     numericInput("depth1",
                                  h4("Top depth in cm"),
@@ -126,7 +126,7 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
                     #             h4("Dbl-Click x"),
                     #             value = 0),
                     numericInput("y2",
-                                 h4("Dbl-Click y"),
+                                 h4("Bottom Click y"),
                                  value = 0),
                     numericInput("depth2",
                                  h4("Bottom depth in cm"),

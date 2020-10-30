@@ -19,5 +19,6 @@ Imports:
     magrittr,
     data.table,
     stringr,
-    dplyr
+    dplyr,
+    rgdal
 RoxygenNote: 7.1.1
