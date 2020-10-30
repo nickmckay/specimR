@@ -11,6 +11,7 @@ getNormValues <- function(normalized){
 return(data)
 }
 
+
 #and subsetted bands
 subsetBands <- function(data){
 bands <- gsub("X","",colnames(data))%>%as.numeric()
@@ -90,6 +91,7 @@ getR590R690 <-function(data,bands, indices){
 }
 GetIndices <- function(normalized,indices){
   data <- getNormValues(normalized = normalized)
+  colnames(data) <- names(normalized$normalized)
   bands <- subsetBands(data = data)
   RABD_660 <-getRABD660(data=data,bands = bands,normalized = normalized,indices=indices)
   RABD_845 <-getRABD845(data=data,bands = bands,normalized = normalized,indices=indices)

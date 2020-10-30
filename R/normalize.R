@@ -291,7 +291,7 @@ normalize <- function(directory = NA,
   if(!is.na(tif.path.to.write)){
     writeTif(normalized, path = tif.path.to.write)
   }
-
-  return(list(allbands = allbands,spectra = spectra,normalized = normalized,scaleY = scaleY,raw=raw))
+#save paths for images too?
+  return(list(allbands = allbands,spectra = spectra,normalized = normalized,scaleY = scaleY,raw=raw,stripe=stripe))
 }
 
