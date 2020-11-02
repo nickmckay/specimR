@@ -3,7 +3,7 @@
 #'
 #' @param normalized the output of specimR::normalize()
 #'
-#' @return matrix of normalized values
+#' @return matrix of normalized values averaged across the core
 #' @export
 getNormValues <- function(normalized){
   norm <- t(normalized$normalized)
@@ -110,5 +110,79 @@ calculateIndices <- function(normalized,indices = c("RABD660","RABD845","R570R63
   }
 
   return(outTable)
+}
+
+getNearestWavelengthIndex <- function(wavelengths,wavelengthToGet,tol=1){
+  li <-  which.min(abs(wavelengths-wavelengthToGet))[1]
+  if(abs(wavelengths[li]-wavelengthToGet) > tol){
+    stop("no wavelengths within tolerance")
+  }
+  return(li)
+}
+
+#' calculate RABD over a raster
+#'
+#' @param normalized output list of specimR::normalize()
+#' @param trough wavelength for the RABD trough
+#' @param edges a 2-element vector marking the edges of the trough
+#' @param tol tolerance for finding the nearest wavelength (default = 1)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rasterRABD <- function(normalized,trough = 660, edges = c(590,730),tol = 1){
+#find wavelength indices and make rasters
+
+  #low edge
+  li <- getNearestWavelengthIndex(normalized$wavelengths,min(edges))
+  l <- raster::subset(normalized$normalized,li)
+
+  #high edge
+  hi <- getNearestWavelengthIndex(normalized$wavelengths,max(edges))
+  h <- raster::subset(normalized$normalized,hi)
+
+  #trough
+  mi <- getNearestWavelengthIndex(normalized$wavelengths,trough)
+  m <- raster::subset(normalized$normalized,hi)
+
+  #distances
+  ld <- normalized$wavelengths[mi]-normalized$wavelengths[li]
+  hd <- normalized$wavelengths[hi]-normalized$wavelengths[mi]
+  td <- normalized$wavelengths[hi]-normalized$wavelengths[li]
+
+  #rabd
+  rabd <- (l*hd+h*ld)/(m*td)
+
+  return(rabd)
+
+}
+
+
+#' calculate band ratio over a raster
+#'
+#' @inheritParams calculateBandRatio
+#' @param trough wavelength for the RABD trough
+#' @param edges a 2-element vector marking the edges of the trough
+#' @param tol tolerance for finding the nearest wavelength (default = 1)
+#'
+#' @return a raster object with the spatial band ratio
+#' @export
+rasterBandRatio <- function(normalized,top = 570, bot = 630,tol = 1){
+  #find wavelength indices and make rasters
+
+  #top
+  ti <- getNearestWavelengthIndex(normalized$wavelengths,top)
+  t <- raster::subset(normalized$normalized,ti)
+
+  #bot
+  bi <- getNearestWavelengthIndex(normalized$wavelengths,bot)
+  b <- raster::subset(normalized$normalized,bi)
+
+  #band ratio
+  br <- t/b
+
+  return(br)
+
 }
 

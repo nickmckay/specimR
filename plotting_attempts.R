@@ -18,7 +18,7 @@ ratio <- (stripe@extent@ymax-stripe@extent@ymin)/(raw@extent@ymax-raw@extent@ymi
 
 
 #plot RGB image
- plotRGB(image,stretch='hist')
+ raster::plotRGB(normalized$normalized,stretch='hist')
  plotRGB(stripe,stretch='hist',add=TRUE)
 
 #Record
@@ -29,7 +29,7 @@ t <- ggdraw()+draw_plot(p1_recorded,scale=1)
 resizePanels(t,h=1,w=10)
 
 ##Rastervis plot - 'trellis' object
-a <- rasterVis::levelplot(normalized, layers=1, colorkey=FALSE,add=TRUE, at=seq(0,.25,length.out=15), xlab=NULL, ylab=NULL, scales=list(draw=FALSE))
+a <- rasterVis::levelplot(normalized$normalized, layers=1, colorkey=FALSE,add=TRUE, at=seq(0,.25,length.out=15), xlab=NULL, ylab=NULL, scales=list(draw=FALSE))
 
 #two formatting options for plotting levelplot
 update(a, aspect=1.8)

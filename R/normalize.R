@@ -265,7 +265,7 @@ normalize <- function(directory = NA,
 
   #find correct wavelengths
   spectra <- getNearestWavelengths(filen = filen, spectra = spectra)
-
+  wavelengthsOut <- gsub("X","",names(spectra))%>%as.numeric()
   #subset by wavelengths
   raw <- raster::subset(filen,spectra)
 
@@ -323,6 +323,7 @@ normalize <- function(directory = NA,
   #save paths for images too?
   return(list(allbands = allbands,
               spectra = spectra,
+              wavelengths = wavelengthsOut,
               normalized = normalized,
               scaleY = scaleY,
               stripe=stripe,
