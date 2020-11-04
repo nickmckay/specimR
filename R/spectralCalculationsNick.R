@@ -109,7 +109,15 @@ calculateIndices <- function(normalized,indices = c("RABD660","RABD845","R570R63
     outTable$R590R690 <- calculateBandRatio(normData,normWavelengths, tol = tol,top = 590, bot = 690)
   }
 
-  return(outTable)
+  #add running means
+
+  smoothOutTable <- mutate(outTable,across(starts_with("R"), smooth)) %>%
+    rename_with(~ stringr::str_c("smooth", .x)) %>%
+    dplyr::select(-smoothdepth)
+
+  out <- dplyr::bind_cols(outTable,smoothOutTable)
+
+  return(out)
 }
 
 getNearestWavelengthIndex <- function(wavelengths,wavelengthToGet,tol=1){

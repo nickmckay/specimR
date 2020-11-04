@@ -326,7 +326,10 @@ normalize <- function(directory = NA,
               wavelengths = wavelengthsOut,
               normalized = normalized,
               scaleY = scaleY,
-              stripe=stripe,
-              corename = corename))
+              stripe = stripe,
+              cmPerPixel = cmPerPixel,
+              roi = roi,
+              corename = corename,
+              pngPath = paths$overview))
 }
 
