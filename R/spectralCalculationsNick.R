@@ -31,7 +31,7 @@ getNormWavelengths <- function(normValues){
 #'
 #' @return The depth sequence of normalized reflectance values for the requested wavelength.
 #' @export
-getNormWavelengthData <- function(normData,normWavelengths,wavelengthToGet,tol = 1){
+getNormWavelengthData <- function(normData,normWavelengths,wavelengthToGet,tol = 1,agg.fun = "mean"){
   ind <- which(abs(normWavelengths-wavelengthToGet) <= tol)
 
   if(length(ind)==0){
@@ -40,8 +40,11 @@ getNormWavelengthData <- function(normData,normWavelengths,wavelengthToGet,tol =
   if(length(ind)==1){
     return(normData[,ind])
   }else if(length(ind) > 1){
-    return(rowMeans(normData[,ind]))
-
+    if(agg.fun == "mean"){
+      return(rowMeans(normData[,ind]))
+    }else if(agg.fun == "min"){
+      return(apply(normData[,ind],1,min))
+    }
   }
 }
 
@@ -52,8 +55,8 @@ getNormWavelengthData <- function(normData,normWavelengths,wavelengthToGet,tol =
 #' @param edges the edges (as a 2-element vector) of the RABD trough (default = c(590,730))
 #' @return a depth series of the RABD index
 #' @export
-calculateRABD <- function(normData,normWavelengths,tol = 1,trough = 660, edges = c(590,730)){
-  troughVals <- getNormWavelengthData(normData,normWavelengths,trough,tol)
+calculateRABD <- function(normData,normWavelengths,tol = 5,trough = 665, edges = c(590,730),trough.agg.fun = "min"){
+  troughVals <- getNormWavelengthData(normData,normWavelengths,trough,tol,agg.fun = trough.agg.fun)
   lowVals <- getNormWavelengthData(normData,normWavelengths,min(edges),tol)
   highVals <- getNormWavelengthData(normData,normWavelengths,max(edges),tol)
 
@@ -87,7 +90,10 @@ calculateBandRatio <- function(normData,normWavelengths,tol = 1,top = 570, bot =
 #'
 #' @return a data.frame with depth and the requested indices
 #' @export
-calculateIndices <- function(normalized,indices = c("RABD660","RABD845","R570R630","R590R690"),tol = 1){
+calculateIndices <- function(normalized,
+                             indices = c("RABD660","RABD660670","RABD845","R570R630","R590R690"),
+                             tol = 1,
+                             smooth.win = round(.2/normalized$cmPerPixel)){
   normData <- getNormValues(normalized = normalized)
   normWavelengths <- getNormWavelengths(normData)
 
@@ -97,6 +103,9 @@ calculateIndices <- function(normalized,indices = c("RABD660","RABD845","R570R63
   #check for indices
   if("RABD660" %in% indices){
     outTable$RABD660 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 660,edges = c(590,730))
+  }
+  if("RABD660670" %in% indices){
+    outTable$RABD660670 <- calculateRABD(normData,normWavelengths, tol = 5,trough = 665,edges = c(590,730))
   }
   if("RABD845" %in% indices){
     outTable$RABD845 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 845,edges = c(790,900))
@@ -111,7 +120,7 @@ calculateIndices <- function(normalized,indices = c("RABD660","RABD845","R570R63
 
   #add running means
 
-  smoothOutTable <- mutate(outTable,across(starts_with("R"), smooth)) %>%
+  smoothOutTable <- mutate(outTable,across(starts_with("R"), smoother::smth,window = smooth.win)) %>%
     rename_with(~ stringr::str_c("smooth", .x)) %>%
     dplyr::select(-smoothdepth)
 
@@ -121,8 +130,8 @@ calculateIndices <- function(normalized,indices = c("RABD660","RABD845","R570R63
 }
 
 getNearestWavelengthIndex <- function(wavelengths,wavelengthToGet,tol=1){
-  li <-  which.min(abs(wavelengths-wavelengthToGet))[1]
-  if(abs(wavelengths[li]-wavelengthToGet) > tol){
+  li <-  which(abs(wavelengths-wavelengthToGet) <= tol)
+  if(length(li) == 0){
     stop("no wavelengths within tolerance")
   }
   return(li)
@@ -139,25 +148,59 @@ getNearestWavelengthIndex <- function(wavelengths,wavelengthToGet,tol=1){
 #' @export
 #'
 #' @examples
-rasterRABD <- function(normalized,trough = 660, edges = c(590,730),tol = 1){
+rasterRABD <- function(normalized,
+                       trough = 660,
+                       edges = c(590,730),
+                       tol = 1,
+                       trough.agg.fun = "min",
+                       edge.agg.fun = "mean"){
 #find wavelength indices and make rasters
 
   #low edge
-  li <- getNearestWavelengthIndex(normalized$wavelengths,min(edges))
+  li <- getNearestWavelengthIndex(normalized$wavelengths,min(edges),tol = tol)
   l <- raster::subset(normalized$normalized,li)
+  if(length(li)>1){
+    if(edge.agg.fun == "mean"){
+      l <- mean(l)
+    }else if(edge.agg.fun == "min"){
+      l <- min(l)
+    }else if(edge.agg.fun == "max"){
+      l <- max(l)
+    }
+  }
 
   #high edge
-  hi <- getNearestWavelengthIndex(normalized$wavelengths,max(edges))
+  hi <- getNearestWavelengthIndex(normalized$wavelengths,max(edges),tol = tol)
   h <- raster::subset(normalized$normalized,hi)
+  if(length(hi)>1){
+    if(edge.agg.fun == "mean"){
+      h <- mean(h)
+    }else if(edge.agg.fun == "min"){
+      h <- min(h)
+    }else if(edge.agg.fun == "max"){
+      h <- max(h)
+    }
+  }
+
 
   #trough
-  mi <- getNearestWavelengthIndex(normalized$wavelengths,trough)
-  m <- raster::subset(normalized$normalized,hi)
+  mi <- getNearestWavelengthIndex(normalized$wavelengths,trough,tol = tol)
+  m <- raster::subset(normalized$normalized,mi)
+  if(length(mi)>1){
+    if(trough.agg.fun == "mean"){
+      m <- mean(m)
+    }else if(trough.agg.fun == "min"){
+      m <- min(m)
+    }else if(trough.agg.fun == "max"){
+      m <- max(m)
+    }
+  }
+
 
   #distances
-  ld <- normalized$wavelengths[mi]-normalized$wavelengths[li]
-  hd <- normalized$wavelengths[hi]-normalized$wavelengths[mi]
-  td <- normalized$wavelengths[hi]-normalized$wavelengths[li]
+  ld <- mean(normalized$wavelengths[mi])-mean(normalized$wavelengths[li])
+  hd <- mean(normalized$wavelengths[hi])-mean(normalized$wavelengths[mi])
+  td <- mean(normalized$wavelengths[hi])-mean(normalized$wavelengths[li])
 
   #rabd
   rabd <- (l*hd+h*ld)/(m*td)
@@ -180,17 +223,58 @@ rasterBandRatio <- function(normalized,top = 570, bot = 630,tol = 1){
   #find wavelength indices and make rasters
 
   #top
-  ti <- getNearestWavelengthIndex(normalized$wavelengths,top)
+  ti <- getNearestWavelengthIndex(normalized$wavelengths,top,tol = tol)
   t <- raster::subset(normalized$normalized,ti)
+  if(length(ti)>1){
+    t <- mean(t)
+  }
 
   #bot
-  bi <- getNearestWavelengthIndex(normalized$wavelengths,bot)
+  bi <- getNearestWavelengthIndex(normalized$wavelengths,bot,tol = tol)
   b <- raster::subset(normalized$normalized,bi)
+  if(length(bi)>1){
+    b <- mean(bi)
+  }
 
   #band ratio
   br <- t/b
 
   return(br)
+
+}
+
+
+
+makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smooth.sigma = 3,smooth.n = 7){
+  #decide what function to use to make the raster
+    #check for indices
+    if("RABD660" == index){
+      heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 660,edges = c(590,730))
+    }
+  if("RABD660670" == index){
+    heatmap <- rasterRABD(normalized = normalized, tol = 5,trough = 665,edges = c(590,730))
+  }
+    if("RABD845" == index){
+      heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 845,edges = c(790,900))
+    }
+
+
+  #band ratios
+  if("R570R630"== index){
+    heatmap <- rasterBandRatio(normalized = normalized, tol = tol,top = 570, bot = 630)
+  }
+
+  if("R590R690" == index){
+    heatmap <- rasterBandRatio(normalized = normalized, tol = tol,top = 590, bot = 690)
+  }
+
+  if(smooth){
+    heatmap <- spatialEco::raster.gaussian.smooth(heatmap,sigma = smooth.sigma,n = smooth.n)
+  }
+
+  return(heatmap)
+
+
 
 }
 

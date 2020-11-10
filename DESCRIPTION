@@ -20,5 +20,7 @@ Imports:
     data.table,
     stringr,
     dplyr,
-    rgdal
+    rgdal,
+    smoother,
+    spatialEco
 RoxygenNote: 7.1.1
