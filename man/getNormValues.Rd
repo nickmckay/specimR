@@ -10,7 +10,7 @@ getNormValues(normalized)
 \item{normalized}{the output of specimR::normalize()}
 }
 \value{
-matrix of normalized values
+matrix of normalized values averaged across the core
 }
 \description{
 Transpose normalized dataset and get normalized values

@@ -4,7 +4,13 @@
 \alias{getNormWavelengthData}
 \title{Extract the depth series for a specific wavelength}
 \usage{
-getNormWavelengthData(normData, normWavelengths, wavelengthToGet, tol = 1)
+getNormWavelengthData(
+  normData,
+  normWavelengths,
+  wavelengthToGet,
+  tol = 1,
+  agg.fun = "mean"
+)
 }
 \arguments{
 \item{normData}{Normalized spectral data (the output of `specimR::getNormValues()`)}

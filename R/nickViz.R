@@ -1,3 +1,13 @@
+#' Title
+#'
+#' @param rasDat
+#' @param depthScale
+#' @param palette
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
   # Heatmap
   plotOut <- rasDat %>%
@@ -31,6 +41,18 @@ plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
 widthMult <- 3
 
 
+#' Title
+#'
+#' @param ind
+#' @param index.name
+#' @param line.color
+#' @param smooth.color
+#' @param smooth.width
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotVerticalIndex <- function(ind,
                               index.name = "RABD660",
                               line.color = "gray70",
@@ -47,6 +69,20 @@ plotVerticalIndex <- function(ind,
 }
 
 
+#' Title
+#'
+#' @param normalized
+#' @param ind
+#' @param index.name
+#' @param depth.label
+#' @param width.mult
+#' @param plot.width
+#' @param tol
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotSpectralDashboard <- function(normalized,
                                   ind,
                                   index.name = "RABD660",

@@ -7,9 +7,10 @@
 calculateRABD(
   normData,
   normWavelengths,
-  tol = 1,
-  trough = 660,
-  edges = c(590, 730)
+  tol = 5,
+  trough = 665,
+  edges = c(590, 730),
+  trough.agg.fun = "min"
 )
 }
 \arguments{
