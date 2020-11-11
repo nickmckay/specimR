@@ -290,7 +290,8 @@ normalize <- function(directory = NA,
   stripe <- raster::crop(raw,roi)
 
   if(is.finite(cmPerPixel) & cmPerPixel > 0){
-    scaleY <- seq(to = cmPerPixel/2,from = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = -cmPerPixel)
+    #scaleY <- seq(to = cmPerPixel/2,from = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = -cmPerPixel)
+    scaleY <- seq(from = cmPerPixel/2,to = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
   }else{
   #calculate length interval of each pixel (necessary for indices calculations)
     scaleY <- coreLength(stripe = stripe, length = length)

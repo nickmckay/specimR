@@ -5,16 +5,22 @@
 #'
 #' @return matrix of normalized values averaged across the core
 #' @export
-getNormValues <- function(normalized){
-  norm <- t(normalized$normalized)
-  data <- raster::getValues(norm,row = 1)
+calculateMeanRows <- function(normalized){
+
+  averageRow <- function(rn,r){
+    a <- apply(raster::getValues(r,rn,1),2,mean)
+  }
+
+  data <- purrr::map_df(seq_len(nrow(normalized$normalized)),averageRow,normalized$normalized) %>%
+    as.matrix
+
   colnames(data) <- names(normalized$spectra)
   return(data)
 }
 
 #' get the wavelengths present in the normalized matrix
 #'
-#' @param normValues the output of `specimR::getNormValues()`
+#' @param normValues the output of `specimR::calculateMeanRows()`
 #'
 #' @return a vector of wavelengths
 #' @export
@@ -24,8 +30,8 @@ getNormWavelengths <- function(normValues){
 
 #' Extract the depth series for a specific wavelength
 #'
-#' @param normData Normalized spectral data (the output of `specimR::getNormValues()`)
-#' @param normWavelengths A vector of wavelengths (the output of `specimR::getNormValues()`)
+#' @param normData Normalized spectral data (the output of `specimR::calculateMeanRows()`)
+#' @param normWavelengths A vector of wavelengths (the output of `specimR::calculateMeanRows()`)
 #' @param wavelengthToGet What wavelength to do you want to extract
 #' @param tol Tolerance for distance from the requested wavelength. If no values are present within the tolerance, this returns an error. If multiple are present, this returns the average of those values.
 #'
@@ -84,7 +90,7 @@ calculateBandRatio <- function(normData,normWavelengths,tol = 1,top = 570, bot =
 
 #' calculate a suite of spectral indices on normalized data
 #'
-#' @param normalized Normalized spectral data (the output of `specimR::getNormValues()`)
+#' @param normalized Normalized spectral data (the output of `specimR::calculateMeanRows()`)
 #' @param indices a character vector of the requested indices. Current options are: "RABD660","RABD845","R570R630"and "R590R690" (default = c("RABD660","RABD845","R570R630","R590R690"))
 #' @param tol the tolerance to use when matching wavelengths (in nm)
 #'
@@ -94,7 +100,7 @@ calculateIndices <- function(normalized,
                              indices = c("RABD660","RABD660670","RABD845","R570R630","R590R690"),
                              tol = 1,
                              smooth.win = round(.2/normalized$cmPerPixel)){
-  normData <- getNormValues(normalized = normalized)
+  normData <- calculateMeanRows(normalized = normalized)
   normWavelengths <- getNormWavelengths(normData)
 
   #initialize indices

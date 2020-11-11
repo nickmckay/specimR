@@ -9,6 +9,8 @@
 #'
 #' @examples
 plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
+  #depth
+ syf <- rev(normalized$scaleY)
   # Heatmap
   plotOut <- rasDat %>%
     as.matrix() %>%
@@ -22,7 +24,7 @@ plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
     mutate(X=as.numeric(gsub("V","",X))*normalized$cmPerPixel) %>%
 
     #convert to depth
-    mutate(depth = normalized$scaleY[depthIndex]) %>%
+    mutate(depth = syf[depthIndex]) %>%
     ggplot(aes(X, depth, fill= index)) +
     geom_raster() +
     theme(legend.position="none")+
