@@ -7,7 +7,7 @@
 getNormWavelengths(normValues)
 }
 \arguments{
-\item{normValues}{the output of `specimR::getNormValues()`}
+\item{normValues}{the output of `specimR::calculateMeanRows()`}
 }
 \value{
 a vector of wavelengths

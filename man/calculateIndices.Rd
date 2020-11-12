@@ -8,11 +8,11 @@ calculateIndices(
   normalized,
   indices = c("RABD660", "RABD660670", "RABD845", "R570R630", "R590R690"),
   tol = 1,
-  smooth.win = round(0.2/normalized$cmPerPixel)
+  smooth.win = round(1/normalized$cmPerPixel)
 )
 }
 \arguments{
-\item{normalized}{Normalized spectral data (the output of `specimR::getNormValues()`)}
+\item{normalized}{Normalized spectral data (the output of `specimR::calculateMeanRows()`)}
 
 \item{indices}{a character vector of the requested indices. Current options are: "RABD660","RABD845","R570R630"and "R590R690" (default = c("RABD660","RABD845","R570R630","R590R690"))}
 

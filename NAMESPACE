@@ -2,8 +2,8 @@
 
 export(calculateBandRatio)
 export(calculateIndices)
+export(calculateMeanRows)
 export(calculateRABD)
-export(getNormValues)
 export(getNormWavelengthData)
 export(getNormWavelengths)
 export(normalize)

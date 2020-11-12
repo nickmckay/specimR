@@ -7,9 +7,9 @@
 calculateBandRatio(normData, normWavelengths, tol = 1, top = 570, bot = 630)
 }
 \arguments{
-\item{normData}{Normalized spectral data (the output of `specimR::getNormValues()`)}
+\item{normData}{Normalized spectral data (the output of `specimR::calculateMeanRows()`)}
 
-\item{normWavelengths}{A vector of wavelengths (the output of `specimR::getNormValues()`)}
+\item{normWavelengths}{A vector of wavelengths (the output of `specimR::calculateMeanRows()`)}
 
 \item{tol}{Tolerance for distance from the requested wavelength. If no values are present within the tolerance, this returns an error. If multiple are present, this returns the average of those values.}
 
