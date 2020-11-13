@@ -8,7 +8,7 @@ calculateIndices(
   normalized,
   indices = c("RABD660", "RABD660670", "RABD845", "R570R630", "R590R690"),
   tol = 1,
-  smooth.win = round(1/normalized$cmPerPixel)
+  smooth.win = round(0.2/normalized$cmPerPixel)
 )
 }
 \arguments{

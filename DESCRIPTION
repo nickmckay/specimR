@@ -22,5 +22,6 @@ Imports:
     dplyr,
     rgdal,
     smoother,
-    spatialEco
+    spatialEco,
+    tidyr
 RoxygenNote: 7.1.1

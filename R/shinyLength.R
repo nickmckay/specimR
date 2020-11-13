@@ -99,12 +99,12 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
            h2("Depth selector"),
            fluidRow(
              column(width = 4,
-                    plotOutput("plot2", height = 300,
+                    plotOutput("plot2", height = 800,
                                click = "image_click"
                     )
              ),
              column(width = 4,
-                    plotOutput("plot3", height = 300,
+                    plotOutput("plot3", height = 800,
                                click = "image_dblclick"
                     )
              )

@@ -1,5 +1,43 @@
 #' Title
 #'
+#' @param index
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getColorsByIndex <- function(index){
+
+if("RABD615" == index){
+  pall <- "GnBu"
+  }
+if("RABD660" == index){
+  pall <- "BuGn"
+}
+if("RABD660670" == index){
+  pall <- "Greens"
+}
+if("RABD845" == index){
+  pall <- "Blues"
+}
+
+
+#band ratios
+if("R570R630"== index){
+  pall <- "YlOrRd"
+}
+
+if("R590R690" == index){
+  pall <- "Purples"
+}
+
+  cols <- list(line = RColorBrewer::brewer.pal(name = pall,n = 7)[3],
+               smooth = RColorBrewer::brewer.pal(name = pall,n = 7)[7],palette = pall)
+return(cols)
+}
+
+#' Title
+#'
 #' @param rasDat
 #' @param depthScale
 #' @param palette
@@ -18,7 +56,7 @@ plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
     # Data wrangling
     as_tibble() %>%
     rowid_to_column(var="depthIndex") %>%
-    gather(key="X", value="index", -1) %>%
+    tidyr::gather(key="X", value="index", -1) %>%
 
     # Change X to numeric
     mutate(X=as.numeric(gsub("V","",X))*normalized$cmPerPixel) %>%
@@ -39,8 +77,6 @@ plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
   return(plotOut)
 
 }
-
-widthMult <- 3
 
 
 #' Title
@@ -123,31 +159,46 @@ ggimg <- ggimg+scale_y_continuous(depth.label,labels = abs(ticks))+
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
 
+
+
+plots <- vector(mode = "list",length = length(index.name)*2+1)
+plots[[1]] <- ggimg
+for(i in 1:length(index.name)){
+  #get colors by index
+  cols <- getColorsByIndex(index.name[i])
 # make a line plot
 # line plot
-linPlot <- plotVerticalIndex(ind,index.name = index.name)+
-  scale_y_reverse(depth.label,position = "right",expand = c(0,0))+theme(axis.title.y.right = element_text(angle = 90))
+plots[[2*i+1]] <- plotVerticalIndex(ind,index.name = index.name[i],line.color = cols$line,smooth.color = cols$smooth)+scale_x_continuous(sec.axis = dup_axis())
+
+if(i<length(index.name)){
+  plots[[2*i+1]] <- plots[[2*i+1]] +   theme(axis.title.y=element_blank(),
+                                             axis.text.y=element_blank(),
+                                             axis.ticks.y=element_blank())
+}else{
+  plots[[2*i+1]] <- plots[[2*i+1]] +
+    scale_y_reverse("Depth (cm)",position = "right")+
+    theme(axis.title.y.right = element_text(angle = 90))
+}
 
 #make a heatmap
-heat <- makeHeatmap(normalized, index = index.name,tol = tol) %>%
-  plotHeatmap(depthScale = normalized$scaleY) +
+plots[[2*i]] <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
+  plotHeatmap(depthScale = normalized$scaleY,palette = cols$palette) +
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         panel.background = element_blank(),
         plot.margin=unit(c(1,-.5,1,-0.5), "cm"))
 #make a dashboard plot
+}
+
+widths <- c(width.mult,rep(c(1,plot.width),times = length(index.name)))
 
 #egg
-outplot <- egg::ggarrange(ggimg,heat,linPlot,nrow = 1,widths = c(width.mult,1,plot.width),padding = 0)
+outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0)
 
 return(outplot)
 
 }
 
 
-# 615
-# 660/670
-# 845
-# R570R630
-# R590R690
+

@@ -99,13 +99,18 @@ calculateBandRatio <- function(normData,normWavelengths,tol = 1,top = 570, bot =
 calculateIndices <- function(normalized,
                              indices = c("RABD660","RABD660670","RABD845","R570R630","R590R690"),
                              tol = 1,
-                             smooth.win = round(1/normalized$cmPerPixel)){
+                             smooth.win = round(.2/normalized$cmPerPixel)){
   normData <- calculateMeanRows(normalized = normalized)
   normWavelengths <- getNormWavelengths(normData)
 
   #initialize indices
   outTable <- data.frame(depth = normalized$scaleY)
 
+
+  #check for indices
+  if("RABD615" %in% indices){
+    outTable$RABD615 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 615,edges = c(550,650))
+  }
   #check for indices
   if("RABD660" %in% indices){
     outTable$RABD660 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 660,edges = c(590,730))
@@ -254,6 +259,9 @@ rasterBandRatio <- function(normalized,top = 570, bot = 630,tol = 1){
 makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smooth.sigma = 3,smooth.n = 7){
   #decide what function to use to make the raster
     #check for indices
+  if("RABD615" == index){
+    heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 615,edges = c(550,650))
+  }
     if("RABD660" == index){
       heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 660,edges = c(590,730))
     }

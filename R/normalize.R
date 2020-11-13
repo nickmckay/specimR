@@ -228,24 +228,37 @@ whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
 #' @export
 normalize <- function(directory = NA,
                       cmPerPixel = NA,
-                      spectra = NA,
+                      spectra = c(550,570,590,615,630,650,659:671,690,730,790,845,900),
                       roi = NA,#specify roi as raster extent
                       output.dir = NA,
                       corename = NA){
 
+  spectraString <- glue::glue("spectra = c({paste(as.character(spectra),collapse = ', ')})")
 
   if(is.na(directory)){
     cat(crayon::bold("Choose a file within the Specim core directory\n"))
     Sys.sleep(1)
   }
 
+  dirString <- glue::glue("directory = '{directory}'")
+
+
   #get the appropriate paths
   paths <- getPaths(dirPath = directory)
+
+  #output directory handling
+  if(is.na(output.dir)){
+    output.dir <- file.path(dirname(paths$overview),"products")
+  }
+  outputdirString <- glue::glue("output.dir = '{output.dir}'")
+
 
   #folder name
   if(is.na(corename)){
     corename <-  basename(dirname(paths$overview))
   }
+
+  corenameString <- glue::glue("corename = '{corename}'")
 
 
 
@@ -253,12 +266,17 @@ normalize <- function(directory = NA,
   overview <- raster::brick(paths$overview)
 
   #choose the ROI
-  if(is.na(roi)){
+  if(!class(roi)=="Extent"){
     roi <- pick_roi_shiny(overview)
   }
 
+  #record roi string
+  roiString <- glue::glue("roi = raster::extent(matrix(c({roi@xmin},{roi@xmax},{roi@ymin},{roi@ymax}),nrow = 2,byrow = T))")
+
   #load in the capture
   filen <- raster::brick(paths$capture)
+
+  orig.ext <- raster::extent(filen)
 
   #save all band names for later
   allbands <- getBandInfo(filen)
@@ -276,21 +294,38 @@ normalize <- function(directory = NA,
   tr_roi <- roi
   tr_roi@xmax <- raster::extent(overview)@xmax
   tr_roi@xmin <- raster::extent(overview)@xmax*.75
-  tr_roi@ymin <- tr_roi@ymax - (tr_roi@xmax-tr_roi@xmin)
+  tr_roi@ymin <- tr_roi@ymax - 1200
+  tr_roi@ymax <- tr_roi@ymax + 1200
+  tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
+  tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
+
+
   tr.image <- raster::crop(overview,tr_roi)
 
   br_roi <- tr_roi
-  br_roi@ymin <- raster::extent(overview)@ymin
-  br_roi@ymax <- br_roi@ymin + (br_roi@xmax-br_roi@xmin)
+  br_roi@ymin <- roi@ymin - 1200
+  br_roi@ymax <- roi@ymin + 1200
+  br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
+  br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
+
+
   br.image <- raster::crop(overview,br_roi)
 
     cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
   }
+
+  cmPerPixelString <- glue::glue("cmPerPixel = {cmPerPixel}")
+
+  #export parameters for rerunning
+  normParams <- glue::glue("{dirString},\n{cmPerPixelString},\n{spectraString},\n{roiString},\n{outputdirString},\n{corenameString}")
+
+  #assign to global just incase it fails
+  assign("normParams",normParams,envir = .GlobalEnv)
+
   #crop the image
   stripe <- raster::crop(raw,roi)
 
   if(is.finite(cmPerPixel) & cmPerPixel > 0){
-    #scaleY <- seq(to = cmPerPixel/2,from = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = -cmPerPixel)
     scaleY <- seq(from = cmPerPixel/2,to = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
   }else{
   #calculate length interval of each pixel (necessary for indices calculations)
@@ -307,20 +342,17 @@ normalize <- function(directory = NA,
   #now normalize
   normalized <- whiteDarkNormalize(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
 
-  #optionally write to a tif
-  if(!is.na(output.dir)){
-
-    if(!dir.exists(file.path(output.dir))){
-      dir.create(file.path(output.dir))
-    }
-    if(!dir.exists(file.path(output.dir,corename))){
-      dir.create(file.path(output.dir,corename))
-    }
-    raster::writeRaster(normalized,file.path(output.dir,corename,"normalized.tif"),overwrite = TRUE)
-    #save normalized data for future reference
-    save(normalized,file = file.path(output.dir,corename,"normalized.RData"))
-
+  if(!dir.exists(file.path(output.dir))){
+    dir.create(file.path(output.dir))
   }
+  if(!dir.exists(file.path(output.dir,corename))){
+    dir.create(file.path(output.dir,corename))
+  }
+  raster::writeRaster(normalized,file.path(output.dir,"normalized.tif"),overwrite = TRUE)
+  #save normalized data for future reference
+  save(normalized,file = file.path(output.dir,"normalized.RData"))
+
+
   #save paths for images too?
   return(list(allbands = allbands,
               spectra = spectra,
@@ -331,6 +363,8 @@ normalize <- function(directory = NA,
               cmPerPixel = cmPerPixel,
               roi = roi,
               corename = corename,
-              pngPath = paths$overview))
+              pngPath = paths$overview,
+              normParams = normParams,
+              outputDir = output.dir))
 }
 
