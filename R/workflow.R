@@ -28,7 +28,7 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
   indexTable <- calculateIndices(normalized,indices = indices)
 
   #write indices to a csv file
-  readr::write_csv(indexTable,file.path(out.path,normalized$corename,"spectralIndices.csv"))
+  readr::write_csv(indexTable,file.path(normalized$outputDir,"spectralIndices.csv"))
 
   #plot dashboards
   overall <- plotSpectralDashboard(normalized,indexTable,index.name = indices,width.mult = width.mult,plot.width = overall.width)

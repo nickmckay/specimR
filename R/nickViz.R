@@ -41,14 +41,15 @@ return(cols)
 #' @param rasDat
 #' @param depthScale
 #' @param palette
+#' @param cmPerPixel
 #'
 #' @return
 #' @export
 #'
 #' @examples
-plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
+plotHeatmap <- function(rasDat,depthScale,cmPerPixel,palette = "Greens"){
   #depth
- syf <- rev(normalized$scaleY)
+ syf <- rev(depthScale)
   # Heatmap
   plotOut <- rasDat %>%
     as.matrix() %>%
@@ -59,7 +60,7 @@ plotHeatmap <- function(rasDat,depthScale,palette = "Greens"){
     tidyr::gather(key="X", value="index", -1) %>%
 
     # Change X to numeric
-    mutate(X=as.numeric(gsub("V","",X))*normalized$cmPerPixel) %>%
+    mutate(X=as.numeric(gsub("V","",X))*cmPerPixel) %>%
 
     #convert to depth
     mutate(depth = syf[depthIndex]) %>%
@@ -144,8 +145,8 @@ cimg <- magick::image_crop(img,geometry = iroi,gravity = "SouthWest") %>%
 
 info <- magick::image_info(cimg)
 
-height <- info$height*cmPerPix
-width <- info$width*cmPerPix
+height <- info$height*normalized$cmPerPixel
+width <- info$width*normalized$cmPerPixel
 
 ggimg <- ggplot2::ggplot(data.frame(x = 0, y = 0), ggplot2::aes_string("x","y")) +
   ggplot2::geom_blank() +
@@ -182,7 +183,7 @@ if(i<length(index.name)){
 
 #make a heatmap
 plots[[2*i]] <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
-  plotHeatmap(depthScale = normalized$scaleY,palette = cols$palette) +
+  plotHeatmap(depthScale = normalized$scaleY,cmPerPixel = normalized$cmPerPixel,palette = cols$palette) +
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),

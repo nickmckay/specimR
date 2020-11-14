@@ -228,23 +228,27 @@ whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
 #' @export
 normalize <- function(directory = NA,
                       cmPerPixel = NA,
-                      spectra = c(550,570,590,615,630,650,659:671,690,730,790,845,900),
+                      wavelengths = c(550,570,590,615,630,650,659:671,690,730,790,845,900),
                       roi = NA,#specify roi as raster extent
                       output.dir = NA,
                       corename = NA){
 
-  spectraString <- glue::glue("spectra = c({paste(as.character(spectra),collapse = ', ')})")
+  spectraString <- glue::glue("wavelengths = c({paste(as.character(wavelengths),collapse = ', ')})")
 
+  #print that you need to pick it.
   if(is.na(directory)){
     cat(crayon::bold("Choose a file within the Specim core directory\n"))
     Sys.sleep(1)
   }
 
-  dirString <- glue::glue("directory = '{directory}'")
 
 
   #get the appropriate paths
   paths <- getPaths(dirPath = directory)
+  directory <- dirname(paths$overview)
+
+  dirString <- glue::glue("directory = '{directory}'")
+
 
   #output directory handling
   if(is.na(output.dir)){
@@ -282,7 +286,7 @@ normalize <- function(directory = NA,
   allbands <- getBandInfo(filen)
 
   #find correct wavelengths
-  spectra <- getNearestWavelengths(filen = filen, spectra = spectra)
+  spectra <- getNearestWavelengths(filen = filen, spectra = wavelengths)
   wavelengthsOut <- gsub("X","",names(spectra))%>%as.numeric()
   #subset by wavelengths
   raw <- raster::subset(filen,spectra)
