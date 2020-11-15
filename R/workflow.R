@@ -50,7 +50,7 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
            filename = file.path(normalized$outputDir,paste0(i,".pdf")),
            width = 10,
            height = totalDepth,
-           units = "in")
+           units = "in",limitsize = FALSE)
   }
 
   #write command to reproduce this
