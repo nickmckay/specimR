@@ -39,7 +39,8 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
          filename = file.path(normalized$outputDir,"allIndices.pdf"),
          width = 20,
          height = totalDepth,
-         units = "in")
+         units = "in",
+         limitsize = FALSE)
 
   #individual indices
   for(i in indices){
