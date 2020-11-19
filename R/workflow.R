@@ -12,7 +12,7 @@
 #'
 #' @examples
 spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
-                             overall.width = 1,
+                             overall.width = 3,
                              individual.width = 2,
                              width.mult = 2,
                              ...){

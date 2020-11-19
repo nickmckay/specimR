@@ -177,7 +177,7 @@ if(i<length(index.name)){
                                              axis.ticks.y=element_blank())
 }else{
   plots[[2*i+1]] <- plots[[2*i+1]] +
-    scale_y_reverse("Depth (cm)",position = "right")+
+    scale_y_reverse("Depth (cm)",position = "right",expand = c(0,0))+
     theme(axis.title.y.right = element_text(angle = 90))
 }
 
