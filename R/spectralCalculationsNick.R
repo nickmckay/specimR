@@ -109,7 +109,7 @@ calculateIndices <- function(normalized,
 
   #check for indices
   if("RABD615" %in% indices){
-    outTable$RABD615 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 615,edges = c(550,650))
+    outTable$RABD615 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 615,edges = c(590,730))
   }
   #check for indices
   if("RABD660" %in% indices){
@@ -260,7 +260,7 @@ makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smoo
   #decide what function to use to make the raster
     #check for indices
   if("RABD615" == index){
-    heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 615,edges = c(550,650))
+    heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 615,edges = c(590,730))
   }
     if("RABD660" == index){
       heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 660,edges = c(590,730))

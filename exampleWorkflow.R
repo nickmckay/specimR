@@ -8,6 +8,7 @@ library(readr)
 library(tidyr)
 library(ggplot2)
 library(tibble)
+devtools::load_all(".")
 
 #chose wavelengths of interest
 wavelengths <- c(550,570,590,615,630,650,659:671,690,730,790,845,900)
