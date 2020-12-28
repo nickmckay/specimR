@@ -1,2 +1,21 @@
 .Rproj.user
 .Rhistory
+test/.DS_Store
+test/DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.hdr
+test/DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw
+test/Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.hdr
+test/Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.log.docx
+test/fullCore.tif
+test/Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw
+test/Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39_Spectral_Calculations30-Sep-2020 13.33.csv
+test/normalized.tif
+test/products/allIndices.pdf
+test/products/normalized.RData
+test/products/normalized.tif
+*.pdf
+test/test.tif
+test/products/reprocess.R
+test/products/spectralIndices.csv
+test/WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.hdr
+test/test.tiff
+test/WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw
