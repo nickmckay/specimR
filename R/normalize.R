@@ -286,9 +286,6 @@ normalize <- function(directory = NA,
   # rgbWavelengths <- c(572,539,430)
   # rgbi <- getNearestWavelengths(filen = filen, spectra = rgbWavelengths)
 
-  normalizedImage <- normalizeCoreImage(paths$overview)
-  imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
-
 
   orig.ext <- raster::extent(filen)
 
@@ -365,6 +362,12 @@ plotRGB(stripe)
   if(!dir.exists(file.path(output.dir,corename))){
     dir.create(file.path(output.dir,corename))
   }
+
+  #save normalized core image
+  normalizedImage <- normalizeCoreImage(paths$overview)
+  imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
+
+
   raster::writeRaster(normalized,file.path(output.dir,"normalized.tif"),overwrite = TRUE)
   #save normalized data for future reference
   save(normalized,file = file.path(output.dir,"normalized.RData"))
