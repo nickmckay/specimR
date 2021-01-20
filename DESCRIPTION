@@ -23,5 +23,6 @@ Imports:
     rgdal,
     smoother,
     spatialEco,
-    tidyr
+    tidyr,
+    imager
 RoxygenNote: 7.1.1

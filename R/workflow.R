@@ -35,8 +35,17 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
 
   totalDepth <- max(indexTable$depth)
 
+  #create pdf
   ggsave(plot = overall,
          filename = file.path(normalized$outputDir,"allIndices.pdf"),
+         width = 20,
+         height = totalDepth,
+         units = "in",
+         limitsize = FALSE)
+
+  #create png
+  ggsave(plot = overall,
+         filename = file.path(normalized$outputDir,"allIndices.png"),
          width = 20,
          height = totalDepth,
          units = "in",
@@ -46,9 +55,16 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
   for(i in indices){
     #plot dashboards
     this <- plotSpectralDashboard(normalized,indexTable,index.name = i,width.mult = width.mult,plot.width = individual.width)
-
+#pdf
     ggsave(plot = this,
            filename = file.path(normalized$outputDir,paste0(i,".pdf")),
+           width = 10,
+           height = totalDepth,
+           units = "in",limitsize = FALSE)
+
+    #png
+    ggsave(plot = this,
+           filename = file.path(normalized$outputDir,paste0(i,".png")),
            width = 10,
            height = totalDepth,
            units = "in",limitsize = FALSE)

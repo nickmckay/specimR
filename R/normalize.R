@@ -280,9 +280,14 @@ normalize <- function(directory = NA,
   filen <- raster::brick(paths$capture)
 
 
-  #create whole core images
-  rgbWavelengths <- c(572,539,430)
-  rgbi <- getNearestWavelengths(filen = filen, spectra = rgbWavelengths)
+  #Create whole core images
+
+  # #for now, just using core png.
+  # rgbWavelengths <- c(572,539,430)
+  # rgbi <- getNearestWavelengths(filen = filen, spectra = rgbWavelengths)
+
+  normalizedImage <- normalizeCoreImage(paths$overview)
+  imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
 
 
   orig.ext <- raster::extent(filen)
