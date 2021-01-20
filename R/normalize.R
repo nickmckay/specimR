@@ -242,7 +242,6 @@ normalize <- function(directory = NA,
   }
 
 
-
   #get the appropriate paths
   paths <- getPaths(dirPath = directory)
   directory <- dirname(paths$overview)
@@ -279,6 +278,12 @@ normalize <- function(directory = NA,
 
   #load in the capture
   filen <- raster::brick(paths$capture)
+
+
+  #create whole core images
+  rgbWavelengths <- c(572,539,430)
+  rgbi <- getNearestWavelengths(filen = filen, spectra = rgbWavelengths)
+
 
   orig.ext <- raster::extent(filen)
 
@@ -328,6 +333,9 @@ normalize <- function(directory = NA,
 
   #crop the image
   stripe <- raster::crop(raw,roi)
+
+  #create some images
+plotRGB(stripe)
 
   if(is.finite(cmPerPixel) & cmPerPixel > 0){
     scaleY <- seq(from = cmPerPixel/2,to = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
