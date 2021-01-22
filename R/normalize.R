@@ -279,14 +279,6 @@ normalize <- function(directory = NA,
   #load in the capture
   filen <- raster::brick(paths$capture)
 
-
-  #Create whole core images
-
-  # #for now, just using core png.
-  # rgbWavelengths <- c(572,539,430)
-  # rgbi <- getNearestWavelengths(filen = filen, spectra = rgbWavelengths)
-
-
   orig.ext <- raster::extent(filen)
 
   #save all band names for later
