@@ -328,9 +328,6 @@ normalize <- function(directory = NA,
   #crop the image
   stripe <- raster::crop(raw,roi)
 
-  #create some images
-plotRGB(stripe)
-
   if(is.finite(cmPerPixel) & cmPerPixel > 0){
     scaleY <- seq(from = cmPerPixel/2,to = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
   }else{
