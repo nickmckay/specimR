@@ -17,8 +17,25 @@ cropViewFun <- function(click,dblclick){
   points(clickpoints, pch=3, col='green')
 }
 
+roiViewFun <- function(im,click,dblclick){
+  xmin <- min(click$x,dblclick$x)
+  xmax <- max(click$x,dblclick$x)
+  ymin <- min(click$y,dblclick$y)
+  ymax <- max(click$y,dblclick$y)
+
+  xy <- data.frame(x = c(xmin,xmax,xmax,xmin),y = c(ymin,ymin,ymax,ymax))
+  plot(im,axes = TRUE,interpolate = TRUE)
+  polygon(xy,col=NA,border = "red")
+  clickpoints <- rbind(c(click$x,click$y),c(dblclick$x,dblclick$y))
+  points(clickpoints,cex = 2)
+  points(clickpoints, pch=3, col='green')
+}
+
+
+
 server <- function(input, output, session){
 image <- get("image",envir = specimEnv)
+im <- get("im",envir = specimEnv)
 
   brushExtent <- reactiveValues()
   click <- reactiveValues()
@@ -37,6 +54,18 @@ image <- get("image",envir = specimEnv)
   # output$plot1 <- renderPlot({
   #   raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview")
   # })
+  output$panzoom <- renderSvgPanZoom({
+    svgPanZoom(
+      svglite:::inlineSVG(
+        #will put on separate line but also need show
+        show(
+          roiViewFun(im,click,dblclick)
+        )
+        ,width = 12,height = 100
+      )
+    , controlIconsEnabled = TRUE)
+
+  })
 
   output$plot2 <- renderPlot({
     raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview/Zoom Control",addfun = cropViewFun(click,dblclick))
@@ -147,6 +176,9 @@ pick_roi_shiny <- function(image){
            h2("Region of interest (ROI) selector"),
            shiny::fluidRow(
              column(width = 4,
+                    svgPanZoomOutput(outputId = "panzoom",height = 500)
+             ),
+             column(width = 4,
                     plotOutput("plot2", height = 500,
                                brush = brushOpts(
                                  id = "plot2_brush",
@@ -154,7 +186,7 @@ pick_roi_shiny <- function(image){
                                )
                     )
              ),
-             column(width = 8,
+             column(width = 4,
                     plotOutput("plot3",
                                height = 500,
                                click = "image_click",

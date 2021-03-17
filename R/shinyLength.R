@@ -64,10 +64,17 @@ lengthserver <- function(input, output, session){
     ymin <- min(click$y,dblclick$y)
     ymax <- max(click$y,dblclick$y)
     pixLen <- ymax-ymin
-    depth1 <- input$depth1
-    depth2 <- input$depth2
+    depth1 <- min(c(input$depth1,input$depth2))
+    depth2 <- max(c(input$depth1,input$depth2))
     cmLen <- abs(depth2-depth1)
     cmPerPix <- cmLen/pixLen
+    #calculate top and bottom depths of ROI
+    roiBotDepth <- (image.ext@ymin-ymin)*cmPerPix+depth2
+    roiTopDepth <- (image.ext@ymax-ymax)*cmPerPix+depth1
+
+    #assign to global
+    roiTopDepth <<- roiTopDepth
+    roiBotDepth <<- roiBotDepth
     cmPerPix <<- cmPerPix
     shiny::stopApp()
 

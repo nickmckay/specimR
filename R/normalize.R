@@ -279,7 +279,10 @@ normalize <- function(directory = NA,
   #load in the capture
   filen <- raster::brick(paths$capture)
 
-  orig.ext <- raster::extent(filen)
+  #put this back!
+  #orig.ext <- raster::extent(filen)
+  orig.ext <- raster::extent(overview)#DELETE THIS
+
 
   #save all band names for later
   allbands <- getBandInfo(filen)
@@ -296,7 +299,7 @@ normalize <- function(directory = NA,
   #try cropping the image with the same height, but on the right side to look at the top bottom
   tr_roi <- roi
   tr_roi@xmax <- raster::extent(overview)@xmax
-  tr_roi@xmin <- raster::extent(overview)@xmax*.75
+  tr_roi@xmin <- raster::extent(overview)@xmax*.70
   tr_roi@ymin <- tr_roi@ymax - 1200
   tr_roi@ymax <- tr_roi@ymax + 1200
   tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
@@ -354,6 +357,8 @@ normalize <- function(directory = NA,
 
   #save normalized core image
   normalizedImage <- normalizeCoreImage(paths$overview)
+  assign("im",normalizedImage,envir = specimEnv)
+
   imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
 
 
