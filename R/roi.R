@@ -24,7 +24,7 @@ roiViewFun <- function(im,click,dblclick){
   ymax <- max(click$y,dblclick$y)
 
   xy <- data.frame(x = c(xmin,xmax,xmax,xmin),y = c(ymin,ymin,ymax,ymax))
-  plot(im,axes = TRUE,interpolate = TRUE)
+  plot(im,axes = FALSE,interpolate = TRUE)
   polygon(xy,col=NA,border = "red")
   clickpoints <- rbind(c(click$x,click$y),c(dblclick$x,dblclick$y))
   points(clickpoints,cex = 2)
@@ -35,11 +35,17 @@ roiViewFun <- function(im,click,dblclick){
 
 server <- function(input, output, session){
 image <- get("image",envir = specimEnv)
-im <- get("im",envir = specimEnv)
+crpout <<- list()
+#im <- get("im",envir = specimEnv)
 
   brushExtent <- reactiveValues()
   click <- reactiveValues()
   dblclick <- reactiveValues()
+  rois <- reactiveValues()
+  nroi <- reactiveVal(0)       # rv <- reactiveValues(value = 0)
+  output$nroi <- renderText({
+    nroi()                     # rv$value
+  })
 
   click$x <- 0
   click$y <- 0
@@ -51,25 +57,10 @@ im <- get("im",envir = specimEnv)
 
   brushExtent$extent <- init.extent
 
-  # output$plot1 <- renderPlot({
-  #   raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview")
-  # })
-  output$panzoom <- renderSvgPanZoom({
-    svgPanZoom(
-      svglite:::inlineSVG(
-        #will put on separate line but also need show
-        show(
-          roiViewFun(im,click,dblclick)
-        )
-        ,width = 12,height = 100
-      )
-    , controlIconsEnabled = TRUE)
-
-  })
-
   output$plot2 <- renderPlot({
-    raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview/Zoom Control",addfun = cropViewFun(click,dblclick))
-  })
+    raster::plotRGB(image, axes=FALSE, stretch="hist", addfun = cropViewFun(click,dblclick),maxpixels = prod(dim(image)[1:2])*(input$slider/100))},
+   width = 500
+  )
 
   output$plot3 <- renderPlot({
     raster::plotRGB(image, axes=TRUE, stretch="hist", main="Select Crop Corners",ext = brushExtent$extent)
@@ -85,11 +76,10 @@ im <- get("im",envir = specimEnv)
       brushExtent$extent <- raster::extent(image)
     }
 
+
+
     brushExtent$brushBox <- data.frame(x = c(brush$xmin, brush$xmax,brush$xmax, brush$xmin),
                            y = c(brush$ymin, brush$ymin,brush$ymax, brush$ymax))
-
-
-
 
   })
 
@@ -109,15 +99,19 @@ im <- get("im",envir = specimEnv)
   }
   )
 
-  output$click_info <- renderPrint({
-    cat("click:\n")
-    str(c(click$x,click$y))
-  })
+  # output$click_info <- renderPrint({
+  #   cat("click:\n")
+  #   str(c(click$x,click$y))
+  # })
+  #
+  # output$dblclick_info <- renderPrint({
+  #   cat("dblclick:\n")
+  #   str(c(dblclick$x,dblclick$y))
+  # })
 
-  output$dblclick_info <- renderPrint({
-    cat("dblclick:\n")
-    str(c(dblclick$x,dblclick$y))
-  })
+  output$nrois <- renderText({
+    str(c(rois$n))
+    })
 
   observeEvent(input$applyWidth, {
     if(click$x >= dblclick$x){
@@ -142,24 +136,32 @@ im <- get("im",envir = specimEnv)
 
   observeEvent(input$record, {
 
+    newRoi <- nroi()+1
+    nroi(newRoi)
     xmin <- min(click$x,dblclick$x)
     xmax <- max(click$x,dblclick$x)
     ymin <- min(click$y,dblclick$y)
     ymax <- max(click$y,dblclick$y)
     crp <- raster::extent(c(xmin,xmax,ymin,ymax))
-    crpout <<- crp
-    shiny::stopApp()
-
+    crpout[[newRoi]] <<- crp
 
   })
+
+  observeEvent(input$stopselecting, {
+
+    shiny::stopApp()
+  })
+
+
 
 }
 
 
-pick_roi_shiny <- function(image){
-
+pick_roi_shiny <- function(image,zh = 5000){
   #assign image into Global (hack for now)
   assign("image",image,envir = specimEnv)
+  # get("myBtn",myBtn,envir = specimEnv)
+  # if(myBtn){zh <- 5000}else{zh <- 800}
 
 
   ui <- shiny::fluidPage(
@@ -169,23 +171,22 @@ pick_roi_shiny <- function(image){
       pre, table.table {
         font-size: smaller;
       }
-    "))
-    ),
+    ")))
+   ,
+   #textOutput("value"),
 
-    column(width = 12, class = "well",
+    column(width = 12,
            h2("Region of interest (ROI) selector"),
-           shiny::fluidRow(
-             column(width = 4,
-                    svgPanZoomOutput(outputId = "panzoom",height = 500)
-             ),
-             column(width = 4,
-                    plotOutput("plot2", height = 500,
+          shiny::fluidRow(
+
+             column(width = 8, style = "overflow-y:scroll; max-height: 600px",
+                    plotOutput("plot2", height = zh,
                                brush = brushOpts(
                                  id = "plot2_brush",
                                  resetOnNew = FALSE
-                               )
-                    )
-             ),
+                               ))
+
+                   ),
              column(width = 4,
                     plotOutput("plot3",
                                height = 500,
@@ -197,6 +198,11 @@ pick_roi_shiny <- function(image){
              )
            ),
            shiny::fluidRow(
+             column(width = 3,
+             sliderInput("slider", h4("Left image resolution (% of max)"),
+                           min = 1, max = 100,step = 5,
+                         value = 1)
+             ),
              column(width = 3,
                     numericInput("x1",
                                  h4("Click x"),
@@ -222,10 +228,21 @@ pick_roi_shiny <- function(image){
                     actionButton("center", "Center ROI"),
              )
 
-           )
+           ),
+          shiny::fluidRow(
+            column(3,
+                   h4("ROIs selected:"),
+                   textOutput("nroi"),
+                   actionButton("record", "Record ROI")
+            ),
+            column(3,
+                   actionButton("stopselecting", "Stop selecting ROI(s)")
+            )
+          )
 
-    ),
-    actionButton("record", "Record ROI")
+    )
+
+
   )
 
 

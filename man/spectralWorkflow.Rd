@@ -5,8 +5,8 @@
 \title{Wrapper function that goes through standardization, index calculation and visualization}
 \usage{
 spectralWorkflow(
-  indices,
-  overall.width = 1,
+  indices = c("RABD615", "RABD660670", "RABD845", "R570R630", "R590R690"),
+  overall.width = 3,
   individual.width = 2,
   width.mult = 2,
   ...
@@ -18,7 +18,6 @@ spectralWorkflow(
   \describe{
     \item{\code{directory}}{path to Specim core folder}
     \item{\code{cmPerPixel}}{optionally specify the number of cm per pixel. Will determine interactively if NA. (default = NA)}
-    \item{\code{spectra}}{which spectra to normalize}
     \item{\code{roi}}{rasterExtent object defining region of interest. NA will allow you to choose interactively (default = NA)}
     \item{\code{output.dir}}{optionally save output raster by specifyign the path}
     \item{\code{corename}}{optionally choose the length of the core}

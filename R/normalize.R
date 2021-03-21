@@ -15,7 +15,7 @@ getPaths <- function(dirPath=NA){
 
 
   #overview
-op <- file.path(dirPath,stringr::str_c(coreName,".png"))
+  op <- file.path(dirPath,stringr::str_c(coreName,".png"))
 
   if(file.exists(op)){
     paths$overview <- op
@@ -24,48 +24,48 @@ op <- file.path(dirPath,stringr::str_c(coreName,".png"))
     paths$overview <-  file.choose()
   }
 
-#capture
-ca <- file.path(dirPath,"capture",stringr::str_c(coreName,".raw"))
+  #capture
+  ca <- file.path(dirPath,"capture",stringr::str_c(coreName,".raw"))
 
-if(file.exists(ca)){
-  paths$capture <- ca
-}else{
-  cat(crayon::bold(crayon::red("Choose the capture .raw file\n")))
-  paths$capture <-  file.choose()
-}
+  if(file.exists(ca)){
+    paths$capture <- ca
+  }else{
+    cat(crayon::bold(crayon::red("Choose the capture .raw file\n")))
+    paths$capture <-  file.choose()
+  }
 
 
-#white ref
-wr <- file.path(dirPath,"capture",stringr::str_c("WHITEREF_",coreName,".raw"))
+  #white ref
+  wr <- file.path(dirPath,"capture",stringr::str_c("WHITEREF_",coreName,".raw"))
 
-if(file.exists(wr)){
-  paths$whiteref <- wr
-}else{
-  cat(crayon::bold(crayon::red("Choose the WHITEREF .raw file\n")))
-  paths$whiteref <-  file.choose()
-}
+  if(file.exists(wr)){
+    paths$whiteref <- wr
+  }else{
+    cat(crayon::bold(crayon::red("Choose the WHITEREF .raw file\n")))
+    paths$whiteref <-  file.choose()
+  }
 
-#dark ref
-dr <- file.path(dirPath,"capture",stringr::str_c("DARKREF_",coreName,".raw"))
+  #dark ref
+  dr <- file.path(dirPath,"capture",stringr::str_c("DARKREF_",coreName,".raw"))
 
-if(file.exists(dr)){
-  paths$darkref <- dr
-}else{
-  cat(crayon::bold(crayon::red("Choose the DARKREF .raw file\n")))
-  paths$darkref <-  file.choose()
-}
+  if(file.exists(dr)){
+    paths$darkref <- dr
+  }else{
+    cat(crayon::bold(crayon::red("Choose the DARKREF .raw file\n")))
+    paths$darkref <-  file.choose()
+  }
 
-return(paths)
+  return(paths)
 
 }
 
 filechooseR <- function(id,directory = NA){
-    Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
-data <- file.path(directory,paste(id,".raw",sep=""))
+  Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
+  data <- file.path(directory,paste(id,".raw",sep=""))
   if(missing(data)) data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
   filen <- raster::brick(data)
-return(filen)
-  }
+  return(filen)
+}
 
 getBandInfo <- function(filen){
   allbands <- names(filen)
@@ -101,7 +101,7 @@ spectraR <- function(filen, wavelengths){
   data.table::setkeyv(bands,c('merge'))
   spectrum <- bands[wavelengths,roll='nearest']
   spectra <- paste0("X",as.character(spectrum$Value))
-return(spectra)
+  return(spectra)
 }
 
 
@@ -116,7 +116,7 @@ cropImage <- function(raw){
   cropC <- raster::drawExtent()
   stripe <- raster::crop(raw,cropC)
   names(stripe) <- names(raw)
-return(stripe)
+  return(stripe)
 }
 
 coreLength <- function(stripe,length = NA){
@@ -131,7 +131,7 @@ coreLength <- function(stripe,length = NA){
 
 createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
   if(is.character(ref)){#load in if necessary
-  ref <- raster::brick(ref)
+    ref <- raster::brick(ref)
   }
   refBrick <-  raster::subset(ref,spectra)
   #crop it by the earlier crop width
@@ -151,10 +151,10 @@ createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
 
   #save row for later processing.
   if(!is.na(outFile)){
-  raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
+    raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
   }else{
-  return(r)
-}
+    return(r)
+  }
 }
 
 
@@ -177,7 +177,7 @@ DarkRef <- function(darkRef,stripe,spectra){
   len <- stripe@nrows
   dark.ref <- disaggregate(darkRow,fact = c(1,len))
   raster::extent(dark.ref) <- raster::extent(stripe)
-return(dark.ref)
+  return(dark.ref)
 }
 
 #' Perform reference processing prior to normalizations
@@ -268,20 +268,28 @@ normalize <- function(directory = NA,
   #load overview
   overview <- raster::brick(paths$overview)
 
-  #choose the ROI
-  if(!class(roi)=="Extent"){
-    roi <- pick_roi_shiny(overview)
+  if(class(roi) == "Extent"){#make it a list of extents now
+    newroi <- list()
+    newroi[[1]] <- roi
+    roi <- newroi
   }
 
-  #record roi string
-  roiString <- glue::glue("roi = raster::extent(matrix(c({roi@xmin},{roi@xmax},{roi@ymin},{roi@ymax}),nrow = 2,byrow = T))")
+  #choose the ROI
+  if(!is.list(roi)){
+    roiList <- pick_roi_shiny(overview,nrow(overview)/5)
+  }else{
+    roiList <- roi
+  }
+
+  nRoi <- length(roiList)
+  normOut <- vector(mode = "list",length(nRoi))
+
 
   #load in the capture
   filen <- raster::brick(paths$capture)
 
-  #put this back!
-  #orig.ext <- raster::extent(filen)
-  orig.ext <- raster::extent(overview)#DELETE THIS
+
+  orig.ext <- raster::extent(filen)
 
 
   #save all band names for later
@@ -293,67 +301,57 @@ normalize <- function(directory = NA,
   #subset by wavelengths
   raw <- raster::subset(filen,spectra)
 
+  #grab one roi for this (should probably replace with max and min)
+roi <- roiList[[1]]
   #get length
   if(is.na(cmPerPixel)){
 
-  #try cropping the image with the same height, but on the right side to look at the top bottom
-  tr_roi <- roi
-  tr_roi@xmax <- raster::extent(overview)@xmax
-  tr_roi@xmin <- raster::extent(overview)@xmax*.70
-  tr_roi@ymin <- tr_roi@ymax - 1200
-  tr_roi@ymax <- tr_roi@ymax + 1200
-  tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
-  tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
+    #try cropping the image with the same height, but on the right side to look at the top bottom
+    tr_roi <- roi
+    tr_roi@xmax <- raster::extent(overview)@xmax
+    tr_roi@xmin <- raster::extent(overview)@xmax*.70
+    tr_roi@ymin <- tr_roi@ymax - 1200
+    tr_roi@ymax <- tr_roi@ymax + 1200
+    tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
+    tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
 
 
-  tr.image <- raster::crop(overview,tr_roi)
+    tr.image <- raster::crop(overview,tr_roi)
 
-  br_roi <- tr_roi
-  br_roi@ymin <- roi@ymin - 1200
-  br_roi@ymax <- roi@ymin + 1200
-  br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
-  br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
+    br_roi <- tr_roi
+    br_roi@ymin <- roi@ymin - 1200
+    br_roi@ymax <- roi@ymin + 1200
+    br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
+    br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
 
 
-  br.image <- raster::crop(overview,br_roi)
+    br.image <- raster::crop(overview,br_roi)
 
     cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
+
   }
+
+
 
   cmPerPixelString <- glue::glue("cmPerPixel = {cmPerPixel}")
 
   #export parameters for rerunning
+  #record roi string
+
+  rs <- "list("
+  for(r in 1:length(roiList)){
+    rs <- stringr::str_c(rs,glue::glue("raster::extent(matrix(c({roiList[[r]]@xmin},{roiList[[r]]@xmax},{roiList[[r]]@ymin},{roiList[[r]]@ymax}),nrow = 2,byrow = T))"))
+    if(r != length(roiList)){
+      rs <- stringr::str_c(rs,",")
+    }else{
+      rs <- stringr::str_c(rs,")")
+    }
+  }
+
+
+  roiString <- rs
+
   normParams <- glue::glue("{dirString},\n{cmPerPixelString},\n{spectraString},\n{roiString},\n{outputdirString},\n{corenameString}")
-
-  #assign to global just incase it fails
-  assign("normParams",normParams,envir = .GlobalEnv)
-
-  #crop the image
-  stripe <- raster::crop(raw,roi)
-
-  if(is.finite(cmPerPixel) & cmPerPixel > 0){
-    scaleY <- seq(from = cmPerPixel/2,to = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
-  }else{
-  #calculate length interval of each pixel (necessary for indices calculations)
-    scaleY <- coreLength(stripe = stripe, length = length)
-  }
-
-  #load in the white and dark refs
-  whiteRef <- raster::brick(paths$whiteref)
-  darkRef <- raster::brick(paths$darkref)
-
-  white.ref <- processReference(whiteRef,stripe = stripe,spectra = spectra)
-  dark.ref <- processReference(darkRef,stripe = stripe,spectra = spectra)
-
-  #now normalize
-  normalized <- whiteDarkNormalize(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
-
-  if(!dir.exists(file.path(output.dir))){
-    dir.create(file.path(output.dir))
-  }
-  if(!dir.exists(file.path(output.dir,corename))){
-    dir.create(file.path(output.dir,corename))
-  }
 
   #save normalized core image
   normalizedImage <- normalizeCoreImage(paths$overview)
@@ -362,23 +360,110 @@ normalize <- function(directory = NA,
   imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
 
 
-  raster::writeRaster(normalized,file.path(output.dir,"normalized.tif"),overwrite = TRUE)
-  #save normalized data for future reference
-  save(normalized,file = file.path(output.dir,"normalized.RData"))
+  #assign to global just incase it fails
+  assign("normParams",normParams,envir = .GlobalEnv)
 
+  #load in the white and dark refs
+  whiteRef <- raster::brick(paths$whiteref)
+  darkRef <- raster::brick(paths$darkref)
+
+  #make multiple output directories if multliple ROIs
+  if(length(roiList)>1){
+    output.dir <- file.path(output.dir,paste0("roi-",seq_along(roiList)))
+
+  }
+
+  for(nroi in 1:nRoi){
+    roi <- roiList[[nroi]]
+
+    #crop the image
+    stripe <- raster::crop(raw,roi)
+
+    if(is.finite(cmPerPixel) & cmPerPixel > 0){
+      scaleY <- seq(from = cmPerPixel/2,to = (nrow(stripe)*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
+    }else{
+      #calculate length interval of each pixel (necessary for indices calculations)
+      scaleY <- coreLength(stripe = stripe, length = length)
+    }
+
+    white.ref <- processReference(whiteRef,stripe = stripe,spectra = spectra)
+    dark.ref <- processReference(darkRef,stripe = stripe,spectra = spectra)
+
+    #now normalize
+    normalized <- whiteDarkNormalize(stripe = stripe, white.ref = white.ref, dark.ref = dark.ref)
+
+    if(!dir.exists(file.path(output.dir[nroi]))){
+      dir.create(file.path(output.dir[nroi]))
+    }
+    # if(!dir.exists(file.path(output.dir[nroi],corename))){
+    #   dir.create(file.path(output.dir[nroi],corename))
+    # }
+
+
+
+    raster::writeRaster(normalized,file.path(output.dir[nroi],"normalized.tif"),overwrite = TRUE)
+
+
+    clickDepths <- try(get("clickDepths",envir = .GlobalEnv),silent = TRUE)
+    if(!class(clickDepths)=="try-error"){
+      #calculate top and bottom depths of ROI
+      ymin <- clickDepths$pixel[2]
+      ymax <- clickDepths$pixel[1]
+      depth1 <- clickDepths$cm[1]
+      depth2 <- clickDepths$cm[2]
+
+      roiBotDepth <- (roi@ymin-ymin)*cmPerPix+depth2
+      roiTopDepth <- (roi@ymax-ymax)*cmPerPix+depth1
+
+    }else{
+      roiBotDepth <- NA
+      roiTopDepth <- NA
+    }
+
+    normalizationOutput <- list(allbands = allbands,
+                            spectra = spectra,
+                            wavelengths = wavelengthsOut,
+                            normalized = normalized,
+                            scaleY = scaleY,
+                            stripe = stripe,
+                            cmPerPixel = cmPerPixel,
+                            roi = roi,
+                            roiTopDepth = roiTopDepth,
+                            roiBotDepth = roiBotDepth,
+                            corename = corename,
+                            pngPath = paths$overview,
+                            normParams = normParams,
+                            outputDir = output.dir[nroi])
+
+    #save normalized data for future reference
+    save(normalizationOutput,file = file.path(output.dir[nroi],"normalized.RData"))
+    normOut[[nroi]] <- normalizationOutput
+
+
+    roiWidth <- round(normOut[[nroi]]$cmPerPixel*(normOut[[nroi]]$roi@xmax-normOut[[nroi]]$roi@xmin),2)
+
+    #write metadata table
+    metaOut <- glue::glue("{corename}\n\n") %>%
+      stringr::str_c(glue::glue("Processed: {date()}\n\n")) %>%
+      stringr::str_c("\n") %>%
+      stringr::str_c(glue::glue("ROI top depth: {roiTopDepth} cm\n\n")) %>%
+      stringr::str_c(glue::glue("ROI bottom depth: {roiBotDepth} cm\n\n")) %>%
+      stringr::str_c(glue::glue("ROI width: {roiWidth} cm\n\n")) %>%
+      stringr::str_c(glue::glue("Pixel resolution: {cmPerPixel} cm\n\n")) %>%
+      stringr::str_c("\n") %>%
+      stringr::str_c(glue::glue("Wavelengths normalized: {paste(wavelengths,collapse = ', ')}\n\n")) %>%
+      stringr::str_c("\n") %>%
+      stringr::str_c(glue::glue("Indices calculated: {paste(indices,collapse = ', ')}\n\n")) %>%
+      stringr::str_c("\n") %>%
+      stringr::str_c(glue::glue("Output directory: {output.dir[nroi]}"))
+
+
+    readr::write_file(metaOut,file.path(output.dir[nroi],"processing_metadata.txt"))
+
+
+  }
 
   #save paths for images too?
-  return(list(allbands = allbands,
-              spectra = spectra,
-              wavelengths = wavelengthsOut,
-              normalized = normalized,
-              scaleY = scaleY,
-              stripe = stripe,
-              cmPerPixel = cmPerPixel,
-              roi = roi,
-              corename = corename,
-              pngPath = paths$overview,
-              normParams = normParams,
-              outputDir = output.dir))
+  return(normOut)
 }
 
