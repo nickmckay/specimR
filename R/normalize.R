@@ -357,6 +357,10 @@ roi <- roiList[[1]]
   normalizedImage <- normalizeCoreImage(paths$overview)
   assign("im",normalizedImage,envir = specimEnv)
 
+  if(!dir.exists(file.path(output.dir))){
+    dir.create(file.path(output.dir))
+  }
+
   imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
 
 
