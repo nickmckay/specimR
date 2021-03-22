@@ -126,8 +126,8 @@ plotSpectralDashboard <- function(normalized,
                                   ind,
                                   index.name = "RABD660",
                                   depth.label = "Depth (cm)",
-                                  width.mult = 1,
-                                  plot.width = 3,
+                                  width.mult = 2,
+                                  plot.width = 30,
                                   tol = 1){
 #make a composite plot
 
@@ -158,7 +158,14 @@ ticks <- ggplot_build(ggimg)$layout$panel_params[[1]]$y$breaks
 ggimg <- ggimg+scale_y_continuous(depth.label,labels = abs(ticks))+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank())+
+  geom_rect(aes(xmin = roi@xmin,
+                xmax = roi@xmax,
+                ymin = roi@ymin,
+                ymax = roi@xmax),
+            color = "red",
+            fill = "none")
+
 
 
 

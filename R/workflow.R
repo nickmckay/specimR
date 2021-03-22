@@ -92,8 +92,6 @@ plotSpectralOutput <- function(normalized,
   #calculate indices
   indexTable <- calculateIndices(normalized,indices = indices)
 
-  #write indices to a csv file
-  readr::write_csv(indexTable,file.path(normalized$outputDir,"spectralIndices.csv"))
 
   #plot dashboards
   overall <- plotSpectralDashboard(normalized,indexTable,index.name = indices,...)

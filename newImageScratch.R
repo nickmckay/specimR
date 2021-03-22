@@ -1,15 +1,20 @@
 #experiment with images
 
 library(raster)
-filen <- "/Users/npm4/Downloads/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33/capture/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33.raw"
+filen <- "/Volumes/Lakes380 WKO/SCANNED CORES/WKO/Lake Ngapouri/Lakes380_NGAPO_LC4U_2B_S2_2019-11-05_02-02-28/capture/Lakes380_NGAPO_LC4U_2B_S2_2019-11-05_02-02-28.raw"
 
-overview <- raster::brick("/Users/npm4/Downloads/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33/capture/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33.raw")
+overview <- raster::brick(filen)
 
 rgbi <- specimR:::getNearestWavelengths(spectra = c(630,532,465),filen = overview)
 
-rgb <- raster::subset(overview,subset = rgbi)
 
-mat <- as.matrix(raster::mean(rgb))
+rgbnorm <- normalize(wavelengths =  c(630,532,465),output.dir = "~/Downloads/Lakes380_NGAPO_LC4U_2B_S2_2019-11-05_02-02-28/")
+
+
+rgb <- raster::subset(overview,subset = rgbi)
+#rgbs <- raster::subset(rgbnorm[[1]]$normalized,subset = rgbi)
+
+mat <- as.matrix(raster::mean(rgbnorm[[1]]$normalized))
 across <- apply(mat,2,mean)
 down <- apply(mat,1,mean)
 
@@ -53,19 +58,19 @@ cropVert <- findCropEdges(down)
 cropHor <- findCropEdges(across)
 
 
-cropped <- raster::crop(rgb,raster::extent(rgb,cropVert[1],cropVert[2],cropHor[1],cropHor[2]))
+cropped <- raster::crop(rgbnorm[[1]]$normalized,raster::extent(rgb,cropVert[1],cropVert[2],cropHor[1],cropHor[2]))
 
 
-cropim <- maptools::as.im(cropped)
-
-
-mac <-  quantile(values(cropped),.99)
-mic <- quantile(values(cropped),.01)
-stretch <- (cropped-mic)/(mac-mic)
-stretch[stretch > 1] <- 1
-stretch[stretch < 0] <- 0
-stretch <- (stretch * 254)+1
-plotRGB(stretch)
+# cropim <- maptools::as.im(cropped)
+#
+#
+# mac <-  quantile(values(cropped),.99)
+# mic <- quantile(values(cropped),.01)
+# stretch <- (cropped-mic)/(mac-mic)
+# stretch[stretch > 1] <- 1
+# stretch[stretch < 0] <- 0
+# stretch <- (stretch * 254)+1
+# plotRGB(stretch)
 
 stretchfun <- function(lay,na.rm = TRUE){
   mac <-  quantile((lay),.99,na.rm = na.rm)
@@ -78,14 +83,25 @@ stretchfun <- function(lay,na.rm = TRUE){
 }
 
 as.mat <- c(as.matrix(cropped))
-test <- imager::as.cimg(as.mat,x = ncol(cropped),y = nrow(cropped),cc = 3)
+im <- imager::as.cimg(as.mat,x = ncol(cropped),y = nrow(cropped),cc = 3)
 hist.eq <- function(im) imager::as.cimg(ecdf(im)(im),dim=dim(im))
 #split image into rgb channels
 cn <- imager::imsplit(im,"c")
 #equalise each channel individually
-cn.eq <- imager::map_il(cn,hist.eq)
+cn.eq <- imager::map_il(cn,stretchfun)
 #recombine and plot
+max(cn[[3]])
 im2 <- imager::imappend(cn.eq,"c")
+
+pngMed <- apply(ppng,4,median)
+pngRat <- pngMed/max(pngMed)
+im3 <- im2
+for(ca in 1:3){
+  im3[,,,ca] <- im3[,,,ca]*pngRat[ca]
+}
+plot(im3)
+
+plot(im2)
 
 plotRGB(cropped,stretch = "hist")
 
