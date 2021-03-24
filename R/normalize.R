@@ -8,11 +8,12 @@ getPaths <- function(dirPath=NA){
     dirPath <-  dirname(file.choose())
   }
 
-  coreName <- stringr::str_extract(pattern = "[^/]+$",string  = dirPath)
+
 
   #try to find the overview, capture, white and dark ref paths
   paths <- list()
 
+  paths$corename <- coreName <- stringr::str_extract(pattern = "[^/]+$",string  = dirPath)
 
   #overview
   op <- file.path(dirPath,stringr::str_c(coreName,".png"))
@@ -83,7 +84,7 @@ getNearestWavelengths <- function(filen, spectra){
     spec.ind[i] <- which(abs(spectra[i]-bands) == min(abs(spectra[i]-bands)))
   }
 
-  spec.ind <- sort(unique(spec.ind))
+  spec.ind <- unique(spec.ind)
 
   names(spec.ind) <- names(filen)[spec.ind]
 
@@ -282,6 +283,8 @@ normalize <- function(directory = NA,
   }
 
   nRoi <- length(roiList)
+
+
   normOut <- vector(mode = "list",length(nRoi))
 
 
@@ -377,6 +380,11 @@ roi <- roiList[[1]]
 
   }
 
+
+  cat(crayon::bold(glue::glue("Normalizing {nRoi} ROIs...\n")))
+  cat(crayon::green(glue::glue("This will take a bit. Maybe you should take a break and have some tea...\n")))
+
+
   for(nroi in 1:nRoi){
     roi <- roiList[[nroi]]
 
@@ -457,13 +465,12 @@ roi <- roiList[[1]]
       stringr::str_c("\n") %>%
       stringr::str_c(glue::glue("Wavelengths normalized: {paste(wavelengths,collapse = ', ')}\n\n")) %>%
       stringr::str_c("\n") %>%
-      stringr::str_c(glue::glue("Indices calculated: {paste(indices,collapse = ', ')}\n\n")) %>%
-      stringr::str_c("\n") %>%
       stringr::str_c(glue::glue("Output directory: {output.dir[nroi]}"))
 
 
     readr::write_file(metaOut,file.path(output.dir[nroi],"processing_metadata.txt"))
 
+    cat(crayon::bold(glue::glue("ROI {nroi} of {nRoi} completed...\n")))
 
   }
 

@@ -148,7 +148,16 @@ crpout <<- list()
   })
 
   observeEvent(input$stopselecting, {
-
+    if(nroi() == 0){#if none are selected, select this one.
+      newRoi <- nroi()+1
+      nroi(newRoi)
+      xmin <- min(click$x,dblclick$x)
+      xmax <- max(click$x,dblclick$x)
+      ymin <- min(click$y,dblclick$y)
+      ymax <- max(click$y,dblclick$y)
+      crp <- raster::extent(c(xmin,xmax,ymin,ymax))
+      crpout[[newRoi]] <<- crp
+    }
     shiny::stopApp()
   })
 
@@ -158,11 +167,8 @@ crpout <<- list()
 
 
 pick_roi_shiny <- function(image,zh = 5000){
-  #assign image into Global (hack for now)
+  #assign image into specimEnv
   assign("image",image,envir = specimEnv)
-  # get("myBtn",myBtn,envir = specimEnv)
-  # if(myBtn){zh <- 5000}else{zh <- 800}
-
 
   ui <- shiny::fluidPage(
     # Some custom CSS for a smaller font for preformatted text

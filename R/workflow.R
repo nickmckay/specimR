@@ -23,6 +23,9 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
 
   normList <- normalize(...)
 
+
+  cat(crayon::bold(glue::glue("Creating figures...")))
+
   #loop through ROIs
   for(n in 1:length(normList)){
   normalized <- normList[[n]]
