@@ -445,6 +445,7 @@ roi <- roiList[[1]]
                             corename = corename,
                             pngPath = paths$overview,
                             normParams = normParams,
+                            inputDir = directory,
                             outputDir = output.dir[nroi])
 
     #save normalized data for future reference

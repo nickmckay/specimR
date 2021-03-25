@@ -124,34 +124,61 @@ plotVerticalIndex <- function(ind,
 #' @examples
 plotSpectralDashboard <- function(normalized,
                                   ind,
+                                  processed.image.dir = file.path(normalized$outputDir,"photos"),
                                   index.name = "RABD660",
                                   depth.label = "Depth (cm)",
-                                  width.mult = 2,
+                                  width.mult = 3,
                                   plot.width = 30,
                                   tol = 1){
 #make a composite plot
 
 #get the image
-img <- magick::image_read(normalized$pngPath)
+  if(is.na(processed.image.dir)){
+    #select it
+}
 
-#crop it based on the roi
+    #get the processed image path (want full png with scale so that ROI is in right spot)
+    fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
+    img <- magick::image_read(fullPath)
+
+    #get the big ROI
+    load(file.path(processed.image.dir,"bigRoi.Rdata"))
+
 roi <- normalized$roi
 
-iroi <- magick::geometry_area(width = width.mult*round(roi@xmax-roi@xmin),height = round(roi@ymax-roi@ymin),x_off = roi@xmin-(width.mult-1)/2*round(roi@xmax-roi@xmin),y_off = roi@ymin)
+#decide how to crop it.
+  xOffset <- min(bigRoi@xmin,roi@xmin)
+  yOffset <- roi@ymin #use ROI exactly
+  rightPos <- max(bigRoi@xmax,roi@xmax)
+  topPos <- roi@ymax #use ROI exactly
+  width <- rightPos-xOffset
+  height <- topPos-yOffset
 
-cimg <- magick::image_crop(img,geometry = iroi,gravity = "SouthWest") %>%
-  magick::image_normalize()
+#crop it based on the roi
+roi <- normalized$roi#roi relative to the whole scan
+
+#get roi boundaries in cm
+cmRoi <- roi
+cmRoi@xmin <- max(roi@xmin - xOffset + 1,1)*normalized$cmPerPixel
+cmRoi@xmax <- min(roi@xmax - xOffset + 1,rightPos)*normalized$cmPerPixel
+cmRoi@ymin <- max(roi@ymin - yOffset + 1,1)*normalized$cmPerPixel
+cmRoi@ymax <- min(roi@ymax - yOffset + 1,topPos)*normalized$cmPerPixel
 
 
-info <- magick::image_info(cimg)
+iroi <- magick::geometry_area(width = width,height = height, x_off = xOffset,y_off = yOffset)
 
-height <- info$height*normalized$cmPerPixel
-width <- info$width*normalized$cmPerPixel
+cimg <- magick::image_crop(img,geometry = iroi,gravity = "SouthWest")
+
+
+cinfo <- magick::image_info(cimg)
+
+c.height <- cinfo$height*normalized$cmPerPixel
+c.width <- cinfo$width*normalized$cmPerPixel
 
 ggimg <- ggplot2::ggplot(data.frame(x = 0, y = 0), ggplot2::aes_string("x","y")) +
   ggplot2::geom_blank() +
-  ggplot2::coord_fixed(expand = FALSE, xlim = c(0, width),ylim = c(-height,0)) +
-  ggplot2::annotation_raster(cimg, 0, width, -height, 0, interpolate = TRUE)
+  ggplot2::coord_fixed(expand = FALSE, xlim = c(0, c.width),ylim = c(-c.height,0)) +
+  ggplot2::annotation_raster(cimg, 0, c.width, -c.height, 0, interpolate = TRUE)
 
 ticks <- ggplot_build(ggimg)$layout$panel_params[[1]]$y$breaks
 
@@ -159,14 +186,12 @@ ggimg <- ggimg+scale_y_continuous(depth.label,labels = abs(ticks))+
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())+
-  geom_rect(aes(xmin = roi@xmin,
-                xmax = roi@xmax,
-                ymin = roi@ymin,
-                ymax = roi@xmax),
+  geom_rect(aes(xmin = cmRoi@xmin,
+                xmax = cmRoi@xmax,
+                ymin = -cmRoi@ymin,
+                ymax = -cmRoi@xmax),
             color = "red",
-            fill = "none")
-
-
+            fill = NA)
 
 
 plots <- vector(mode = "list",length = length(index.name)*2+1)
@@ -199,7 +224,7 @@ plots[[2*i]] <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
 #make a dashboard plot
 }
 
-widths <- c(width.mult,rep(c(1,plot.width),times = length(index.name)))
+widths <- c(1,rep(c(1,plot.width)/width.mult,times = length(index.name)))
 
 #egg
 outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0)

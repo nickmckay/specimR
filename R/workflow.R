@@ -12,9 +12,11 @@
 #'
 #' @examples
 spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
-                             overall.width = 3,
-                             individual.width = 2,
-                             width.mult = 2,
+                             overall.width = 5,
+                             individual.width = 30,
+                             width.mult = 4,
+                             image.wavelengths = c(630,532,465),
+                             imageRoi = NA,
                              ...){
   indicesString <- paste0("indices = c(",paste(paste0('"',indices,'"'),collapse = ','),")")
   owString <- glue::glue("overall.width = {overall.width}")
@@ -23,6 +25,21 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
 
   normList <- normalize(...)
 
+  cat(crayon::bold(glue::glue("Creating images...")))
+
+  #check for the multi ROI
+if(length(normList)==1){
+  image.dir <- file.path(normList[[1]]$outputDir,"photos")
+}else{
+  image.dir <- file.path(dirname(normList[[1]]$outputDir),"photos")
+}
+  #create images
+
+
+  createImages(directory = normList[[1]]$inputDir,
+               wavelengths = image.wavelengths,
+               image.output.dir = file.path(normList[[1]]$outputDir,"photos"),
+               bigRoi = imageRoi)
 
   cat(crayon::bold(glue::glue("Creating figures...")))
 
@@ -35,8 +52,14 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
   #write indices to a csv file
   readr::write_csv(indexTable,file.path(normalized$outputDir,"spectralIndices.csv"))
 
+
   #plot dashboards
-  overall <- plotSpectralDashboard(normalized,indexTable,index.name = indices,width.mult = width.mult,plot.width = overall.width)
+  overall <- plotSpectralDashboard(normalized,
+                                   indexTable,
+                                   processed.image.dir = image.dir,
+                                   index.name = indices,
+                                   width.mult = width.mult,
+                                   plot.width = overall.width)
 
   totalDepth <- max(indexTable$depth)
 
@@ -45,13 +68,13 @@ spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R
          filename = file.path(normalized$outputDir,"allIndices.png"),
          width = 20,
          height = totalDepth,
-         units = "in",
+         units = "cm",
          limitsize = FALSE)
 
   #individual indices
   for(i in indices){
     #plot dashboards
-    this <- plotSpectralDashboard(normalized,indexTable,index.name = i,width.mult = width.mult,plot.width = individual.width)
+    this <- plotSpectralDashboard(normalized,indexTable,index.name = i,width.mult = width.mult,plot.width = individual.width,processed.image.dir = image.dir)
 
     #png
     ggsave(plot = this,

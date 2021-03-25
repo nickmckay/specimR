@@ -1,12 +1,17 @@
-#experiment with images
-
-library(raster)
-library(magrittr)
-library(shiny)
-
 
 # auto detection ---------------------------------------------------------
 
+#' Title
+#'
+#' @param line
+#' @param basereg
+#' @param cutthresh
+#' @param thresh
+#'
+#' @return
+#' @export
+#'
+#' @examples
 findCropEdges <- function(line,basereg =  c(0.25,0.75),cutthresh = .3, thresh = 3){
 
   starti <- c(round(c(0.25,0.75)*length(line)))
@@ -41,6 +46,16 @@ findCropEdges <- function(line,basereg =  c(0.25,0.75),cutthresh = .3, thresh = 
 }
 
 
+#' Title
+#'
+#' @param lay
+#' @param na.rm
+#' @param trunc.perc
+#'
+#' @return
+#' @export
+#'
+#' @examples
 linearStretch <- function(lay,na.rm = TRUE,trunc.perc = 0.02){
   mac <-  quantile((lay),1-trunc.perc,na.rm = na.rm)
   mic <- quantile((lay),trunc.perc,na.rm = na.rm)
@@ -52,6 +67,14 @@ linearStretch <- function(lay,na.rm = TRUE,trunc.perc = 0.02){
   return(stretch)
 }
 
+#' Title
+#'
+#' @param im
+#'
+#' @return
+#' @export
+#'
+#' @examples
 histogramStretch <- function(im){
   win <- which(!is.na(im))
   st <- ecdf(im[win])(im[win])
@@ -59,8 +82,19 @@ histogramStretch <- function(im){
   return(imager::as.cimg(im))
 }
 
-#Create image from reflectance standardized data
-
+#' Create image from reflectance standardized data
+#'
+#' @param bigRoi
+#' @param directory
+#' @param wavelengths
+#' @param image.output.dir
+#' @param stretch.method
+#' @param stretch.fun
+#'
+#' @return
+#' @export
+#'
+#' @examples
 createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,465),image.output.dir = NA,stretch.method = "full",stretch.fun = "linear2pct"){
 
   #pick stretch function
