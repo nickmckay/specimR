@@ -99,7 +99,7 @@ spectralWorkflow <- function(directory = NA,
 
 
   #plot dashboards
-  overall <- plotSpectralDashboard(normalized,
+  overall <- suppressWarnings(plotSpectralDashboard(normalized,
                                    indexTable,
                                    processed.image.dir = image.dir,
                                    index.name = indices,
@@ -107,12 +107,12 @@ spectralWorkflow <- function(directory = NA,
                                    page.width = overall.page.width,
                                    plot.width = plot.width,
                                    output.file.path = file.path(normalized$outputDir,"allIndices.png"),
-                                   output.dpi = 600)
+                                   output.dpi = 600))
 
   #individual indices
   for(i in indices){
     #plot dashboards
-    this <- plotSpectralDashboard(normalized,
+    this <- suppressWarnings(plotSpectralDashboard(normalized,
                                   indexTable,
                                   index.name = i,
                                   core.width = core.width,
@@ -120,7 +120,7 @@ spectralWorkflow <- function(directory = NA,
                                   page.width = individual.page.width,
                                   plot.width = plot.width,
                                   output.file.path = file.path(normalized$outputDir,paste0(i,".png")),
-                                  output.dpi = 600)
+                                  output.dpi = 600))
   }
 
   #write command to reproduce this

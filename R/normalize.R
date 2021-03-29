@@ -317,7 +317,7 @@ normalize <- function(directory = NA,
   raw <- raster::subset(filen,spectra)
 
   #grab one roi for this (should probably replace with max and min)
-roi <- roiList[[1]]
+  roi <- roiList[[1]]
   #get length
   if(is.na(cmPerPixel)){
 
@@ -378,8 +378,9 @@ roi <- roiList[[1]]
 
 
   #assign to global just incase it fails
-  assign("normParams",normParams,envir = .GlobalEnv)
-
+  if(!is.image){
+    assign("normParams",normParams,envir = .GlobalEnv)
+  }
   #load in the white and dark refs
   whiteRef <- raster::brick(paths$whiteref)
   darkRef <- raster::brick(paths$darkref)
@@ -394,8 +395,8 @@ roi <- roiList[[1]]
     cat(crayon::bold(glue::glue("Normalizing data for a core image\n\n")))
     cat(crayon::green(glue::glue("This will take a bit more time. Have you got your tea yet?\n\n")))
   }else{
-  cat(crayon::bold(glue::glue("Normalizing {nRoi} ROIs...\n\n")))
-  cat(crayon::green(glue::glue("This will take a bit. Maybe you should take a break and have some tea...\n\n")))
+    cat(crayon::bold(glue::glue("Normalizing {nRoi} ROIs...\n\n")))
+    cat(crayon::green(glue::glue("This will take a bit. Maybe you should take a break and have some tea...\n\n")))
   }
 
 
@@ -447,20 +448,20 @@ roi <- roiList[[1]]
     }
 
     normalizationOutput <- list(allbands = allbands,
-                            spectra = spectra,
-                            wavelengths = wavelengthsOut,
-                            normalized = normalized,
-                            scaleY = scaleY,
-                            stripe = stripe,
-                            cmPerPixel = cmPerPixel,
-                            roi = roi,
-                            roiTopDepth = roiTopDepth,
-                            roiBotDepth = roiBotDepth,
-                            corename = corename,
-                            pngPath = paths$overview,
-                            normParams = normParams,
-                            inputDir = directory,
-                            outputDir = output.dir[nroi])
+                                spectra = spectra,
+                                wavelengths = wavelengthsOut,
+                                normalized = normalized,
+                                scaleY = scaleY,
+                                stripe = stripe,
+                                cmPerPixel = cmPerPixel,
+                                roi = roi,
+                                roiTopDepth = roiTopDepth,
+                                roiBotDepth = roiBotDepth,
+                                corename = corename,
+                                pngPath = paths$overview,
+                                normParams = normParams,
+                                inputDir = directory,
+                                outputDir = output.dir[nroi])
 
     #save normalized data for future reference
     save(normalizationOutput,file = file.path(output.dir[nroi],"normalized.RData"))
