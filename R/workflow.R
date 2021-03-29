@@ -132,7 +132,7 @@ spectralWorkflow <- function(directory = NA,
                             {pwString},
                           {wmString})")
 
-  readr::write_file(rep.command,file.path(outputDir,"reprocess.R"))
+  readr::write_file(rep.command,file.path(output.dir,"reprocess.R"))
   }
 }
 
