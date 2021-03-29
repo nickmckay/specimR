@@ -153,8 +153,11 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
 
   bigRoiStr <<- glue::glue("raster::extent(matrix(c({bigRoi@xmin},{bigRoi@xmax},{bigRoi@ymin},{bigRoi@ymax}),nrow = 2,byrow = T))")
 
-  save(bigRoi,file = file.path(image.output.dir,"bigRoi.Rdata"))
 
+  if(!dir.exists(image.output.dir)){
+    dir.create(image.output.dir)
+  }
+  save(bigRoi,file = file.path(image.output.dir,"bigRoi.Rdata"))
 
   # now crop out the mud.
 

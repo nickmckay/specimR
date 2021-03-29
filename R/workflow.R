@@ -11,37 +11,77 @@
 #' @export
 #'
 #' @examples
-spectralWorkflow <- function(indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
-                             overall.width = 5,
-                             individual.width = 30,
-                             width.mult = 4,
+spectralWorkflow <- function(directory = NA,
+                             indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
+                             overall.page.width = 30,
+                             individual.page.width = 10,
+                             plot.width = 8,
+                             core.width = 4,
                              image.wavelengths = c(630,532,465),
                              imageRoi = NA,
+                             output.dir = NA,
                              ...){
   indicesString <- paste0("indices = c(",paste(paste0('"',indices,'"'),collapse = ','),")")
-  owString <- glue::glue("overall.width = {overall.width}")
-  iwString <- glue::glue("individual.width = {individual.width}")
-  wmString <- glue::glue("width.mult = {width.mult}")
+  owString <- glue::glue("overall.page.width = {overall.page.width}")
+  iwString <- glue::glue("individual.page.width = {individual.page.width}")
+  wmString <- glue::glue("core.width = {core.width}")
+  pwString <- glue::glue("core.width = {plot.width}")
 
-  normList <- normalize(...)
 
-  cat(crayon::bold(glue::glue("Creating images...")))
 
-  #check for the multi ROI
-if(length(normList)==1){
-  image.dir <- file.path(normList[[1]]$outputDir,"photos")
-}else{
-  image.dir <- file.path(dirname(normList[[1]]$outputDir),"photos")
-}
+  #print that you need to pick it.
+  if(is.na(directory)){
+    cat(crayon::bold("Choose a file within the Specim core directory\n"))
+    Sys.sleep(1)
+  }
+
+  #get the appropriate paths
+  paths <- getPaths(dirPath = directory)
+  directory <- dirname(paths$overview)
+
+
+  #output directory handling
+  if(is.na(output.dir)){
+    output.dir <- file.path(dirname(paths$overview),"products")
+  }
+
+
+  if(is.na(imageRoi)){
+    overviewPng <- imager::load.image(paths$overview)
+
+    gs <- imager::grayscale(overviewPng) %>% as.matrix()
+
+    across <- apply(gs,1,mean)
+    down <- apply(gs,2,mean)
+
+    cropVert <- findCropEdges(rev(down))
+    cropHor <- findCropEdges(across)
+
+    bigRoiTry <- raster::extent(cropHor[1],cropHor[2],cropVert[1],cropVert[2])
+
+    #check to see if the big ROI is good (new shiny app)
+    overview <- raster::brick(paths$overview)
+    imageRoi <- pick_big_roi_shiny(overview,bigRoiTry, zh = nrow(overviewPng)/5)
+
+    imageRoi@xmin <- ceiling(imageRoi@xmin)
+    imageRoi@ymin <- ceiling(imageRoi@ymin)
+    imageRoi@xmax <- floor(imageRoi@xmax)
+    imageRoi@ymax <- floor(imageRoi@ymax)
+  }
+
+  normList <- normalize(directory = directory,output.dir = output.dir,...)
+
   #create images
+  cat(crayon::bold(glue::glue("Loading data to creating images...\n")))
 
+  image.dir <- file.path(output.dir,"photos")
 
-  createImages(directory = normList[[1]]$inputDir,
+  createImages(directory = directory,
                wavelengths = image.wavelengths,
-               image.output.dir = file.path(normList[[1]]$outputDir,"photos"),
+               image.output.dir = image.dir,
                bigRoi = imageRoi)
 
-  cat(crayon::bold(glue::glue("Creating figures...")))
+  cat(crayon::bold(glue::glue("Creating figures...\n")))
 
   #loop through ROIs
   for(n in 1:length(normList)){
@@ -58,30 +98,24 @@ if(length(normList)==1){
                                    indexTable,
                                    processed.image.dir = image.dir,
                                    index.name = indices,
-                                   width.mult = width.mult,
-                                   plot.width = overall.width)
-
-  totalDepth <- max(indexTable$depth)
-
-  #create png
-  ggsave(plot = overall,
-         filename = file.path(normalized$outputDir,"allIndices.png"),
-         width = 20,
-         height = totalDepth,
-         units = "cm",
-         limitsize = FALSE)
+                                   core.width = core.width,
+                                   page.width = overall.page.width,
+                                   plot.width = plot.width,
+                                   output.file.path = file.path(normalized$outputDir,"allIndices.png"),
+                                   output.dpi = 600)
 
   #individual indices
   for(i in indices){
     #plot dashboards
-    this <- plotSpectralDashboard(normalized,indexTable,index.name = i,width.mult = width.mult,plot.width = individual.width,processed.image.dir = image.dir)
-
-    #png
-    ggsave(plot = this,
-           filename = file.path(normalized$outputDir,paste0(i,".png")),
-           width = 10,
-           height = totalDepth,
-           units = "in",limitsize = FALSE)
+    this <- plotSpectralDashboard(normalized,
+                                  indexTable,
+                                  index.name = i,
+                                  core.width = core.width,
+                                  processed.image.dir = image.dir,
+                                  page.width = individual.page.width,
+                                  plot.width = plot.width,
+                                  output.file.path = file.path(normalized$outputDir,paste0(i,".png")),
+                                  output.dpi = 600)
   }
 
   #write command to reproduce this
@@ -89,6 +123,7 @@ if(length(normList)==1){
                           {normParams},
                           {owString},
                           {iwString},
+                            {pwString},
                           {wmString})")
 
   readr::write_file(rep.command,file.path(normalized$outputDir,"reprocess.R"))

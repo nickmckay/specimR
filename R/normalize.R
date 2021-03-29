@@ -230,7 +230,7 @@ whiteDarkNormalize <- function(stripe,white.ref,dark.ref,...){
 normalize <- function(directory = NA,
                       cmPerPixel = NA,
                       wavelengths = c(550,570,590,615,630,650,659:671,690,730,790,845,900),
-                      roi = NA,#specify roi as raster extent
+                      roi = NA,#specify roi as raster extent or list of raster extenst
                       output.dir = NA,
                       corename = NA){
 
@@ -357,14 +357,14 @@ roi <- roiList[[1]]
   normParams <- glue::glue("{dirString},\n{cmPerPixelString},\n{spectraString},\n{roiString},\n{outputdirString},\n{corenameString}")
 
   #save normalized core image
-  normalizedImage <- normalizeCoreImage(paths$overview)
-  assign("im",normalizedImage,envir = specimEnv)
+  # normalizedImage <- normalizeCoreImage(paths$overview)
+  # assign("im",normalizedImage,envir = specimEnv)
 
   if(!dir.exists(file.path(output.dir))){
     dir.create(file.path(output.dir))
   }
 
-  imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
+  #imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
 
 
   #assign to global just incase it fails
