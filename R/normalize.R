@@ -238,7 +238,7 @@ normalize <- function(directory = NA,
 
   #print that you need to pick it.
   if(is.na(directory)){
-    cat(crayon::bold("Choose a file within the Specim core directory\n"))
+    cat(crayon::bold("Choose a file within the Specim core directory\n\n"))
     Sys.sleep(1)
   }
 
@@ -341,7 +341,7 @@ roi <- roiList[[1]]
   #export parameters for rerunning
   #record roi string
 
-  rs <- "list("
+  rs <- "roi = list("
   for(r in 1:length(roiList)){
     rs <- stringr::str_c(rs,glue::glue("raster::extent(matrix(c({roiList[[r]]@xmin},{roiList[[r]]@xmax},{roiList[[r]]@ymin},{roiList[[r]]@ymax}),nrow = 2,byrow = T))"))
     if(r != length(roiList)){
@@ -364,8 +364,6 @@ roi <- roiList[[1]]
     dir.create(file.path(output.dir))
   }
 
-  #imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
-
 
   #assign to global just incase it fails
   assign("normParams",normParams,envir = .GlobalEnv)
@@ -380,9 +378,13 @@ roi <- roiList[[1]]
 
   }
 
-
-  cat(crayon::bold(glue::glue("Normalizing {nRoi} ROIs...\n")))
-  cat(crayon::green(glue::glue("This will take a bit. Maybe you should take a break and have some tea...\n")))
+  if(length(wavelengths) == 3){#probably an image
+    cat(crayon::bold(glue::glue("Normalizing data for a core image\n\n")))
+    cat(crayon::green(glue::glue("This will take a bit more time. Have you got your tea yet?\n\n")))
+  }else{
+  cat(crayon::bold(glue::glue("Normalizing {nRoi} ROIs...\n\n")))
+  cat(crayon::green(glue::glue("This will take a bit. Maybe you should take a break and have some tea...\n\n")))
+  }
 
 
   for(nroi in 1:nRoi){

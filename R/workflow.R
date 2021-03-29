@@ -34,7 +34,7 @@ spectralWorkflow <- function(directory = NA,
 
   #print that you need to pick it.
   if(is.na(directory)){
-    cat(crayon::bold("Choose a file within the Specim core directory\n"))
+    cat(crayon::bold("Choose a file within the Specim core directory\n\n"))
     Sys.sleep(1)
   }
 
@@ -72,10 +72,12 @@ spectralWorkflow <- function(directory = NA,
     imageRoi@ymax <- floor(imageRoi@ymax)
   }
 
+  irs <- glue::glue("imageRoi = raster::extent(matrix(c({imageRoi@xmin},{imageRoi@xmax},{imageRoi@ymin},{imageRoi@ymax}),nrow = 2,byrow = T))")
+
   normList <- normalize(directory = directory,output.dir = output.dir,...)
 
   #create images
-  cat(crayon::bold(glue::glue("Loading data to creating images...\n")))
+  cat(crayon::bold(glue::glue("Loading data to creating images...\n\n")))
 
   image.dir <- file.path(output.dir,"photos")
 
@@ -84,7 +86,7 @@ spectralWorkflow <- function(directory = NA,
                image.output.dir = image.dir,
                bigRoi = imageRoi)
 
-  cat(crayon::bold(glue::glue("Creating figures...\n")))
+  cat(crayon::bold(glue::glue("Creating figures...\n\n")))
 
   #loop through ROIs
   for(n in 1:length(normList)){
@@ -124,6 +126,7 @@ spectralWorkflow <- function(directory = NA,
   #write command to reproduce this
   rep.command <- glue::glue("specimR::spectralWorkflow({indicesString},
                           {normParams},
+                            {irs},
                           {owString},
                           {iwString},
                             {pwString},

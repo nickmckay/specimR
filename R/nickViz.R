@@ -134,7 +134,7 @@ plotSpectralDashboard <- function(normalized,
                                   page.units = "cm",
                                   tol = 1,
                                   output.file.path = NA,
-                                  output.dpi = 300){
+                                  output.dpi = 600){
   #make a composite plot
 
   #get the image
