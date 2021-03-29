@@ -165,7 +165,7 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
                        cmPerPixel = 0.004,
                        wavelengths = wavelengths,
                        roi = bigRoi,
-                       output.dir = tempdir(),
+                       output.dir = image.output.dir,
                        corename = paths$corename
   )
 

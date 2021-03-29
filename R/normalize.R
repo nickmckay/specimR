@@ -234,6 +234,14 @@ normalize <- function(directory = NA,
                       output.dir = NA,
                       corename = NA){
 
+
+
+  if(length(wavelengths) == 3){#probably an image
+    is.image <- TRUE
+  }else{
+    is.image <- FALSE
+  }
+
   spectraString <- glue::glue("wavelengths = c({paste(as.character(wavelengths),collapse = ', ')})")
 
   #print that you need to pick it.
@@ -252,7 +260,11 @@ normalize <- function(directory = NA,
 
   #output directory handling
   if(is.na(output.dir)){
-    output.dir <- file.path(dirname(paths$overview),"products")
+    if(is.image){
+      output.dir <- file.path(dirname(paths$overview),"products","photos")
+    }else{
+      output.dir <- file.path(dirname(paths$overview),"products")
+    }
   }
   outputdirString <- glue::glue("output.dir = '{output.dir}'")
 
@@ -378,7 +390,7 @@ roi <- roiList[[1]]
 
   }
 
-  if(length(wavelengths) == 3){#probably an image
+  if(is.image){
     cat(crayon::bold(glue::glue("Normalizing data for a core image\n\n")))
     cat(crayon::green(glue::glue("This will take a bit more time. Have you got your tea yet?\n\n")))
   }else{
