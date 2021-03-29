@@ -199,7 +199,7 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
     dir.create(image.output.dir)
   }
 
-  imager::save.image(rescaledROI,file = file.path(image.output.dir,paste0("coreOnly-",stretch.fun,".png")))
+  imager::save.image(imager::mirror(rescaledROI,"y"),file = file.path(image.output.dir,paste0("coreOnly-",stretch.fun,".png")))
 
 
 

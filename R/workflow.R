@@ -20,12 +20,15 @@ spectralWorkflow <- function(directory = NA,
                              image.wavelengths = c(630,532,465),
                              imageRoi = NA,
                              output.dir = NA,
+                             overall.width = NA,
+                             individual.width = NA,
+                             width.mult = NA,
                              ...){
   indicesString <- paste0("indices = c(",paste(paste0('"',indices,'"'),collapse = ','),")")
   owString <- glue::glue("overall.page.width = {overall.page.width}")
   iwString <- glue::glue("individual.page.width = {individual.page.width}")
   wmString <- glue::glue("core.width = {core.width}")
-  pwString <- glue::glue("core.width = {plot.width}")
+  pwString <- glue::glue("plot.width = {plot.width}")
 
 
 
@@ -61,7 +64,7 @@ spectralWorkflow <- function(directory = NA,
 
     #check to see if the big ROI is good (new shiny app)
     overview <- raster::brick(paths$overview)
-    imageRoi <- pick_big_roi_shiny(overview,bigRoiTry, zh = nrow(overviewPng)/5)
+    imageRoi <- pick_big_roi_shiny(overview,bigRoiTry, zh = nrow(overview)/5)
 
     imageRoi@xmin <- ceiling(imageRoi@xmin)
     imageRoi@ymin <- ceiling(imageRoi@ymin)

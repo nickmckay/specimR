@@ -411,24 +411,14 @@ pick_big_roi_shiny <- function(image,bigRoiTry = raster::extent(image),zh = 5000
     column(width = 12,
            h2("Select large ROI (the largest box you can draw that selects only mud)"),
            shiny::fluidRow(
-
              column(width = 8, style = "overflow-y:scroll; max-height: 600px",
                     plotOutput("plot2", height = zh,
-                               brush = brushOpts(
-                                 id = "plot2_brush",
-                                 resetOnNew = FALSE
-                               ))
-
-             ),
-             column(width = 4,
-                    plotOutput("plot3",
-                               height = 500,
                                click = "image_click",
                                dblclick = dblclickOpts(
                                  id = "image_dblclick"
-                               )
-                    )
-             )
+                               ))
+
+             ),
            ),
            shiny::fluidRow(
              column(width = 3,
