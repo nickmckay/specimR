@@ -8,32 +8,32 @@
 #' @examples
 getColorsByIndex <- function(index){
 
-if("RABD615" == index){
-  pall <- "GnBu"
+  if("RABD615" == index){
+    pall <- "GnBu"
   }
-if("RABD660" == index){
-  pall <- "BuGn"
-}
-if("RABD660670" == index){
-  pall <- "Greens"
-}
-if("RABD845" == index){
-  pall <- "Blues"
-}
+  if("RABD660" == index){
+    pall <- "BuGn"
+  }
+  if("RABD660670" == index){
+    pall <- "Greens"
+  }
+  if("RABD845" == index){
+    pall <- "Blues"
+  }
 
 
-#band ratios
-if("R570R630"== index){
-  pall <- "YlOrRd"
-}
+  #band ratios
+  if("R570R630"== index){
+    pall <- "YlOrRd"
+  }
 
-if("R590R690" == index){
-  pall <- "Purples"
-}
+  if("R590R690" == index){
+    pall <- "Purples"
+  }
 
   cols <- list(line = RColorBrewer::brewer.pal(name = pall,n = 7)[3],
                smooth = RColorBrewer::brewer.pal(name = pall,n = 7)[7],palette = pall)
-return(cols)
+  return(cols)
 }
 
 #' Title
@@ -49,7 +49,7 @@ return(cols)
 #' @examples
 plotHeatmap <- function(rasDat,depthScale,cmPerPixel,palette = "Greens"){
   #depth
- syf <- rev(depthScale)
+  syf <- rev(depthScale)
   # Heatmap
   plotOut <- rasDat %>%
     as.matrix() %>%
@@ -124,80 +124,132 @@ plotVerticalIndex <- function(ind,
 #' @examples
 plotSpectralDashboard <- function(normalized,
                                   ind,
+                                  processed.image.dir = file.path(normalized$outputDir,"photos"),
                                   index.name = "RABD660",
                                   depth.label = "Depth (cm)",
-                                  width.mult = 1,
-                                  plot.width = 3,
-                                  tol = 1){
-#make a composite plot
+                                  core.width = 4,
+                                  plot.width = 8,
+                                  page.width = 10,
+                                  y.tick.interval = 5,
+                                  page.units = "cm",
+                                  tol = 1,
+                                  output.file.path = NA,
+                                  output.dpi = 600){
+  #make a composite plot
 
-#get the image
-img <- magick::image_read(normalized$pngPath)
+  #get the image
+  if(is.na(processed.image.dir)){
+    #select it
+  }
 
-#crop it based on the roi
-roi <- normalized$roi
+  #get the processed image path (want full png with scale so that ROI is in right spot)
+  fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
+  img <- magick::image_read(fullPath)
 
-iroi <- magick::geometry_area(width = width.mult*round(roi@xmax-roi@xmin),height = round(roi@ymax-roi@ymin),x_off = roi@xmin-(width.mult-1)/2*round(roi@xmax-roi@xmin),y_off = roi@ymin)
+  #get the big ROI
+  load(file.path(processed.image.dir,"bigRoi.Rdata"))
 
-cimg <- magick::image_crop(img,geometry = iroi,gravity = "SouthWest") %>%
-  magick::image_normalize()
+  roi <- normalized$roi
+
+  #decide how to crop it.
+  xOffset <- min(bigRoi@xmin,roi@xmin)
+  yOffset <- roi@ymin #use ROI exactly
+  rightPos <- max(bigRoi@xmax,roi@xmax)
+  topPos <- roi@ymax #use ROI exactly
+  width <- rightPos-xOffset
+  height <- topPos-yOffset
+
+  #crop it based on the roi
+  roi <- normalized$roi#roi relative to the whole scan
+
+  #get roi boundaries in cm
+  cmRoi <- roi
+  cmRoi@xmin <- max(roi@xmin - xOffset + 1,1)*normalized$cmPerPixel
+  cmRoi@xmax <- min(roi@xmax - xOffset + 1,rightPos)*normalized$cmPerPixel
+  cmRoi@ymin <- max(roi@ymin - yOffset + 1,1)*normalized$cmPerPixel
+  cmRoi@ymax <- min(roi@ymax - yOffset + 1,topPos)*normalized$cmPerPixel
 
 
-info <- magick::image_info(cimg)
+  iroi <- magick::geometry_area(width = width,height = height, x_off = xOffset,y_off = yOffset)
 
-height <- info$height*normalized$cmPerPixel
-width <- info$width*normalized$cmPerPixel
-
-ggimg <- ggplot2::ggplot(data.frame(x = 0, y = 0), ggplot2::aes_string("x","y")) +
-  ggplot2::geom_blank() +
-  ggplot2::coord_fixed(expand = FALSE, xlim = c(0, width),ylim = c(-height,0)) +
-  ggplot2::annotation_raster(cimg, 0, width, -height, 0, interpolate = TRUE)
-
-ticks <- ggplot_build(ggimg)$layout$panel_params[[1]]$y$breaks
-
-ggimg <- ggimg+scale_y_continuous(depth.label,labels = abs(ticks))+
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+  cimg <- magick::image_crop(img,geometry = iroi,gravity = "SouthWest")
 
 
+  cinfo <- magick::image_info(cimg)
 
-plots <- vector(mode = "list",length = length(index.name)*2+1)
-plots[[1]] <- ggimg
-for(i in 1:length(index.name)){
-  #get colors by index
-  cols <- getColorsByIndex(index.name[i])
-# make a line plot
-# line plot
-plots[[2*i+1]] <- plotVerticalIndex(ind,index.name = index.name[i],line.color = cols$line,smooth.color = cols$smooth)+scale_x_continuous(sec.axis = dup_axis())
+  c.height <- cinfo$height*normalized$cmPerPixel
+  c.width <- cinfo$width*normalized$cmPerPixel
 
-if(i<length(index.name)){
-  plots[[2*i+1]] <- plots[[2*i+1]] +   theme(axis.title.y=element_blank(),
-                                             axis.text.y=element_blank(),
-                                             axis.ticks.y=element_blank())
-}else{
-  plots[[2*i+1]] <- plots[[2*i+1]] +
-    scale_y_reverse("Depth (cm)",position = "right",expand = c(0,0))+
-    theme(axis.title.y.right = element_text(angle = 90))
-}
+  depth.ticks <- seq(0,c.height,by = y.tick.interval)
 
-#make a heatmap
-plots[[2*i]] <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
-  plotHeatmap(depthScale = normalized$scaleY,cmPerPixel = normalized$cmPerPixel,palette = cols$palette) +
-  theme(axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        panel.background = element_blank(),
-        plot.margin=unit(c(1,-.5,1,-0.5), "cm"))
-#make a dashboard plot
-}
+  ggimg <- ggplot2::ggplot(data.frame(x = 0, y = 0), ggplot2::aes_string("x","y")) +
+    ggplot2::geom_blank() +
+    ggplot2::coord_fixed(expand = FALSE, xlim = c(0, c.width),ylim = c(-c.height,0)) +
+    ggplot2::annotation_raster(cimg, 0, c.width, -c.height, 0, interpolate = FALSE)+
+    ggplot2::scale_y_continuous(depth.label,labels = rev(depth.ticks),breaks = -rev(depth.ticks))
 
-widths <- c(width.mult,rep(c(1,plot.width),times = length(index.name)))
 
-#egg
-outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0)
+  ticks <- ggplot_build(ggimg)$layout$panel_params[[1]]$y$breaks
 
-return(outplot)
+  ggimg <- ggimg+
+    theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())+
+    geom_rect(aes(xmin = cmRoi@xmin,
+                  xmax = cmRoi@xmax,
+                  ymin = -cmRoi@ymin,
+                  ymax = -cmRoi@ymax),
+              color = "red",
+              fill = NA)
+
+
+  plots <- vector(mode = "list",length = length(index.name)*2+1)
+  plots[[1]] <- ggimg
+  for(i in 1:length(index.name)){
+    #get colors by index
+    cols <- getColorsByIndex(index.name[i])
+    # make a line plot
+    # line plot
+    plots[[2*i+1]] <- plotVerticalIndex(ind,index.name = index.name[i],line.color = cols$smooth,smooth.color = cols$smooth,smooth.width = 0)+scale_x_continuous(sec.axis = dup_axis())
+
+    if(i<length(index.name)){
+      plots[[2*i+1]] <- plots[[2*i+1]] +   theme(axis.title.y=element_blank(),
+                                                 axis.text.y=element_blank(),
+                                                 axis.ticks.y=element_blank())
+    }else{
+      plots[[2*i+1]] <- plots[[2*i+1]] +
+        scale_y_reverse("Depth (cm)",position = "right",expand = c(0,0),breaks = rev(depth.ticks))+
+        theme(axis.title.y.right = element_text(angle = 90))
+    }
+
+    #make a heatmap
+    plots[[2*i]] <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
+      plotHeatmap(depthScale = normalized$scaleY,cmPerPixel = normalized$cmPerPixel,palette = cols$palette) +
+      theme(axis.title.y=element_blank(),
+            axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            panel.background = element_blank(),
+            plot.margin=unit(c(1,-.5,1,-0.5), "cm"))
+    #make a dashboard plot
+  }
+
+  rel.widths <- c(core.width,rep(c(1,plot.width),times = length(index.name)))
+  widths <- unit(rel.widths/sum(rel.widths)*page.width,units = page.units)
+  page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height/c.width
+
+  #egg
+  outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0,draw = FALSE,clip = "on")
+
+  if(!is.na(output.file.path)){
+  ggsave(plot = outplot,
+         filename = output.file.path,
+         width = page.width*2,
+         height = page.length*2,
+         units = page.units,dpi = output.dpi,
+         limitsize = FALSE)
+  }
+
+  return(outplot)
 
 }
 
