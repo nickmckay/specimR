@@ -486,7 +486,7 @@ normalize <- function(directory = NA,
 
     readr::write_file(metaOut,file.path(output.dir[nroi],"processing_metadata.txt"))
 
-    cat(crayon::bold(glue::glue("ROI {nroi} of {nRoi} completed...\n")))
+    cat(crayon::bold(glue::glue("ROI {nroi} of {nRoi} completed...\n\n")))
 
   }
 

@@ -32,11 +32,11 @@ spectralWorkflow <- function(directory = NA,
 
 
 
-  #print that you need to pick it.
-  if(is.na(directory)){
-    cat(crayon::bold("Choose a file within the Specim core directory\n\n"))
-    Sys.sleep(1)
-  }
+  # #print that you need to pick it.
+  # if(is.na(directory)){
+  #   cat(crayon::bold("Choose a file within the Specim core directory\n\n"))
+  #   Sys.sleep(1)
+  # }
 
   #get the appropriate paths
   paths <- getPaths(dirPath = directory)
@@ -99,7 +99,7 @@ spectralWorkflow <- function(directory = NA,
 
 
   #plot dashboards
-  overall <- suppressWarnings(plotSpectralDashboard(normalized,
+  overall <- suppressMessages(plotSpectralDashboard(normalized,
                                    indexTable,
                                    processed.image.dir = image.dir,
                                    index.name = indices,
@@ -112,7 +112,7 @@ spectralWorkflow <- function(directory = NA,
   #individual indices
   for(i in indices){
     #plot dashboards
-    this <- suppressWarnings(plotSpectralDashboard(normalized,
+    this <- suppressMessages(plotSpectralDashboard(normalized,
                                   indexTable,
                                   index.name = i,
                                   core.width = core.width,
@@ -132,7 +132,7 @@ spectralWorkflow <- function(directory = NA,
                             {pwString},
                           {wmString})")
 
-  readr::write_file(rep.command,file.path(normalized$outputDir,"reprocess.R"))
+  readr::write_file(rep.command,file.path(outputDir,"reprocess.R"))
   }
 }
 
