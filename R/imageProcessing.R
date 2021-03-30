@@ -95,7 +95,7 @@ histogramStretch <- function(im){
 #' @export
 #'
 #' @examples
-createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,465),image.output.dir = NA,stretch.method = "full",stretch.fun = "linear2pct"){
+createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,465),image.output.dir = NA,stretch.method = "full",stretch.fun = "linear2pct",guessBigRoi = FALSE){
 
   #pick stretch function
   if(stretch.fun == "linear2pct"){
@@ -132,6 +132,7 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
   overviewPng <- imager::load.image(paths$overview)
 
   if(is.na(bigRoi)){
+    if(guessBigRoi){
     gs <- imager::grayscale(overviewPng) %>% as.matrix()
 
     across <- apply(gs,1,mean)
@@ -141,6 +142,9 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
     cropHor <- findCropEdges(across)
 
     bigRoiTry <- raster::extent(cropHor[1],cropHor[2],cropVert[1],cropVert[2])
+    }else{
+      bigRoiTry <- raster::extent(overview)
+    }
 
     #check to see if the big ROI is good (new shiny app)
     bigRoi <- pick_big_roi_shiny(overview,bigRoiTry, zh = nrow(overview)/5)

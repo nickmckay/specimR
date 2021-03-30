@@ -20,6 +20,7 @@ spectralWorkflow <- function(directory = NA,
                              image.wavelengths = c(630,532,465),
                              imageRoi = NA,
                              output.dir = NA,
+                             clickDepths = NA,
                              overall.width = NA,
                              individual.width = NA,
                              width.mult = NA,
@@ -31,7 +32,11 @@ spectralWorkflow <- function(directory = NA,
   pwString <- glue::glue("plot.width = {plot.width}")
 
 
-
+  if(all(is.na(clickDepths))){
+    assign("clickDepths",NULL,envir = .GlobalEnv)
+  }else{
+    assign("clickDepths",clickDepths,envir = .GlobalEnv)
+  }
   # #print that you need to pick it.
   # if(is.na(directory)){
   #   cat(crayon::bold("Choose a file within the Specim core directory\n\n"))
@@ -134,6 +139,8 @@ spectralWorkflow <- function(directory = NA,
 
   readr::write_file(rep.command,file.path(output.dir,"reprocess.R"))
   }
+  rm("clickDepths",envir = .GlobalEnv)
+
 }
 
 
