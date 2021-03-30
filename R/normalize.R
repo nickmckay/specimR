@@ -235,6 +235,11 @@ normalize <- function(directory = NA,
                       corename = NA){
 
 
+  clickDepths <- try(get("clickDepths",envir = .GlobalEnv),silent = TRUE)
+  if(is.data.frame(clickDepths)){
+    cmPerPixel <- abs(diff(clickDepths$cm[1:2])/diff(clickDepths$pixel[1:2]))
+  }
+
 
   if(length(wavelengths) == 3){#probably an image
     is.image <- TRUE
@@ -432,15 +437,23 @@ normalize <- function(directory = NA,
 
 
     clickDepths <- try(get("clickDepths",envir = .GlobalEnv),silent = TRUE)
-    if(!class(clickDepths)=="try-error"){
+    if(is.data.frame(clickDepths)){
       #calculate top and bottom depths of ROI
-      ymin <- clickDepths$pixel[2]
-      ymax <- clickDepths$pixel[1]
-      depth1 <- clickDepths$cm[1]
-      depth2 <- clickDepths$cm[2]
+      ymin <- min(clickDepths$pixel)
+      ymax <- max(clickDepths$pixel)
+      depthTop <- min(clickDepths$cm)
+      depthBot <- max(clickDepths$cm)
 
-      roiBotDepth <- (roi@ymin-ymin)*cmPerPix+depth2
-      roiTopDepth <- (roi@ymax-ymax)*cmPerPix+depth1
+      roiBotDepth <- Hmisc::approxExtrap(clickDepths$pixel,clickDepths$cm,roi@ymin)$y
+      roiTopDepth <- Hmisc::approxExtrap(clickDepths$pixel,clickDepths$cm,roi@ymax)$y
+
+      clickDepths <- clickDepths %>%
+        dplyr::bind_rows(tibble::tibble(position = c("ROI top","ROI bottom"),
+                                  pixel = c(roi@ymax,roi@ymin),
+                                  cm = c(roiTopDepth,roiBotDepth)))
+
+      readr::write_csv(clickDepths,file.path(output.dir[nroi],"depthTable.csv"))
+
 
     }else{
       roiBotDepth <- NA
@@ -484,7 +497,7 @@ normalize <- function(directory = NA,
       stringr::str_c(glue::glue("Output directory: {output.dir[nroi]}"))
 
 
-    readr::write_file(metaOut,file.path(output.dir[nroi],"processing_metadata.txt"))
+    readr::write_lines(metaOut,file.path(output.dir[nroi],"processing_metadata.txt"),)
 
     cat(crayon::bold(glue::glue("ROI {nroi} of {nRoi} completed...\n\n")))
 
