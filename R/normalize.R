@@ -347,7 +347,7 @@ normalize <- function(directory = NA,
 
     br.image <- raster::crop(overview,br_roi)
 
-    cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
+    cmPerPixel <- pick_length_shiny(overview,nrow(overview)/5)
 
   }
 
@@ -427,11 +427,6 @@ normalize <- function(directory = NA,
     if(!dir.exists(file.path(output.dir[nroi]))){
       dir.create(file.path(output.dir[nroi]))
     }
-    # if(!dir.exists(file.path(output.dir[nroi],corename))){
-    #   dir.create(file.path(output.dir[nroi],corename))
-    # }
-
-
 
     raster::writeRaster(normalized,file.path(output.dir[nroi],"normalized.tif"),overwrite = TRUE)
 
@@ -448,7 +443,7 @@ normalize <- function(directory = NA,
       roiTopDepth <- Hmisc::approxExtrap(clickDepths$pixel,clickDepths$cm,roi@ymax)$y
 
       clickDepths <- clickDepths %>%
-        dplyr::bind_rows(tibble::tibble(position = c("ROI top","ROI bottom"),
+        dplyr::bind_rows(tibble::tibble(position = c("roiTop","roiBottom"),
                                   pixel = c(roi@ymax,roi@ymin),
                                   cm = c(roiTopDepth,roiBotDepth)))
 
