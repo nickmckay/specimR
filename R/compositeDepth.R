@@ -59,7 +59,7 @@ createCoreDepthTable <- function(cores){
   return(coreTable)
 }
 
-section2coreDepth <- function(coreTable,core.section,depths){
+section2compositeDepth <- function(coreTable,core.section,depths){
   #get relevant core
   relCore <- dplyr::filter(coreTable,section == core.section)
 

@@ -15,8 +15,7 @@
 #' @examples
 plotCompositeSpectralDashboard <- function(normList,
                                            coreTable,
-                                           ind,
-                                           processed.image.dir = file.path(normalized$outputDir,"photos"),
+                                           processed.image.dir = file.path(normList[[1]]$outputDir,"photos"),
                                            index.name = "RABD660",
                                            depth.label = "Depth (cm)",
                                            core.width = 4,
@@ -133,56 +132,88 @@ plotCompositeSpectralDashboard <- function(normList,
                   ymax = -ymax),
               color = "red",
               fill = NA)
-}
 
 
 
-plots <- vector(mode = "list",length = length(index.name)*2+1)
-plots[[1]] <- ggimg
-for(i in 1:length(index.name)){
-  #get colors by index
-  cols <- getColorsByIndex(index.name[i])
-  # make a line plot
-  # line plot
-  plots[[2*i+1]] <- plotVerticalIndex(ind,index.name = index.name[i],line.color = cols$smooth,smooth.color = cols$smooth,smooth.width = 0)+scale_x_continuous(sec.axis = dup_axis())
+  # Plot indices! -----------------------------------------------------------
 
-  if(i<length(index.name)){
-    plots[[2*i+1]] <- plots[[2*i+1]] +   theme(axis.title.y=element_blank(),
-                                               axis.text.y=element_blank(),
-                                               axis.ticks.y=element_blank())
-  }else{
-    plots[[2*i+1]] <- plots[[2*i+1]] +
-      scale_y_reverse("Depth (cm)",position = "right",expand = c(0,0),breaks = rev(depth.ticks))+
-      theme(axis.title.y.right = element_text(angle = 90))
+  for(ni in 1:length(normList)){
+    normalized <- normList[[ni]]
+    thisIndex <- calculateIndices(normalized)
+
+    #adjust depth if
+    if(ni==1){
+      indexTable <- thisIndex
+    }else{
+      thisIndex$depth <- thisIndex$depth+coreTable$compositeRoiTopDepth[ni]
+      #add a row of NAs
+      narow <- thisIndex[1,]
+      narow[,] <- NA
+      indexTable <- dplyr::bind_rows(indexTable,narow)
+      indexTable <- dplyr::bind_rows(indexTable,thisIndex)
+    }
+  }
+  ind <- indexTable
+
+  plots <- vector(mode = "list",length = length(index.name)+1)
+  plots[[1]] <- ggimg
+  for(i in 1:length(index.name)){
+    #get colors by index
+    cols <- getColorsByIndex(index.name[i])
+    # make a line plot
+    # line plot
+    plots[[i+1]] <- plotVerticalIndex(ind,index.name = index.name[i],line.color = cols$smooth,smooth.color = cols$smooth,smooth.width = 0)+scale_x_continuous(sec.axis = dup_axis())
+
+    if(i<length(index.name)){
+      plots[[i+1]] <- plots[[i+1]] +   theme(axis.title.y=element_blank(),
+                                             axis.text.y=element_blank(),
+                                             axis.ticks.y=element_blank())
+    }else{
+      plots[[i+1]] <- plots[[i+1]] +
+        scale_y_reverse("Depth (cm)",position = "right",expand = c(0,0),breaks = rev(depth.ticks))+
+        theme(axis.title.y.right = element_text(angle = 90))
+    }
+  }
+  # #make a heatmap ------ None for now
+
+  # for(ni in 1:length(normList)){
+  #   normalized <- normList[[ni]]
+  #   secDepth <- section2compositeDepth(coreTable = coreTable,core.section = names(normList)[ni],depths = normalized$scaleY)
+  #   thisHeatMap <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
+  #     plotHeatmap(depthScale = secDepth,cmPerPixel = normalized$cmPerPixel,palette = cols$palette) +
+  #     theme(axis.title.y=element_blank(),
+  #           axis.text.y=element_blank(),
+  #           axis.ticks.y=element_blank(),
+  #           panel.background = element_blank(),
+  #           plot.margin=unit(c(1,-.5,1,-0.5), "cm"))
+  #   if(ni == 1){
+  #     bigHeatMap <- thisHeatMap
+  #   }else{
+  #     bigHeatMap <- bigHeatMap + thisHeatMap
+  #   }
+  #
+  # }
+
+  # rel.widths <- c(core.width,rep(c(1,plot.width),times = length(index.name)))
+  # widths <- unit(rel.widths/sum(rel.widths)*page.width,units = page.units)
+  # page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height/c.width
+
+  rel.widths <- c(core.width,rep(plot.width,times = length(index.name)))
+  widths <- unit(rel.widths/sum(rel.widths)*page.width,units = page.units)
+  page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height/c.width
+
+  #egg
+  outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0,draw = FALSE,clip = "on")
+
+  if(!is.na(output.file.path)){
+    ggsave(plot = outplot,
+           filename = output.file.path,
+           width = page.width*2,
+           height = page.length*2,
+           units = page.units,dpi = output.dpi,
+           limitsize = FALSE)
   }
 
-  #make a heatmap
-  plots[[2*i]] <- makeHeatmap(normalized, index = index.name[i],tol = tol) %>%
-    plotHeatmap(depthScale = normalized$scaleY,cmPerPixel = normalized$cmPerPixel,palette = cols$palette) +
-    theme(axis.title.y=element_blank(),
-          axis.text.y=element_blank(),
-          axis.ticks.y=element_blank(),
-          panel.background = element_blank(),
-          plot.margin=unit(c(1,-.5,1,-0.5), "cm"))
-  #make a dashboard plot
-}
-
-rel.widths <- c(core.width,rep(c(1,plot.width),times = length(index.name)))
-widths <- unit(rel.widths/sum(rel.widths)*page.width,units = page.units)
-page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height/c.width
-
-#egg
-outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0,draw = FALSE,clip = "on")
-
-if(!is.na(output.file.path)){
-  ggsave(plot = outplot,
-         filename = output.file.path,
-         width = page.width*2,
-         height = page.length*2,
-         units = page.units,dpi = output.dpi,
-         limitsize = FALSE)
-}
-
-return(outplot)
+  return(outplot)
 
 }
