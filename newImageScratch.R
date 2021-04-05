@@ -1,22 +1,13 @@
 #experiment with images
 
 library(raster)
-filen <- "/Users/npm4/Downloads/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33/capture/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33.raw"
-
-overview <- raster::brick("/Users/npm4/Downloads/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33/capture/Lakes380_DOUGL_LC2U_2B_2020-11-12_21-55-33.raw")
-
-rgbi <- specimR:::getNearestWavelengths(spectra = c(630,532,465),filen = overview)
-
-rgb <- raster::subset(overview,subset = rgbi)
-
-mat <- as.matrix(raster::mean(rgb))
-across <- apply(mat,2,mean)
-down <- apply(mat,1,mean)
-
-line <- across
+library(magrittr)
+library(shiny)
 
 
-findCropEdges <- function(line,basereg =  c(0.25,0.75),cutthresh = .1, thresh = 5){
+# auto detection ---------------------------------------------------------
+
+findCropEdges <- function(line,basereg =  c(0.25,0.75),cutthresh = .3, thresh = 3){
 
   starti <- c(round(c(0.25,0.75)*length(line)))
 
@@ -49,27 +40,11 @@ findCropEdges <- function(line,basereg =  c(0.25,0.75),cutthresh = .1, thresh = 
   return(c(cut1,cut2))
 }
 
-cropVert <- findCropEdges(down)
-cropHor <- findCropEdges(across)
 
+linearStretch <- function(lay,na.rm = TRUE,trunc.perc = 0.02){
+  mac <-  quantile((lay),1-trunc.perc,na.rm = na.rm)
+  mic <- quantile((lay),trunc.perc,na.rm = na.rm)
 
-cropped <- raster::crop(rgb,raster::extent(rgb,cropVert[1],cropVert[2],cropHor[1],cropHor[2]))
-
-
-cropim <- maptools::as.im(cropped)
-
-
-mac <-  quantile(values(cropped),.99)
-mic <- quantile(values(cropped),.01)
-stretch <- (cropped-mic)/(mac-mic)
-stretch[stretch > 1] <- 1
-stretch[stretch < 0] <- 0
-stretch <- (stretch * 254)+1
-plotRGB(stretch)
-
-stretchfun <- function(lay,na.rm = TRUE){
-  mac <-  quantile((lay),.99,na.rm = na.rm)
-  mic <- quantile((lay),.01,na.rm = na.rm)
   stretch <- (lay-mic)/(mac-mic)
   stretch[stretch > 1] <- 1
   stretch[stretch < 0] <- 0
@@ -77,18 +52,155 @@ stretchfun <- function(lay,na.rm = TRUE){
   return(stretch)
 }
 
-as.mat <- c(as.matrix(cropped))
-test <- imager::as.cimg(as.mat,x = ncol(cropped),y = nrow(cropped),cc = 3)
-hist.eq <- function(im) imager::as.cimg(ecdf(im)(im),dim=dim(im))
-#split image into rgb channels
-cn <- imager::imsplit(im,"c")
-#equalise each channel individually
-cn.eq <- imager::map_il(cn,hist.eq)
-#recombine and plot
-im2 <- imager::imappend(cn.eq,"c")
+histogramStretch <- function(im){
+  win <- which(!is.na(im))
+  st <- ecdf(im[win])(im[win])
+  im[win] <- st
+  return(imager::as.cimg(im))
+}
 
-plotRGB(cropped,stretch = "hist")
+#Create image from reflectance standardized data
+
+createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,465),image.output.dir = NA,stretch.method = "full",stretch.fun = "linear2pct"){
+
+  #pick stretch function
+  if(stretch.fun == "linear2pct"){
+    stretchfun = linearStretch
+  }else if(stretch.fun == "histogram"){
+    stretchfun = histogramStretch
+  }else{
+    stop("stretchfun not recognized. Valid options are 'linear2pct' or 'histogram'")
+  }
 
 
 
-plotRGB(rgb,stretch = "lin")
+  #print that you need to pick it.
+  if(is.na(directory)){
+    cat(crayon::bold("Choose a file within the Specim core directory\n"))
+    Sys.sleep(1)
+  }
+
+
+  #get the appropriate paths
+  paths <- getPaths(dirPath = directory)
+
+  #output info
+
+  #output directory handling
+  if(is.na(image.output.dir)){
+    image.output.dir <- file.path(dirname(paths$overview),"products","photos")
+  }
+
+  directory <- dirname(paths$overview)
+
+  overview <- raster::brick(paths$overview)
+
+  overviewPng <- imager::load.image(paths$overview)
+
+  if(is.na(bigRoi)){
+    gs <- imager::grayscale(overviewPng) %>% as.matrix()
+
+    across <- apply(gs,1,mean)
+    down <- apply(gs,2,mean)
+
+    cropVert <- findCropEdges(rev(down))
+    cropHor <- findCropEdges(across)
+
+    bigRoiTry <- raster::extent(cropHor[1],cropHor[2],cropVert[1],cropVert[2])
+
+    #check to see if the big ROI is good (new shiny app)
+    bigRoi <- pick_big_roi_shiny(overview,bigRoiTry, zh = nrow(overview)/5)
+
+    bigRoi@xmin <- ceiling(bigRoi@xmin)
+    bigRoi@ymin <- ceiling(bigRoi@ymin)
+    bigRoi@xmax <- floor(bigRoi@xmax)
+    bigRoi@ymax <- floor(bigRoi@ymax)
+  }
+
+  bigRoiStr <<- glue::glue("raster::extent(matrix(c({bigRoi@xmin},{bigRoi@xmax},{bigRoi@ymin},{bigRoi@ymax}),nrow = 2,byrow = T))")
+
+  save(bigRoi,file = file.path(image.output.dir,"bigRoi.Rdata"))
+
+
+  # now crop out the mud.
+
+  normRGB <- normalize(directory = directory,
+                       cmPerPixel = 0.004,
+                       wavelengths = wavelengths,
+                       roi = bigRoi,
+                       output.dir = tempdir(),
+                       corename = paths$corename
+  )
+
+
+  if(stretch.method == "full"){#apply stretch to all channels together
+    #rescale the image
+    rescaledROI <- normRGB[[1]]$normalized %>%
+      as.matrix() %>%
+      stretchfun() %>%
+      c() %>%
+      imager::as.cimg(x = ncol(normRGB[[1]]$normalized),y = nrow(normRGB[[1]]$normalized),cc = 3) %>%
+      imager::mirror("y")
+
+
+  }else if(stretch.method == "channel"){#apply stretch channel by channel
+    #rescale the image
+    rescaledROI <- normRGB[[1]]$normalized %>%
+      as.matrix() %>%
+      c() %>%
+      imager::as.cimg(x = ncol(normRGB[[1]]$normalized),y = nrow(normRGB[[1]]$normalized),cc = 3) %>%
+      imager::imsplit("c") %>%
+      imager::map_il(stretchfun) %>%
+      imager::imappend("c") %>%
+      imager::mirror("y")
+
+
+  }
+
+  #save the mud only image.
+  if(!dir.exists(image.output.dir)){
+    dir.create(image.output.dir)
+  }
+
+  imager::save.image(rescaledROI,file = file.path(image.output.dir,paste0("coreOnly-",stretch.fun,".png")))
+
+
+
+  # rescale the outer parts of the png
+  rescaledOverview <- imager::mirror(overviewPng,"y")
+  rescaledOverview[(bigRoi@xmin+1):bigRoi@xmax,(bigRoi@ymin+1):bigRoi@ymax, , ] <- NA
+  rescaledOverview <-  imager::imsplit(rescaledOverview,"c") %>%
+    imager::map_il(linearStretch) %>%
+    imager::imappend("c")
+
+
+  #plop the new rescaled mud back in.
+
+  mudAndScale <- rescaledOverview
+
+  mudAndScale[(bigRoi@xmin+1):bigRoi@xmax,(bigRoi@ymin+1):bigRoi@ymax, , ] <- rescaledROI
+
+  #flip back
+  mudAndScale <- imager::mirror(mudAndScale,"y")
+
+
+  imager::save.image(mudAndScale,file = file.path(image.output.dir,paste0("fullImage-",stretch.fun,".png")))
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

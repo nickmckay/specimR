@@ -64,10 +64,16 @@ lengthserver <- function(input, output, session){
     ymin <- min(click$y,dblclick$y)
     ymax <- max(click$y,dblclick$y)
     pixLen <- ymax-ymin
-    depth1 <- input$depth1
-    depth2 <- input$depth2
+    depth1 <- min(c(input$depth1,input$depth2))
+    depth2 <- max(c(input$depth1,input$depth2))
+
+    clickDepths <<- tibble::tibble(position = c("top","bottom"),
+                                  pixel = c(ymax,ymin),
+                                  cm = c(depth1, depth2))
+
     cmLen <- abs(depth2-depth1)
     cmPerPix <- cmLen/pixLen
+
     cmPerPix <<- cmPerPix
     shiny::stopApp()
 

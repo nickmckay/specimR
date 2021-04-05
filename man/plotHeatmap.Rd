@@ -4,10 +4,10 @@
 \alias{plotHeatmap}
 \title{Title}
 \usage{
-plotHeatmap(rasDat, depthScale, palette = "Greens")
+plotHeatmap(rasDat, depthScale, cmPerPixel, palette = "Greens")
 }
 \arguments{
-\item{palette}{}
+\item{cmPerPixel}{}
 }
 \value{
 

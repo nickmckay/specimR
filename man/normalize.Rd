@@ -7,7 +7,7 @@
 normalize(
   directory = NA,
   cmPerPixel = NA,
-  spectra = NA,
+  wavelengths = c(550, 570, 590, 615, 630, 650, 659:671, 690, 730, 790, 845, 900),
   roi = NA,
   output.dir = NA,
   corename = NA
@@ -18,13 +18,13 @@ normalize(
 
 \item{cmPerPixel}{optionally specify the number of cm per pixel. Will determine interactively if NA. (default = NA)}
 
-\item{spectra}{which spectra to normalize}
-
 \item{roi}{rasterExtent object defining region of interest. NA will allow you to choose interactively (default = NA)}
 
 \item{output.dir}{optionally save output raster by specifyign the path}
 
 \item{corename}{optionally choose the length of the core}
+
+\item{spectra}{which spectra to normalize}
 }
 \value{
 a normalized hyperspectral image
