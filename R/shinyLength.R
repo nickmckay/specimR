@@ -85,7 +85,7 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
   assign("image.ext",image.ext,envir = specimEnv)
 
 
-  ui <- fluidPage(
+  ui <- shiny::fluidPage(
     # Some custom CSS for a smaller font for preformatted text
     tags$head(
       tags$style(HTML("
@@ -97,7 +97,7 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
 
     column(width = 12, class = "well",
            h2("Depth selector"),
-           fluidRow(
+           shiny::fluidRow(
              column(width = 4,
                     plotOutput("plot2", height = 800,
                                click = "image_click"
@@ -109,7 +109,7 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
                     )
              )
            ),
-           fluidRow(
+           shiny::fluidRow(
              column(width = 3,
                     #numericInput("x1",
                     #             h4("Click x"),
