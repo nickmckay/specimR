@@ -15,6 +15,7 @@
 #' @examples
 plotCompositeSpectralDashboard <- function(normList,
                                            coreTable,
+                                           indices = NA,
                                            processed.image.dir = file.path(normList[[1]]$outputDir,"photos"),
                                            index.name = "RABD660",
                                            depth.label = "Depth (cm)",
@@ -139,8 +140,11 @@ plotCompositeSpectralDashboard <- function(normList,
 
   for(ni in 1:length(normList)){
     normalized <- normList[[ni]]
-    thisIndex <- calculateIndices(normalized)
-
+    if(is.na(indices)){
+    thisIndex <- calculateIndices(normalized) #this won't work if the Temporary raster data are missing
+    }else{
+    thisIndex <- indices[[ni]]
+    }
     #adjust depth if
     if(ni==1){
       indexTable <- thisIndex
