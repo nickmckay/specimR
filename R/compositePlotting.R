@@ -34,7 +34,7 @@ plotCompositeSpectralDashboard <- function(normList,
   for(ni in 1:length(normList)){
 
     normalized <- normList[[ni]]
-    processed.image.dir = file.path(normalized,"photos")
+    processed.image.dir = file.path(normalized$outputDir,"photos")
     #get the processed image path (want full png with scale so that ROI is in right spot)
     fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
     img <- magick::image_read(fullPath)
