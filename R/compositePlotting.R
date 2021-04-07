@@ -81,7 +81,6 @@ plotCompositeSpectralDashboard <- function(normList,
 
   #now plot it!
   c.height <- max(coreTable$compositeDepthAtBottomCoreliner)
-  c.width <- cinfo$width*normalized$cmPerPixel
 
   depth.ticks <- seq(0,c.height,by = y.tick.interval)
 
@@ -108,6 +107,7 @@ plotCompositeSpectralDashboard <- function(normList,
 
 
     cinfo <- magick::image_info(cimg)
+    c.width <- cinfo$width*normalized$cmPerPixel
 
 
     if(ni == 1){

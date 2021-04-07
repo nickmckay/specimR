@@ -7,11 +7,17 @@
 plotSpectralDashboard(
   normalized,
   ind,
+  processed.image.dir = file.path(normalized$outputDir, "photos"),
   index.name = "RABD660",
   depth.label = "Depth (cm)",
-  width.mult = 1,
-  plot.width = 3,
-  tol = 1
+  core.width = 4,
+  plot.width = 8,
+  page.width = 10,
+  y.tick.interval = 5,
+  page.units = "cm",
+  tol = 1,
+  output.file.path = NA,
+  output.dpi = 600
 )
 }
 \arguments{

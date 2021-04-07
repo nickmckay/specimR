@@ -5,10 +5,20 @@
 \title{Wrapper function that goes through standardization, index calculation and visualization}
 \usage{
 spectralWorkflow(
+  directory = NA,
   indices = c("RABD615", "RABD660670", "RABD845", "R570R630", "R590R690"),
-  overall.width = 3,
-  individual.width = 2,
-  width.mult = 2,
+  overall.page.width = 30,
+  individual.page.width = 10,
+  plot.width = 8,
+  core.width = 4,
+  image.wavelengths = c(630, 532, 465),
+  predict.image.roi = FALSE,
+  imageRoi = NA,
+  output.dir = NA,
+  clickDepths = NA,
+  overall.width = NA,
+  individual.width = NA,
+  width.mult = NA,
   ...
 )
 }
