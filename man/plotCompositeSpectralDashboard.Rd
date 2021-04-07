@@ -7,8 +7,8 @@
 plotCompositeSpectralDashboard(
   normList,
   coreTable,
-  processed.image.dir = file.path(normList[[1]]$outputDir, "photos"),
-  index.name = "RABD660",
+  indices = NA,
+  index.name = "RABD660670",
   depth.label = "Depth (cm)",
   core.width = 4,
   plot.width = 8,

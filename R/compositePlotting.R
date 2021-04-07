@@ -16,8 +16,7 @@
 plotCompositeSpectralDashboard <- function(normList,
                                            coreTable,
                                            indices = NA,
-                                           processed.image.dir = file.path(normList[[1]]$outputDir,"photos"),
-                                           index.name = "RABD660",
+                                           index.name = "RABD660670",
                                            depth.label = "Depth (cm)",
                                            core.width = 4,
                                            plot.width = 8,
@@ -31,24 +30,17 @@ plotCompositeSpectralDashboard <- function(normList,
 
   #imagery first
 
-
-
-  #get the image
-  if(is.na(processed.image.dir)){
-    #select it
-  }
-
-  #get the processed image path (want full png with scale so that ROI is in right spot)
-  fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
-  img <- magick::image_read(fullPath)
-
-  #get the big ROI
-  load(file.path(processed.image.dir,"bigRoi.Rdata"))
-
   #get ROI info!
   for(ni in 1:length(normList)){
 
     normalized <- normList[[ni]]
+    processed.image.dir = file.path(normalized,"photos")
+    #get the processed image path (want full png with scale so that ROI is in right spot)
+    fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
+    img <- magick::image_read(fullPath)
+
+    #get the big ROI
+    load(file.path(processed.image.dir,"bigRoi.Rdata"))
 
     roi <- normalized$roi
 
