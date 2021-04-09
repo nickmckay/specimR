@@ -27,9 +27,9 @@ createCoreDepthTable <- function(cores){
       dplyr::select(position,cm)
 
     clT <- 0
-    clB <- filter(core,position == "coreLinerBottom")$cm
-    roiT <- filter(core,position == "roiTop")$cm
-    roiB <- filter(core,position == "roiBottom")$cm
+    clB <- dplyr::filter(core,position == "coreLinerBottom")$cm
+    roiT <- dplyr::filter(core,position == "roiTop")$cm
+    roiB <- dplyr::filter(core,position == "roiBottom")$cm
 
     #remove top gap on first core
     if(i == 1){

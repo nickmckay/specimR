@@ -1,13 +1,190 @@
 
+#' Title
+#'
+#' @param coreNames
+#' @param append
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getCompositeName <- function(coreNames,append = "Composite"){
+compName <- coreNames[1]
+
+for(i in 2:length(coreNames)){
+  ta <- drop(attr(adist(compName, coreNames[i], counts=TRUE), "trafos"))
+  compName <- stringr::str_sub(compName, stringr::str_locate(ta,"M+"))
+
+}
+
+return(stringr::str_c(compName,append))
+}
+
+
+
+#' Title
+#'
+#' @param dirPath
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getPathsForCompositing <- function(dirPath=NA){
+  if(is.na(dirPath)){
+    cat(crayon::bold("Select the `processing_metadata.txt` within the Products directory of the core you want\n\n"))
+    Sys.sleep(0.5)
+    metaPath <- file.choose()
+    dirPath <-  dirname(metaPath)
+  }
+
+  #load metadata
+  meta <- readr::read_lines(metaPath)
+
+
+  #try to find the overview, capture, white and dark ref paths
+  paths <- list()
+
+  paths$corename <- coreName <- meta[1]
+
+  #normalized output RData
+  op <- file.path(dirPath,"normalized.RData")
+
+  if(file.exists(op)){
+    paths$normOut <- op
+  }else{
+    cat(crayon::bold(crayon::red("Choose the 'normalized.RData' file\n\n")))
+    paths$overview <-  file.choose()
+  }
+
+  #depth table
+  ca <- file.path(dirPath,"depthTable.csv")
+
+  if(file.exists(ca)){
+    paths$depthTable <- ca
+  }else{
+    cat(crayon::bold(crayon::red("Choose the depthTable .csv file\n\n")))
+    paths$depthTable <-  file.choose()
+  }
+
+  #index table
+  si <- file.path(dirPath,"spectralIndices.csv")
+
+  if(file.exists(ca)){
+    paths$spectralIndices <- si
+  }else{
+    cat(crayon::bold(crayon::red("Choose the spectralIndicies .csv file\n\n")))
+    paths$spectralIndices <-  file.choose()
+  }
+
+  #index table
+  ph <- file.path(dirPath,"photos")
+
+  if(dir.exists(ph)){
+    paths$processedImageDir <- ph
+  }else{
+    cat(crayon::bold(crayon::red("Choose a file within the processedImage directory\n\n")))
+    paths$processedImageDir <-  dirpath(file.choose())
+  }
+
+  return(paths)
+
+}
+
+#' Title
+#'
+#' @param dirs
+#' @param out.dir
+#' @inheritDotParams plotCompositeSpectralDashboards
+#'
+#' @return
+#' @export
+#'
+#' @examples
+compositeSections <- function(dirs = NA,out.dir = NA,...){
+  if(is.na(dirs)){
+    nCores <- as.numeric(readline(prompt = cat(crayon::bold("How many sections do you want to composite?"))))
+    if(nCores < 2){stop("No reason to composite fewer than 2 cores")}
+
+    cat(crayon::red(glue::glue("Select the cores you want to composite IN ORDER FROM TOP TO BOTTOM...\n\n")))
+
+
+    dirs <- vector(mode = "list", length = nCores)
+
+
+    for(i in 1:nCores){
+      dirs[[i]] <- getPathsForCompositing()
+      if(i<nCores){
+        cat(crayon::green(glue::glue("Core {i} of {nCores} selected. Moving on to next core...\n\n")))
+      }else{
+        cat(crayon::green(glue::glue("Core selection complete!\n\n")))
+      }
+      Sys.sleep(0.5)
+    }
+  }
+
+  nCores <- length(dirs)
+  allInd <- allNorm <- allDepth <-  vector(mode = "list",length = nCores)
+  coreNames <- processedImageDirs <- c()
+  #load in all data
+  for(i in 1:nCores){
+    load(dirs[[i]]$normOut)
+    allNorm[[i]] <- normalizationOutput
+
+    allInd[[i]] <- readr::read_csv(dirs[[i]]$spectralIndices)
+
+    allDepth[[i]] <- readr::read_csv(dirs[[i]]$depthTable)
+
+    coreNames[i] <- dirs[[i]]$corename
+
+    processedImageDirs[i] <- file.path(dirs[[i]]$processedImageDir)
+
+  }
+
+  names(allDepth) <- coreNames
+
+  #Create the core table
+    coreTable <- createCoreDepthTable(allDepth)
+
+  #Create the composite
+    compName <- getCompositeName(coreNames)
+
+    if(is.na(out.dir)){
+      out.dir <- file.path(dirname(dirname(dirs[[1]]$normOut)),compName)
+    }
+
+    if(!dir.exists(out.dir)){
+      dir.create(out.dir)
+    }
+    readr::write_csv(coreTable, file.path(out.dir,"core-depth-table.csv"))
+
+    #plot more than 1?
+
+    outPlot <- plotCompositeSpectralDashboard(normList = allNorm,
+                                   coreTable = coreTable,
+                                   indices = allInd,
+                                   output.file.path = file.path(out.dir,paste0(compName,"-compositePlot.png")),
+                                   processed.image.dirs = processedImageDirs,
+                                   ...)
+}
+
+
+
 #' Plot composite spectral dashboard
 #'
-#' @param normalized
-#' @param ind
 #' @param index.name
 #' @param depth.label
-#' @param width.mult
 #' @param plot.width
 #' @param tol
+#' @param normList a list of the normalized output lists from normalize()
+#' @param coreTable core depth table
+#' @param indices a list of spectralIndices tibbles
+#' @param core.width
+#' @param page.width
+#' @param y.tick.interval
+#' @param page.units
+#' @param output.file.path
+#' @param output.dpi
 #'
 #' @return
 #' @export
@@ -16,6 +193,7 @@
 plotCompositeSpectralDashboard <- function(normList,
                                            coreTable,
                                            indices = NA,
+                                           processed.image.dirs = NA,
                                            index.name = "RABD660670",
                                            depth.label = "Depth (cm)",
                                            core.width = 4,
@@ -34,10 +212,7 @@ plotCompositeSpectralDashboard <- function(normList,
   for(ni in 1:length(normList)){
 
     normalized <- normList[[ni]]
-    processed.image.dir = file.path(normalized$outputDir,"photos")
-    #get the processed image path (want full png with scale so that ROI is in right spot)
-    fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
-    img <- magick::image_read(fullPath)
+    processed.image.dir = processed.image.dirs[ni]
 
     #get the big ROI
     load(file.path(processed.image.dir,"bigRoi.Rdata"))
@@ -72,13 +247,16 @@ plotCompositeSpectralDashboard <- function(normList,
     }
   }
 
-  #now plot it!
-  c.height <- max(coreTable$compositeDepthAtBottomCoreliner)
-
-  depth.ticks <- seq(0,c.height,by = y.tick.interval)
-
   for(ni in 1:length(normList)){
+
     normalized <- normList[[ni]]
+    processed.image.dir =     processed.image.dir = processed.image.dirs[ni]
+    #get the processed image path (want full png with scale so that ROI is in right spot)
+    fullPath <- list.files(path = processed.image.dir,pattern = "fullImage*",full.names = TRUE)
+    img <- magick::image_read(fullPath)
+
+    #get the big ROI
+    load(file.path(processed.image.dir,"bigRoi.Rdata"))
 
     roi <- normalized$roi
 
@@ -93,6 +271,11 @@ plotCompositeSpectralDashboard <- function(normList,
     #crop it based on the roi
     roi <- normalized$roi#roi relative to the whole scan
 
+
+  #now plot it!
+  c.height <- max(coreTable$compositeRoiBottomDepth)
+
+  depth.ticks <- seq(0,c.height,by = y.tick.interval)
 
     iroi <- magick::geometry_area(width = width,height = height, x_off = xOffset,y_off = yOffset)
 
@@ -133,7 +316,7 @@ plotCompositeSpectralDashboard <- function(normList,
   for(ni in 1:length(normList)){
     normalized <- normList[[ni]]
     if(is.na(indices)){
-    thisIndex <- calculateIndices(normalized) #this won't work if the Temporary raster data are missing
+    thisIndex <- readr::read_csv(file.path(normalized$outputDir,"spectralIndices.csv"))
     }else{
     thisIndex <- indices[[ni]]
     }
