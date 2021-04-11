@@ -22,9 +22,9 @@ spectralWorkflow <- function(directory = NA,
                              imageRoi = NA,
                              output.dir = NA,
                              clickDepths = NA,
-                             overall.width = NA,
-                             individual.width = NA,
-                             width.mult = NA,
+                             overall.width = NA,#deprecated, kept for old scripts
+                             individual.width = NA,#deprecated, kept for old scripts
+                             width.mult = NA,#deprecated, kept for old scripts
                              ...){
   indicesString <- paste0("indices = c(",paste(paste0('"',indices,'"'),collapse = ','),")")
   owString <- glue::glue("overall.page.width = {overall.page.width}")

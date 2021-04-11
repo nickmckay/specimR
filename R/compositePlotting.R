@@ -101,7 +101,7 @@ getPathsForCompositing <- function(dirPath=NA){
 #' @export
 #'
 #' @examples
-compositeSections <- function(dirs = NA,out.dir = NA,...){
+compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),...){
   if(is.na(dirs)){
     nCores <- as.numeric(readline(prompt = cat(crayon::bold("How many sections do you want to composite?"))))
     if(nCores < 2){stop("No reason to composite fewer than 2 cores")}
@@ -150,24 +150,37 @@ compositeSections <- function(dirs = NA,out.dir = NA,...){
     compName <- getCompositeName(coreNames)
 
     if(is.na(out.dir)){
-      out.dir <- file.path(dirname(dirname(dirs[[1]]$normOut)),compName)
+      out.dir <- file.path(dirname(dirname(dirname(dirs[[1]]$normOut))),compName)
     }
 
     if(!dir.exists(out.dir)){
       dir.create(out.dir)
     }
-    readr::write_csv(coreTable, file.path(out.dir,"core-depth-table.csv"))
+    readr::write_csv(coreTable, file.path(out.dir,paste0(compName,"-core-depth-table.csv")))
 
-    #plot more than 1?
+#plot all the comp.indices
 
-    outPlot <- plotCompositeSpectralDashboard(normList = allNorm,
+    allPlot <- plotCompositeSpectralDashboard(normList = allNorm,
                                    coreTable = coreTable,
                                    indices = allInd,
-                                   output.file.path = file.path(out.dir,paste0(compName,"-compositePlot.png")),
+                                   index.name = composite.indices,
+                                   output.file.path = file.path(out.dir,paste0(compName,"-allIndices-compositePlot.png")),
                                    processed.image.dirs = processedImageDirs,
                                    ...)
-}
 
+    if(length(composite.indices) > 1){#plot individuals
+      for(ind in 1:length(composite.indices)){
+      indPlot <- plotCompositeSpectralDashboard(normList = allNorm,
+                                                coreTable = coreTable,
+                                                indices = allInd,
+                                                index.name = composite.indices[ind],
+                                                output.file.path = file.path(out.dir,paste0(compName,"-",composite.indices[ind],"-compositePlot.png")),
+                                                processed.image.dirs = processedImageDirs,
+                                                ...)
+
+    }
+}
+}
 
 
 #' Plot composite spectral dashboard
@@ -194,7 +207,7 @@ plotCompositeSpectralDashboard <- function(normList,
                                            coreTable,
                                            indices = NA,
                                            processed.image.dirs = NA,
-                                           index.name = "RABD660670",
+                                           index.name = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
                                            depth.label = "Depth (cm)",
                                            core.width = 4,
                                            plot.width = 8,
@@ -273,9 +286,9 @@ plotCompositeSpectralDashboard <- function(normList,
 
 
   #now plot it!
-  c.height <- max(coreTable$compositeRoiBottomDepth)
+  c.height.scale <- max(coreTable$compositeRoiBottomDepth)
 
-  depth.ticks <- seq(0,c.height,by = y.tick.interval)
+  depth.ticks <- seq(0,c.height.scale,by = y.tick.interval)
 
     iroi <- magick::geometry_area(width = width,height = height, x_off = xOffset,y_off = yOffset)
 
@@ -289,7 +302,7 @@ plotCompositeSpectralDashboard <- function(normList,
     if(ni == 1){
       ggimg <- ggplot2::ggplot(cmRoiTib, ggplot2::aes_string("x","y")) +
         ggplot2::geom_blank() +
-        ggplot2::coord_fixed(expand = FALSE, xlim = c(0, c.width),ylim = c(-c.height,0)) +
+        ggplot2::coord_fixed(expand = FALSE, xlim = c(0, c.width),ylim = c(-c.height.scale,0)) +
         ggplot2::scale_y_continuous(depth.label,labels = rev(depth.ticks),breaks = -rev(depth.ticks))+
         theme(axis.title.x=element_blank(),
               axis.text.x=element_blank(),
@@ -373,13 +386,9 @@ plotCompositeSpectralDashboard <- function(normList,
   #
   # }
 
-  # rel.widths <- c(core.width,rep(c(1,plot.width),times = length(index.name)))
-  # widths <- unit(rel.widths/sum(rel.widths)*page.width,units = page.units)
-  # page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height/c.width
-
   rel.widths <- c(core.width,rep(plot.width,times = length(index.name)))
   widths <- unit(rel.widths/sum(rel.widths)*page.width,units = page.units)
-  page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height/c.width
+  page.length <- rel.widths[1]/sum(rel.widths)*page.width*c.height.scale/c.width
 
   #egg
   outplot <- egg::ggarrange(plots = plots,nrow = 1,widths = widths,padding = 0,draw = FALSE,clip = "on")

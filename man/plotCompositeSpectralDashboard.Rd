@@ -9,7 +9,7 @@ plotCompositeSpectralDashboard(
   coreTable,
   indices = NA,
   processed.image.dirs = NA,
-  index.name = "RABD660670",
+  index.name = c("RABD615", "RABD660670", "RABD845", "R570R630", "R590R690"),
   depth.label = "Depth (cm)",
   core.width = 4,
   plot.width = 8,
