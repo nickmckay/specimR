@@ -174,11 +174,6 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
   )
 
   #export RGB quantiles
-  print("here")
-  normData <-normRGB[[1]]$normalized %>%
-    as.matrix() %>%
-    apply(2,quantile,probs)
-
   qs <- quantile(normRGB[[1]]$normalized,probs = (0:100)/100)
   write.csv(qs,file.path(image.output.dir,paste0("normalizedImageQuantiles-",paste0(wavelengths,collapse = "-"),".csv")))
 
