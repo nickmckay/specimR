@@ -95,7 +95,7 @@ getPathsForCompositing <- function(dirPath=NA){
 #'
 #' @param dirs
 #' @param out.dir
-#' @inheritDotParams plotCompositeSpectralDashboards
+#' @inheritDotParams plotCompositeSpectralDashboard
 #'
 #' @return
 #' @export

@@ -8,6 +8,7 @@ plotCompositeSpectralDashboard(
   normList,
   coreTable,
   indices = NA,
+  processed.image.dirs = NA,
   index.name = "RABD660670",
   depth.label = "Depth (cm)",
   core.width = 4,
@@ -21,7 +22,13 @@ plotCompositeSpectralDashboard(
 )
 }
 \arguments{
-\item{tol}{}
+\item{normList}{a list of the normalized output lists from normalize()}
+
+\item{coreTable}{core depth table}
+
+\item{indices}{a list of spectralIndices tibbles}
+
+\item{output.dpi}{}
 }
 \value{
 
