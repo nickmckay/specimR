@@ -57,7 +57,7 @@ lengthserver <- function(input, output, session){
     depth1 <- min(c(input$depth1,input$depth2))
     depth2 <- max(c(input$depth1,input$depth2))
 
-    clickDepths <<- tibble::tibble(position = c("topClick","coreLinerBottom"),
+    clickDepths <<- tibble::tibble(position = c("coreLinerTop","coreLinerBottom"),
                                   pixel = c(ymax,ymin),
                                   cm = c(depth1, depth2))
 
@@ -104,17 +104,17 @@ pick_length_shiny <- function(image,zh = 5000){
              column(width = 3,
                     sliderInput("slider", h4("Left image resolution (% of max)"),
                                 min = 1, max = 100,step = 5,
-                                value = 1)
+                                value = 80)
              ),
              column(width = 3,
                     #numericInput("x1",
                     #             h4("Click x"),
                     #             value = 0),
                     numericInput("y1",
-                                 h4("Top Click y"),
+                                 h4("Core liner top Click y"),
                                  value = 0),
                     numericInput("depth1",
-                                 h4("Top depth in cm"),
+                                 h4("Core liner top depth in cm"),
                                  value = 0)
              ),
              column(width = 3,

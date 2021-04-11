@@ -356,7 +356,7 @@ normalize <- function(directory = NA,
 
   }
 
-  clickDepthsStr <- glue::glue('clickDepths = tibble::tibble(position = c("topClick","coreLinerBottom"),
+  clickDepthsStr <- glue::glue('clickDepths = tibble::tibble(position = c("coreLinerTop","coreLinerBottom"),
                                    pixel = c({clickDepths$pixel[1]},{clickDepths$pixel[2]}),
                                    cm = c({clickDepths$cm[1]}, {clickDepths$cm[2]}))')
 

@@ -26,7 +26,7 @@ createCoreDepthTable <- function(cores){
     core <- cores[[i]] %>%
       dplyr::select(position,cm)
 
-    clT <- 0
+    clT <- dplyr::filter(core,position == "coreLinerTop")$cm
     clB <- dplyr::filter(core,position == "coreLinerBottom")$cm
     roiT <- dplyr::filter(core,position == "roiTop")$cm
     roiB <- dplyr::filter(core,position == "roiBottom")$cm
