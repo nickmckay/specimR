@@ -1,7 +1,16 @@
 source('~/Documents/GitHub/specimR/R/roi.R')
 source('~/Documents/GitHub/specimR/R/shinyLength.R')
 source('~/Documents/GitHub/specimR/R/normalize.R')
+source('~/Documents/GitHub/specimR/R/coreImage.R')
 library(shiny)
+library(raster)
+library(specimR)
+library(magrittr)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(tibble)
+
 #' Normalize a hyperspectral image
 #'
 #' @param directory path to Specim core folder
@@ -70,7 +79,8 @@ full_spectra <- function(directory = NA,
   }
 
   #record roi string
-  roiString <- glue::glue("roi = raster::extent(matrix(c({roi@xmin},{roi@xmax},{roi@ymin},{roi@ymax}),nrow = 2,byrow = T))")
+roi <- roi[[1]]
+     roiString <- glue::glue("roi = raster::extent(matrix(c({roi@xmin},{roi@xmax},{roi@ymin},{roi@ymax}),nrow = 2,byrow = T))")
 
   #load in the capture
 
@@ -93,9 +103,9 @@ full_spectra <- function(directory = NA,
   #find correct wavelengths
   wavelengthsOut <- gsub("X","",names(filen))%>%as.numeric()
     #get length, then subset
- #cmPerPixel <- NA
+  #cmPerPixel <- NA
     if(is.na(cmPerPixel)){
-
+   # roi <- roi[[1]]
     #try cropping the image with the same height, but on the right side to look at the top bottom
     tr_roi <- roi
     tr_roi@xmax <- raster::extent(overview)@xmax
@@ -133,26 +143,26 @@ full_spectra <- function(directory = NA,
 
   #crop the image
 
-  if(is.finite(cmPerPixel) & cmPerPixel > 0){
+if(is.finite(cmPerPixel) & cmPerPixel > 0){
     scaleY <- seq(from = cmPerPixel/2,to = (dim(filen)[1]*cmPerPixel)-cmPerPixel/2,by = cmPerPixel)
   }else{
     #calculate length interval of each pixel (necessary for indices calculations)
-    scaleY <- coreLength(stripe = stripe, length = length)
+    scaleY <- coreLength(stripe = roi, length = length)
   }
-  length(scaleY)
 
   #crop_1 <- raster::crop
   #test how slow the crop function is for .5 cm interval (6 times) or jst 3 cm interval
 
   #chunk into .5 cm bits, normalizate against the white dark lines, average into a single spectra.
 
-length.out <- 3
-chunk <- 0.5
+length.out <- 1
+chunk <- 0.25
 
 sub <- raster::extent(filen@extent@xmin,filen@extent@xmax,filen@extent@ymin,length(which(scaleY <= length.out)))
 full_spectra <- raster::crop(filen,sub)
 new_vals <- raster::aggregate(full_spectra,fact=c(1,(((full_spectra@extent@ymax-full_spectra@extent@ymin)/((length.out/chunk)-1)))),FUN=mean)
-
+dim(new_vals)
+dim(full_spectra)
 #load in the white and dark refs
   whiteRef <- raster::brick(paths$whiteref)
   darkRef <- raster::brick(paths$darkref)
@@ -182,16 +192,16 @@ new_vals <- raster::aggregate(full_spectra,fact=c(1,(((full_spectra@extent@ymax-
 
   #save paths for images too?
   return(list(allbands = allbands,
-              spectra = spectra,
+              #spectra = spectra,
               wavelengths = wavelengthsOut,
               normalized = normalized,
               scaleY = scaleY,
-              stripe = stripe,
+            #  stripe = stripe,
               cmPerPixel = cmPerPixel,
               roi = roi,
               corename = corename,
               pngPath = paths$overview,
-              normParams = normParams,
+             # normParams = normParams,
               outputDir = output.dir))
 }
 
