@@ -162,7 +162,7 @@ compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD
 
     allPlot <- plotCompositeSpectralDashboard(normList = allNorm,
                                    coreTable = coreTable,
-                                   plot.width = 20,
+                                   page.width = 30,
                                    indices = allInd,
                                    index.name = composite.indices,
                                    output.file.path = file.path(out.dir,paste0(compName,"-allIndices-compositePlot.png")),
