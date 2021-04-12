@@ -162,6 +162,7 @@ compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD
 
     allPlot <- plotCompositeSpectralDashboard(normList = allNorm,
                                    coreTable = coreTable,
+                                   plot.width = 20,
                                    indices = allInd,
                                    index.name = composite.indices,
                                    output.file.path = file.path(out.dir,paste0(compName,"-allIndices-compositePlot.png")),
@@ -173,6 +174,7 @@ compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD
       indPlot <- plotCompositeSpectralDashboard(normList = allNorm,
                                                 coreTable = coreTable,
                                                 indices = allInd,
+
                                                 index.name = composite.indices[ind],
                                                 output.file.path = file.path(out.dir,paste0(compName,"-",composite.indices[ind],"-compositePlot.png")),
                                                 processed.image.dirs = processedImageDirs,
@@ -396,8 +398,8 @@ plotCompositeSpectralDashboard <- function(normList,
   if(!is.na(output.file.path)){
     ggsave(plot = outplot,
            filename = output.file.path,
-           width = page.width*2,
-           height = page.length*2,
+           width = page.width*1.8,
+           height = page.length*1.8,
            units = page.units,dpi = output.dpi,
            limitsize = FALSE)
   }
