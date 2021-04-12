@@ -173,6 +173,9 @@ createImages <- function(bigRoi = NA, directory = NA, wavelengths = c(630,532,46
                        corename = paths$corename
   )
 
+  #export RGB quantiles
+  qs <- quantile(normRGB[[1]]$normalized,probs = (0:100)/100)
+  write.csv(qs,file.path(image.output.dir,paste0("normalizedImageQuantiles-",paste0(wavelengths,collapse = "-"),".csv")))
 
   if(stretch.method == "full"){#apply stretch to all channels together
     #rescale the image

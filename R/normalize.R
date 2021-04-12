@@ -238,6 +238,8 @@ normalize <- function(directory = NA,
   clickDepths <- try(get("clickDepths",envir = .GlobalEnv),silent = TRUE)
   if(is.data.frame(clickDepths)){
     cmPerPixel <- abs(diff(clickDepths$cm[1:2])/diff(clickDepths$pixel[1:2]))
+  }else{
+    cmPerPixel <- NA
   }
 
 
@@ -326,32 +328,37 @@ normalize <- function(directory = NA,
   #get length
   if(is.na(cmPerPixel)){
 
-    #try cropping the image with the same height, but on the right side to look at the top bottom
-    tr_roi <- roi
-    tr_roi@xmax <- raster::extent(overview)@xmax
-    tr_roi@xmin <- raster::extent(overview)@xmax*.70
-    tr_roi@ymin <- tr_roi@ymax - 1200
-    tr_roi@ymax <- tr_roi@ymax + 1200
-    tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
-    tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
+    # #try cropping the image with the same height, but on the right side to look at the top bottom
+    # tr_roi <- roi
+    # tr_roi@xmax <- raster::extent(overview)@xmax
+    # tr_roi@xmin <- raster::extent(overview)@xmax*.70
+    # tr_roi@ymin <- tr_roi@ymax - 1200
+    # tr_roi@ymax <- tr_roi@ymax + 1200
+    # tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
+    # tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
+    #
+    #
+    # tr.image <- raster::crop(overview,tr_roi)
+    #
+    # br_roi <- tr_roi
+    # br_roi@ymin <- roi@ymin - 1200
+    # br_roi@ymax <- roi@ymin + 1200
+    # br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
+    # br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
+    #
+    #
+    # br.image <- raster::crop(overview,br_roi)
 
+    cmPerPixel <- pick_length_shiny(overview,nrow(overview)/5)
 
-    tr.image <- raster::crop(overview,tr_roi)
+    clickDepths <- try(get("clickDepths",envir = .GlobalEnv),silent = TRUE)
 
-    br_roi <- tr_roi
-    br_roi@ymin <- roi@ymin - 1200
-    br_roi@ymax <- roi@ymin + 1200
-    br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
-    br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
-
-
-    br.image <- raster::crop(overview,br_roi)
-
-    cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
 
   }
 
-
+  clickDepthsStr <- glue::glue('clickDepths = tibble::tibble(position = c("coreLinerTop","coreLinerBottom"),
+                                   pixel = c({clickDepths$pixel[1]},{clickDepths$pixel[2]}),
+                                   cm = c({clickDepths$cm[1]}, {clickDepths$cm[2]}))')
 
   cmPerPixelString <- glue::glue("cmPerPixel = {cmPerPixel}")
 
@@ -371,7 +378,7 @@ normalize <- function(directory = NA,
 
   roiString <- rs
 
-  normParams <- glue::glue("{dirString},\n{cmPerPixelString},\n{spectraString},\n{roiString},\n{outputdirString},\n{corenameString}")
+  normParams <- glue::glue("{dirString},\n{clickDepthsStr},\n{cmPerPixelString},\n{spectraString},\n{roiString},\n{outputdirString},\n{corenameString}")
 
   #save normalized core image
   # normalizedImage <- normalizeCoreImage(paths$overview)
@@ -427,11 +434,6 @@ normalize <- function(directory = NA,
     if(!dir.exists(file.path(output.dir[nroi]))){
       dir.create(file.path(output.dir[nroi]))
     }
-    # if(!dir.exists(file.path(output.dir[nroi],corename))){
-    #   dir.create(file.path(output.dir[nroi],corename))
-    # }
-
-
 
     raster::writeRaster(normalized,file.path(output.dir[nroi],"normalized.tif"),overwrite = TRUE)
 
@@ -448,11 +450,12 @@ normalize <- function(directory = NA,
       roiTopDepth <- Hmisc::approxExtrap(clickDepths$pixel,clickDepths$cm,roi@ymax)$y
 
       clickDepths <- clickDepths %>%
-        dplyr::bind_rows(tibble::tibble(position = c("ROI top","ROI bottom"),
+        dplyr::bind_rows(tibble::tibble(position = c("roiTop","roiBottom"),
                                   pixel = c(roi@ymax,roi@ymin),
                                   cm = c(roiTopDepth,roiBotDepth)))
 
       readr::write_csv(clickDepths,file.path(output.dir[nroi],"depthTable.csv"))
+
 
 
     }else{

@@ -1,8 +1,6 @@
 
 lengthserver <- function(input, output, session){
-  tr.image <- get("tr.image",envir = specimEnv)
-  br.image <- get("br.image",envir = specimEnv)
-  image.ext <- get("image.ext",envir = specimEnv)
+  image <- get("image",envir = specimEnv)
 
   click <- reactiveValues()
   dblclick <- reactiveValues()
@@ -14,21 +12,13 @@ lengthserver <- function(input, output, session){
   click$y <- 0
   dblclick$x <- 0
   dblclick$y <- 0
-  init.extent <- image.ext
-  init.extent[3] <- init.extent[4]-2000
 
-
-  # output$plot1 <- renderPlot({
-  #   raster::plotRGB(image, axes=TRUE, stretch="hist", main="Overview")
-  # })
 
   output$plot2 <- renderPlot({
-    raster::plotRGB(tr.image, axes=TRUE, stretch="hist", main="Click on depth marker near top of core")
-  })
+    raster::plotRGB(image, axes=FALSE, stretch="hist", maxpixels = prod(dim(image)[1:2])*(input$slider/100))},
+    width = 500
+  )
 
-  output$plot3 <- renderPlot({
-    raster::plotRGB(br.image, axes=TRUE, stretch="hist", main="Double Click on depth marker near top of core")
-  })
 
   observeEvent(input$image_click,{
     click$x <- input$image_click$x
@@ -46,15 +36,15 @@ lengthserver <- function(input, output, session){
   }
   )
 
-  output$click_info <- renderPrint({
-    cat("click:\n")
-    str(c(click$x,click$y))
-  })
-
-  output$dblclick_info <- renderPrint({
-    cat("dblclick:\n")
-    str(c(dblclick$x,dblclick$y))
-  })
+  # output$click_info <- renderPrint({
+  #   cat("click:\n")
+  #   str(c(click$x,click$y))
+  # })
+  #
+  # output$dblclick_info <- renderPrint({
+  #   cat("dblclick:\n")
+  #   str(c(dblclick$x,dblclick$y))
+  # })
 
 
 
@@ -67,7 +57,7 @@ lengthserver <- function(input, output, session){
     depth1 <- min(c(input$depth1,input$depth2))
     depth2 <- max(c(input$depth1,input$depth2))
 
-    clickDepths <<- tibble::tibble(position = c("top","bottom"),
+    clickDepths <<- tibble::tibble(position = c("coreLinerTop","coreLinerBottom"),
                                   pixel = c(ymax,ymin),
                                   cm = c(depth1, depth2))
 
@@ -83,12 +73,10 @@ lengthserver <- function(input, output, session){
 }
 
 
-pick_length_shiny <- function(tr.image,br.image,image.ext){
+pick_length_shiny <- function(image,zh = 5000){
 
   #assign image into Global (hack for now)
-  assign("tr.image",tr.image,envir = specimEnv)
-  assign("br.image",br.image,envir = specimEnv)
-  assign("image.ext",image.ext,envir = specimEnv)
+  assign("image",image,envir = specimEnv)
 
 
   ui <- shiny::fluidPage(
@@ -101,30 +89,32 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
     "))
     ),
 
-    column(width = 12, class = "well",
+    column(width = 12,
            h2("Depth selector"),
            shiny::fluidRow(
-             column(width = 4,
-                    plotOutput("plot2", height = 800,
-                               click = "image_click"
-                    )
-             ),
-             column(width = 4,
-                    plotOutput("plot3", height = 800,
-                               click = "image_dblclick"
-                    )
+             column(width = 8, style = "overflow-y:scroll; max-height: 600px",
+                    plotOutput("plot2", height = zh,
+                               click = "image_click",
+                               dblclick = dblclickOpts(
+                                 id = "image_dblclick"
+                               ))
              )
            ),
            shiny::fluidRow(
+             column(width = 3,
+                    sliderInput("slider", h4("Left image resolution (% of max)"),
+                                min = 1, max = 100,step = 5,
+                                value = 80)
+             ),
              column(width = 3,
                     #numericInput("x1",
                     #             h4("Click x"),
                     #             value = 0),
                     numericInput("y1",
-                                 h4("Top Click y"),
+                                 h4("Core liner top Click y"),
                                  value = 0),
                     numericInput("depth1",
-                                 h4("Top depth in cm"),
+                                 h4("Core liner top depth in cm"),
                                  value = 0)
              ),
              column(width = 3,
@@ -132,10 +122,10 @@ pick_length_shiny <- function(tr.image,br.image,image.ext){
                     #             h4("Dbl-Click x"),
                     #             value = 0),
                     numericInput("y2",
-                                 h4("Bottom Click y"),
+                                 h4("Core liner bottom Dbl-Click y"),
                                  value = 0),
                     numericInput("depth2",
-                                 h4("Bottom depth in cm"),
+                                 h4("Core liner bottom depth in cm"),
                                  value = 0)
              ),
            )

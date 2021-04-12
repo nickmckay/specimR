@@ -18,12 +18,13 @@ spectralWorkflow <- function(directory = NA,
                              plot.width = 8,
                              core.width = 4,
                              image.wavelengths = c(630,532,465),
+                             predict.image.roi = FALSE,
                              imageRoi = NA,
                              output.dir = NA,
                              clickDepths = NA,
-                             overall.width = NA,
-                             individual.width = NA,
-                             width.mult = NA,
+                             overall.width = NA,#deprecated, kept for old scripts
+                             individual.width = NA,#deprecated, kept for old scripts
+                             width.mult = NA,#deprecated, kept for old scripts
                              ...){
   indicesString <- paste0("indices = c(",paste(paste0('"',indices,'"'),collapse = ','),")")
   owString <- glue::glue("overall.page.width = {overall.page.width}")
@@ -55,6 +56,9 @@ spectralWorkflow <- function(directory = NA,
 
 
   if(is.na(imageRoi)){
+    overview <- raster::brick(paths$overview)
+
+    if(predict.image.roi){
     overviewPng <- imager::load.image(paths$overview)
 
     gs <- imager::grayscale(overviewPng) %>% as.matrix()
@@ -66,9 +70,9 @@ spectralWorkflow <- function(directory = NA,
     cropHor <- findCropEdges(across)
 
     bigRoiTry <- raster::extent(cropHor[1],cropHor[2],cropVert[1],cropVert[2])
-
-    #check to see if the big ROI is good (new shiny app)
-    overview <- raster::brick(paths$overview)
+    }else{
+      bigRoiTry <- raster::extent(overview)
+    }
     imageRoi <- pick_big_roi_shiny(overview,bigRoiTry, zh = nrow(overview)/5)
 
     imageRoi@xmin <- ceiling(imageRoi@xmin)
