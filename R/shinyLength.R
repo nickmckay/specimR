@@ -79,7 +79,7 @@ pick_length_shiny <- function(image,zh = 5000){
   assign("image",image,envir = specimEnv)
 
 
-  ui <- fluidPage(
+  ui <- shiny::fluidPage(
     # Some custom CSS for a smaller font for preformatted text
     tags$head(
       tags$style(HTML("
@@ -100,7 +100,7 @@ pick_length_shiny <- function(image,zh = 5000){
                                ))
              )
            ),
-           fluidRow(
+           shiny::fluidRow(
              column(width = 3,
                     sliderInput("slider", h4("Left image resolution (% of max)"),
                                 min = 1, max = 100,step = 5,
