@@ -1,15 +1,15 @@
-source('~/Documents/GitHub/specimR/R/roi.R')
-source('~/Documents/GitHub/specimR/R/shinyLength.R')
-source('~/Documents/GitHub/specimR/R/normalize.R')
-source('~/Documents/GitHub/specimR/R/coreImage.R')
-library(shiny)
-library(raster)
-library(specimR)
-library(magrittr)
-library(dplyr)
-library(readr)
-library(tidyr)
-library(tibble)
+# source('~/Documents/GitHub/specimR/R/roi.R')
+# source('~/Documents/GitHub/specimR/R/shinyLength.R')
+# source('~/Documents/GitHub/specimR/R/normalize.R')
+# source('~/Documents/GitHub/specimR/R/coreImage.R')
+# library(shiny)
+# library(raster)
+# library(specimR)
+# library(magrittr)
+# library(dplyr)
+# library(readr)
+# library(tidyr)
+# library(tibble)
 
 #' Normalize a hyperspectral image
 #'
@@ -27,16 +27,10 @@ library(tibble)
 full_spectra <- function(directory = NA,
                       length.out = NA,
                       wavelengths = NA,
+                      cmPerPixel = NA,
                       roi = NA,#specify roi as raster extent
                       output.dir = NA,
                       corename = NA){
-
- # spectraString <- glue::glue("wavelengths = c({paste(as.character(wavelengths),collapse = ', ')})")
-
-  #print that you need to pick it.
-
-
-  #get the appropriate paths
 
 
  # directory <- NA
@@ -75,33 +69,25 @@ full_spectra <- function(directory = NA,
 #    roi <- NA
     #choose the ROI
   if(!class(roi)=="Extent"){
-    roi <- pick_roi_shiny(overview)
+    roiList <- pick_roi_shiny(overview,nrow(overview)/5)
   }
 
   #record roi string
-roi <- roi[[1]]
+roi <- roiList[[1]]
      roiString <- glue::glue("roi = raster::extent(matrix(c({roi@xmin},{roi@xmax},{roi@ymin},{roi@ymax}),nrow = 2,byrow = T))")
 
   #load in the capture
 
   filen <- raster::brick(paths$capture)
 
-#  sample roi (WHILE IMAGE ISNT WORKING)
-  #roi <- raster::extent(matrix(c(xmin = 400 ,xmax =600 ,ymin =200 , ymax =500),nrow=2,byrow = TRUE))
-
-    #Create whole core images
-
-  # #for now, just using core png.
-  # rgbWavelengths <- c(572,539,430)
-  # rgbi <- getNearestWavelengths(filen = filen, spectra = rgbWavelengths)
-
-
   orig.ext <- raster::extent(filen)
 
   #save all band names for later
   allbands <- getBandInfo(filen)
+
   #find correct wavelengths
   wavelengthsOut <- gsub("X","",names(filen))%>%as.numeric()
+
     #get length, then subset
   #cmPerPixel <- NA
     if(is.na(cmPerPixel)){
@@ -155,23 +141,35 @@ if(is.finite(cmPerPixel) & cmPerPixel > 0){
 
   #chunk into .5 cm bits, normalizate against the white dark lines, average into a single spectra.
 
-length.out <- 1
-chunk <- 0.25
+chunk.top <- 0
+chunk.bot <- 1
+chunk.step <- 0.25
 
-sub <- raster::extent(filen@extent@xmin,filen@extent@xmax,filen@extent@ymin,length(which(scaleY <= length.out)))
+pixel.top <- round(1+chunk.top/cmPerPixel)
+pixel.bot <- floor(chunk.bot/cmPerPixel)
+
+#figure out pixel range for depths
+#replace this with approx and clickdepths
+
+sub <- raster::extent(roi@xmin,roi@xmax,pixel.top,pixel.bot)
+
+
 full_spectra <- raster::crop(filen,sub)
-new_vals <- raster::aggregate(full_spectra,fact=c(1,(((full_spectra@extent@ymax-full_spectra@extent@ymin)/((length.out/chunk)-1)))),FUN=mean)
+new_vals <- raster::aggregate(full_spectra,
+                              fact=c(1,(((full_spectra@extent@ymax-full_spectra@extent@ymin)/((length.out/chunk)-1)))),
+                              FUN=mean)
 dim(new_vals)
 dim(full_spectra)
 #load in the white and dark refs
   whiteRef <- raster::brick(paths$whiteref)
   darkRef <- raster::brick(paths$darkref)
 
-  white.ref <- processReference(whiteRef,stripe = full_spectra,spectra = names(whiteRef))
-  dark.ref <- processReference(darkRef,stripe = full_spectra,spectra = names(whiteRef))
-
+  white.ref <- processReference(whiteRef,stripe = new_vals,spectra = names(whiteRef))
+  tic()
+  dark.ref <- processReference(darkRef,stripe = new_vals,spectra = names(whiteRef))
+toc()
   #now normalize
-  normalized <- whiteDarkNormalize(stripe = full_spectra, white.ref = white.ref, dark.ref = dark.ref)
+  normalized <- whiteDarkNormalize(stripe = new_vals, white.ref = white.ref, dark.ref = dark.ref)
 
   if(!dir.exists(file.path(output.dir))){
     dir.create(file.path(output.dir))
@@ -179,6 +177,10 @@ dim(full_spectra)
   if(!dir.exists(file.path(output.dir,corename))){
     dir.create(file.path(output.dir,corename))
   }
+
+  #average across
+
+  normData <- calculateMeanRows(normalized = normalized)
 
   #save normalized core image
   normalizedImage <- normalizeCoreImage(paths$overview)
