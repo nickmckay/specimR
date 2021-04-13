@@ -143,9 +143,10 @@ if(is.finite(cmPerPixel) & cmPerPixel > 0){
 
 chunk.top <- 0
 chunk.bot <- 1
+length.out <- chunk.bot - chunk.top
 chunk.step <- 0.25
 
-pixel.top <- round(1+chunk.top/cmPerPixel)
+pixel.top <- ceiling(.01+chunk.top/cmPerPixel)
 pixel.bot <- floor(chunk.bot/cmPerPixel)
 
 #figure out pixel range for depths
@@ -156,17 +157,18 @@ sub <- raster::extent(roi@xmin,roi@xmax,pixel.top,pixel.bot)
 
 full_spectra <- raster::crop(filen,sub)
 new_vals <- raster::aggregate(full_spectra,
-                              fact=c(1,(((full_spectra@extent@ymax-full_spectra@extent@ymin)/((length.out/chunk)-1)))),
+                              fact=c(1,ceiling((full_spectra@extent@ymax-full_spectra@extent@ymin)/((length.out/chunk.step)))),
                               FUN=mean)
 dim(new_vals)
 dim(full_spectra)
 #load in the white and dark refs
   whiteRef <- raster::brick(paths$whiteref)
   darkRef <- raster::brick(paths$darkref)
-
-  white.ref <- processReference(whiteRef,stripe = new_vals,spectra = names(whiteRef))
+tic()
+  white.ref <- processReference(whiteRef,stripe = sub,spectra = names(whiteRef))
+  toc()
   tic()
-  dark.ref <- processReference(darkRef,stripe = new_vals,spectra = names(whiteRef))
+  dark.ref <- processReference(darkRef,stripe = sub,spectra = names(whiteRef))
 toc()
   #now normalize
   normalized <- whiteDarkNormalize(stripe = new_vals, white.ref = white.ref, dark.ref = dark.ref)
