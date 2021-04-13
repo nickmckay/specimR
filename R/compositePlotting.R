@@ -101,7 +101,11 @@ getPathsForCompositing <- function(dirPath=NA){
 #' @export
 #'
 #' @examples
-compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),...){
+compositeSections <- function(dirs = NA,
+                              out.dir = NA,
+                              composite.indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
+                              plot.type = "png",
+                              ...){
   if(is.na(dirs)){
     nCores <- as.numeric(readline(prompt = cat(crayon::bold("How many sections do you want to composite?"))))
     if(nCores < 2){stop("No reason to composite fewer than 2 cores")}
@@ -165,7 +169,7 @@ compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD
                                    page.width = 30,
                                    indices = allInd,
                                    index.name = composite.indices,
-                                   output.file.path = file.path(out.dir,paste0(compName,"-allIndices-compositePlot.png")),
+                                   output.file.path = file.path(out.dir,paste0(compName,"-allIndices-compositePlot.",plot.type)),
                                    processed.image.dirs = processedImageDirs,
                                    ...)
 
@@ -176,7 +180,7 @@ compositeSections <- function(dirs = NA,out.dir = NA,composite.indices = c("RABD
                                                 indices = allInd,
 
                                                 index.name = composite.indices[ind],
-                                                output.file.path = file.path(out.dir,paste0(compName,"-",composite.indices[ind],"-compositePlot.png")),
+                                                output.file.path = file.path(out.dir,paste0(compName,"-",composite.indices[ind],"-compositePlot.",plot.type)),
                                                 processed.image.dirs = processedImageDirs,
                                                 ...)
 
