@@ -47,9 +47,17 @@ getNormWavelengthData <- function(normData,normWavelengths,wavelengthToGet,tol =
     return(normData[,ind])
   }else if(length(ind) > 1){
     if(agg.fun == "mean"){
+      if(nrow(normData) > 1){
       return(rowMeans(normData[,ind]))
+      }else{
+        return(mean(normData[,ind]))
+      }
     }else if(agg.fun == "min"){
+      if(nrow(normData) > 1){
       return(apply(normData[,ind],1,min))
+      }else{
+        return(min(normData[,ind]))
+      }
     }
   }
 }
@@ -256,6 +264,19 @@ rasterBandRatio <- function(normalized,top = 570, bot = 630,tol = 1){
 
 
 
+#' Title
+#'
+#' @param normalized
+#' @param index
+#' @param tol
+#' @param smooth
+#' @param smooth.sigma
+#' @param smooth.n
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smooth.sigma = 3,smooth.n = 7){
   #decide what function to use to make the raster
     #check for indices
