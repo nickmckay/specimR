@@ -192,8 +192,8 @@ DarkRef <- function(darkRef,stripe,spectra){
 #' @export
 processReference <- function(reference,stripe,spectra){
   row <- createReferenceMeanRow(ref = reference,e=stripe,outFile=NA,spectra=spectra)
-  names(row) <- names(stripe)
-  len <- stripe@nrows
+  names(row) <- spectra
+  len <- extent(stripe)@ymax-extent(stripe)@ymin
   ref <- raster::disaggregate(row,fact = c(1,len))
   raster::extent(ref) <- raster::extent(stripe)
   return(ref)
