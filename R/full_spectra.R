@@ -17,8 +17,21 @@ full_spectra <- function(directory = NA,
                          cmPerPixel = NA,
                          roi = NA,#specify roi as raster extent
                          output.dir = NA,
-                         corename = NA){
+                         corename = NA,
+                         chunk.top = 0,
+                         chunk.bot = 3,
+                         chunk.step = 1){
 
+
+
+
+  #check to make sure evenly divisible chunks
+  if((chunk.bot - chunk.top) %% chunk.step != 0){
+    stop("chunk.top, chunk.bot, and chunk.step must define evenly divisible chunks")
+  }
+
+  length.out <- chunk.bot - chunk.top
+  mid.points <- seq(chunk.top + chunk.step/2,chunk.bot - chunk.step/2, by = chunk.step)
 
   # directory <- NA
   if(is.na(directory)){
@@ -55,12 +68,17 @@ full_spectra <- function(directory = NA,
   #ADDED
   #    roi <- NA
   #choose the ROI
+
+  if(class(roi) == "list"){
+    roi <- roi[[1]]
+  }
+
   if(!class(roi)=="Extent"){
     roiList <- pick_roi_shiny(overview,nrow(overview)/5)
-  }
 
   #record roi string
   roi <- roiList[[1]]
+  }
   roiString <- glue::glue("roi = raster::extent(matrix(c({roi@xmin},{roi@xmax},{roi@ymin},{roi@ymax}),nrow = 2,byrow = T))")
 
   #load in the capture
@@ -125,10 +143,6 @@ full_spectra <- function(directory = NA,
 
 #chunk into .5 cm bits, normalizate against the white dark lines, average into a single spectra.
 
-  chunk.top <- 0
-  chunk.bot <- 1
-  length.out <- chunk.bot - chunk.top
-  chunk.step <- 0.25
 
   pixel.top <- ceiling(.01+chunk.top/cmPerPixel)
   pixel.bot <- floor(chunk.bot/cmPerPixel)
@@ -144,34 +158,18 @@ full_spectra <- function(directory = NA,
                                 fact=c(1,ceiling((full.spectra@extent@ymax-full.spectra@extent@ymin)/((length.out/chunk.step)))),
                                 FUN=mean)
 
-    #load in the white and dark refs
-  whiteRef <- raster::brick(paths$whiteref)
-  wRef <- raster::aggregate(whiteRef,
-                            fact=c(1,ceiling((whiteRef@extent@ymax-whiteRef@extent@ymin)/((length.out/chunk.step)))),
-                            FUN=mean)
-  darkRef <- raster::brick(paths$darkref)
-  dRef <- raster::aggregate(darkRef,
-                            fact=c(1,ceiling((darkRef@extent@ymax-darkRef@extent@ymin)/((length.out/chunk.step)))),
-                            FUN=mean)
+    #load in the white and dark refs and pre-aggregate
+  whiteRef <- raster::brick(paths$whiteref) #load
 
-  tic()
-  #white.ref <- processReference(whiteRef,stripe = sub,spectra = names(whiteRef))
-  #white.ref <- processReference(whiteRef,stripe = new.vals,spectra = names(whiteRef))
-  white.ref <- processReference(wRef,stripe = new.vals,spectra = names(wRef))
-  w.ref <- raster::aggregate(white.ref,
-                    fact=c(1,ceiling((full.spectra@extent@ymax-full.spectra@extent@ymin)/((length.out/chunk.step)))),
-                    FUN=mean)
-  toc()
-  tic()
-  #dark.ref <- processReference(darkRef,stripe = sub,spectra = names(whiteRef))
-  #dark.ref <- processReference(darkRef,stripe = new.vals,spectra = names(whiteRef))
-  dark.ref <- processReference(dRef,stripe = new.vals,spectra = names(dRef))
-  d.ref <- raster::aggregate(dark.ref,
-                             fact=c(1,ceiling((full.spectra@extent@ymax-full.spectra@extent@ymin)/((length.out/chunk.step)))),
-                             FUN=mean)
-  toc()
+  white.ref <- processReference(whiteRef,stripe = new.vals,spectra = names(whiteRef))
+
+
+  darkRef <- raster::brick(paths$darkref)
+
+  dark.ref <- processReference(darkRef,stripe = new.vals,spectra = names(darkRef))
+
   #now normalize
-  normalized <- whiteDarkNormalize(stripe = new.vals, white.ref = w.ref, dark.ref = d.ref)
+  normalized <- whiteDarkNormalize(stripe = new.vals, white.ref = white.ref, dark.ref = dark.ref)
 
   if(!dir.exists(file.path(output.dir))){
     dir.create(file.path(output.dir))
@@ -184,27 +182,20 @@ full_spectra <- function(directory = NA,
 
   normData <- MeanRowSpectra(normalized = normalized)
 
-  #save normalized core image
-  normalizedImage <- normalizeCoreImage(paths$overview)
-  imager::save.image(normalizedImage,file = file.path(output.dir,"normalizedCoreImage.png"))
+  spectraOut <- tibble::tibble(depth.mid = mid.points)
 
+  ndt <- as_tibble(normData)
+  names(ndt) <- wavelengthsOut
+  #create spectral output spreadsheet
 
-  raster::writeRaster(normalized,file.path(output.dir,"normalized.tif"),overwrite = TRUE)
+  spectraOut <- bind_cols(spectraOut,ndt)
+  readr::write_csv(spectraOut,file.path(output.dir,"fullSpectraChunks.csv"))
+
+  raster::writeRaster(normalized,file.path(output.dir,"normalizedChunks.tif"),overwrite = TRUE)
   #save normalized data for future reference
   save(normalized,file = file.path(output.dir,"normalized.RData"))
 
 
   #save paths for images too?
-  return(list(allbands = allbands,
-              #spectra = spectra,
-              wavelengths = wavelengthsOut,
-              normalized = normalized,
-              scaleY = scaleY,
-              #  stripe = stripe,
-              cmPerPixel = cmPerPixel,
-              roi = roi,
-              corename = corename,
-              pngPath = paths$overview,
-              # normParams = normParams,
-              outputDir = output.dir))
+  return(spectraOut)
 }

@@ -134,7 +134,15 @@ createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
   if(is.character(ref)){#load in if necessary
     ref <- raster::brick(ref)
   }
-  refBrick <-  raster::subset(ref,spectra)
+
+  #aggregate - average into 1 row
+  refAgg <- raster::aggregate(ref,
+                            fact = c(1,dim(ref)[1]),
+                            FUN = mean)
+
+  #subset by spectra
+  refBrick <-  raster::subset(refAgg,spectra)
+
   #crop it by the earlier crop width
   ebb <- raster::extent(refBrick)
   ex <- raster::extent(e)
@@ -142,13 +150,14 @@ createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
   ebb@xmax <- ex@xmax
 
 
-  refBrick <- raster::crop(refBrick,ebb)
+  #crop
+  r <- raster::crop(refBrick,ebb)
 
-  rbcm <- raster::colSums(refBrick)/nrow(refBrick)
-
-  #preallocate
-  r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
-  r <- raster::setValues(r,rbcm)
+  # rbcm <- raster::colSums(refBrick)/nrow(refBrick)
+  #
+  # #preallocate
+  # r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
+  # r <- raster::setValues(r,rbcm)
 
   #save row for later processing.
   if(!is.na(outFile)){
@@ -193,7 +202,8 @@ DarkRef <- function(darkRef,stripe,spectra){
 processReference <- function(reference,stripe,spectra){
   row <- createReferenceMeanRow(ref = reference,e=stripe,outFile=NA,spectra=spectra)
   names(row) <- spectra
-  len <- extent(stripe)@ymax-extent(stripe)@ymin
+  #len <- extent(stripe)@ymax-extent(stripe)@ymin
+  len <- dim(stripe)[1] #make it work after aggregation
   ref <- raster::disaggregate(row,fact = c(1,len))
   raster::extent(ref) <- raster::extent(stripe)
   return(ref)
