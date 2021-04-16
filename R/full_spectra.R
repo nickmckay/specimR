@@ -20,7 +20,7 @@ full_spectra <- function(directory = NA,
                          corename = NA,
                          chunk.top = 0,
                          chunk.bot = 3,
-                         chunk.step = 1){
+                         chunk.step = .25){
 
 
 
@@ -161,12 +161,12 @@ full_spectra <- function(directory = NA,
     #load in the white and dark refs and pre-aggregate
   whiteRef <- raster::brick(paths$whiteref) #load
 
-  white.ref <- processReference(whiteRef,stripe = new.vals,spectra = names(whiteRef))
+  white.ref <- processReferenceLarge(whiteRef,stripe = new.vals,spectra = names(whiteRef))
 
 
   darkRef <- raster::brick(paths$darkref)
 
-  dark.ref <- processReference(darkRef,stripe = new.vals,spectra = names(darkRef))
+  dark.ref <- processReferenceLarge(darkRef,stripe = new.vals,spectra = names(darkRef))
 
   #now normalize
   normalized <- whiteDarkNormalize(stripe = new.vals, white.ref = white.ref, dark.ref = dark.ref)

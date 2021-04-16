@@ -134,6 +134,35 @@ createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
   if(is.character(ref)){#load in if necessary
     ref <- raster::brick(ref)
   }
+  refBrick <-  raster::subset(ref,spectra)
+  #crop it by the earlier crop width
+  ebb <- raster::extent(refBrick)
+  ex <- raster::extent(e)
+  ebb@xmin <- ex@xmin
+  ebb@xmax <- ex@xmax
+
+
+  refBrick <- raster::crop(refBrick,ebb)
+
+  rbcm <- raster::colSums(refBrick)/nrow(refBrick)
+
+  #preallocate
+  r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
+  r <- raster::setValues(r,rbcm)
+
+  #save row for later processing.
+  if(!is.na(outFile)){
+    raster::writeRaster(r,filename = file.path("..",outFile), overwrite = TRUE)
+  }else{
+    return(r)
+  }
+}
+
+
+createReferenceMeanRowLarge <- function(ref,e,outFile=NA,spectra){
+  if(is.character(ref)){#load in if necessary
+    ref <- raster::brick(ref)
+  }
 
   #aggregate - average into 1 row
   refAgg <- raster::aggregate(ref,
@@ -149,15 +178,8 @@ createReferenceMeanRow <- function(ref,e,outFile=NA,spectra){
   ebb@xmin <- ex@xmin
   ebb@xmax <- ex@xmax
 
-
   #crop
   r <- raster::crop(refBrick,ebb)
-
-  # rbcm <- raster::colSums(refBrick)/nrow(refBrick)
-  #
-  # #preallocate
-  # r <- raster::brick(ncol=ncol(refBrick), nrow=1,nl = dim(refBrick)[3], xmn=ex@xmin, xmx=ex@xmax, ymn=0, ymx=1)
-  # r <- raster::setValues(r,rbcm)
 
   #save row for later processing.
   if(!is.na(outFile)){
@@ -209,6 +231,25 @@ processReference <- function(reference,stripe,spectra){
   return(ref)
 }
 
+
+#' Perform reference processing prior to normalizations for large numbers of spectra
+#'
+#' @param reference a rasterBrick object to process
+#' @param stripe a raster whose extent you want to mirror
+#' @param spectra an index of spectra to subset
+#' @import raster
+#'
+#' @return a standardized rasterBrick the same size and thickness as stripe
+#' @export
+processReferenceLarge <- function(reference,stripe,spectra){
+  row <- createReferenceMeanRowLarge(ref = reference,e=stripe,outFile=NA,spectra=spectra)
+  names(row) <- spectra
+  #len <- extent(stripe)@ymax-extent(stripe)@ymin
+  len <- dim(stripe)[1] #make it work after aggregation
+  ref <- raster::disaggregate(row,fact = c(1,len))
+  raster::extent(ref) <- raster::extent(stripe)
+  return(ref)
+}
 
 normFun <- function(data,white,dark){
   s1 <- (data - dark)
