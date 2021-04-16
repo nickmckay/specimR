@@ -14,10 +14,21 @@ calculateMeanRows <- function(normalized){
   data <- purrr::map_df(seq_len(nrow(normalized$normalized)),averageRow,normalized$normalized) %>%
     as.matrix
 
-  colnames(data) <- names(normalized$spectra)
+ colnames(data) <- names(normalized$spectra)
   return(data)
 }
 
+MeanRowSpectra <- function(normalized){
+
+  averageRow <- function(rn,r){
+    a <- apply(raster::getValues(r,rn,1),2,mean)
+  }
+
+  data <- purrr::map_df(seq_len(nrow(normalized)),averageRow,normalized) %>%
+    as.matrix
+ colnames(data) <- names(normalized)
+  return(data)
+}
 #' get the wavelengths present in the normalized matrix
 #'
 #' @param normValues the output of `specimR::calculateMeanRows()`
