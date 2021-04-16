@@ -379,27 +379,6 @@ normalize <- function(directory = NA,
   #get length
   if(is.na(cmPerPixel)){
 
-    # #try cropping the image with the same height, but on the right side to look at the top bottom
-    # tr_roi <- roi
-    # tr_roi@xmax <- raster::extent(overview)@xmax
-    # tr_roi@xmin <- raster::extent(overview)@xmax*.70
-    # tr_roi@ymin <- tr_roi@ymax - 1200
-    # tr_roi@ymax <- tr_roi@ymax + 1200
-    # tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
-    # tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
-    #
-    #
-    # tr.image <- raster::crop(overview,tr_roi)
-    #
-    # br_roi <- tr_roi
-    # br_roi@ymin <- roi@ymin - 1200
-    # br_roi@ymax <- roi@ymin + 1200
-    # br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
-    # br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
-    #
-    #
-    # br.image <- raster::crop(overview,br_roi)
-
     cmPerPixel <- pick_length_shiny(overview,nrow(overview)/5)
 
     clickDepths <- try(get("clickDepths",envir = .GlobalEnv),silent = TRUE)

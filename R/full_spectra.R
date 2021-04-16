@@ -25,10 +25,6 @@ full_spectra <- function(directory = NA,
 
 
 
-  #check to make sure evenly divisible chunks
-  if((chunk.bot - chunk.top) %% chunk.step != 0){
-    stop("chunk.top, chunk.bot, and chunk.step must define evenly divisible chunks")
-  }
 
   length.out <- chunk.bot - chunk.top
   mid.points <- seq(chunk.top + chunk.step/2,chunk.bot - chunk.step/2, by = chunk.step)
@@ -96,29 +92,8 @@ full_spectra <- function(directory = NA,
   #get length, then subset
   #cmPerPixel <- NA
   if(is.na(cmPerPixel)){
-    # roi <- roi[[1]]
-    #try cropping the image with the same height, but on the right side to look at the top bottom
-    tr_roi <- roi
-    tr_roi@xmax <- raster::extent(overview)@xmax
-    tr_roi@xmin <- raster::extent(overview)@xmax*.75
-    tr_roi@ymin <- tr_roi@ymax - 1200
-    tr_roi@ymax <- tr_roi@ymax + 1200
-    tr_roi@ymin <- max(c(tr_roi@ymin,orig.ext@ymin))
-    tr_roi@ymax <- min(c(tr_roi@ymax,orig.ext@ymax))
+    cmPerPixel <- pick_length_shiny(overview,nrow(overview)/5)
 
-
-    tr.image <- raster::crop(overview,tr_roi)
-
-    br_roi <- tr_roi
-    br_roi@ymin <- roi@ymin - 1200
-    br_roi@ymax <- roi@ymin + 1200
-    br_roi@ymin <- max(c(br_roi@ymin,orig.ext@ymin))
-    br_roi@ymax <- min(c(br_roi@ymax,orig.ext@ymax))
-
-
-    br.image <- raster::crop(overview,br_roi)
-
-    cmPerPixel <- pick_length_shiny(tr.image,br.image,roi)
   }
 
   cmPerPixelString <- glue::glue("cmPerPixel = {cmPerPixel}")
