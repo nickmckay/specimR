@@ -243,8 +243,8 @@ plotSpectralDashboard <- function(normalized,
   if(!is.na(output.file.path)){
   ggsave(plot = outplot,
          filename = output.file.path,
-         width = page.width*1.8,
-         height = page.length*2.5,
+         width = page.width*1.5,
+         height = page.length*3,
          units = page.units,dpi = output.dpi,
          limitsize = FALSE)
   }
