@@ -1,13 +1,8 @@
 #load library
 library(specimR)
-library(magrittr)
-library(dplyr)
 library(raster)
 library(shiny)
-library(readr)
-library(tidyr)
-library(ggplot2)
-library(tibble)
+library(tidyverse)
 
 #chose wavelengths of interest
 wavelengths <- c(550,570,590,615,630,650,659:671,690,730,790,845,900)

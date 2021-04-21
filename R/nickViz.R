@@ -177,8 +177,8 @@ plotSpectralDashboard <- function(normalized,
 
   cinfo <- magick::image_info(cimg)
 
-  c.height <- cinfo$height*normalized$cmPerPixel
-  c.width <- cinfo$width*normalized$cmPerPixel
+  c.height <- height*normalized$cmPerPixel
+  c.width <- width*normalized$cmPerPixel
 
   depth.ticks <- seq(0,c.height,by = y.tick.interval)
 

@@ -11,7 +11,7 @@
 #'
 #' @return a normalized hyperspectral image
 #' @export
-full_spectra <- function(directory = NA,
+fullSpectra <- function(directory = NA,
                          length.out = NA,
                          wavelengths = NA,
                          cmPerPixel = NA,

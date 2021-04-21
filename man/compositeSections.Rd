@@ -8,6 +8,7 @@ compositeSections(
   dirs = NA,
   out.dir = NA,
   composite.indices = c("RABD615", "RABD660670", "RABD845", "R570R630", "R590R690"),
+  plot.type = "png",
   ...
 )
 }
