@@ -114,9 +114,17 @@ plotVerticalIndex <- function(ind,
 #' @param ind
 #' @param index.name
 #' @param depth.label
-#' @param width.mult
 #' @param plot.width
 #' @param tol
+#' @param processed.image.dir
+#' @param core.width
+#' @param page.width
+#' @param page.width.multiplier
+#' @param page.length.multiplier
+#' @param y.tick.interval
+#' @param page.units
+#' @param output.file.path
+#' @param output.dpi
 #'
 #' @return
 #' @export
@@ -130,6 +138,8 @@ plotSpectralDashboard <- function(normalized,
                                   core.width = 4,
                                   plot.width = 8,
                                   page.width = 10,
+                                  page.width.multiplier = 1.5,
+                                  page.length.multiplier = 3,
                                   y.tick.interval = 5,
                                   page.units = "cm",
                                   tol = 1,
@@ -243,8 +253,8 @@ plotSpectralDashboard <- function(normalized,
   if(!is.na(output.file.path)){
   ggsave(plot = outplot,
          filename = output.file.path,
-         width = page.width*1.5,
-         height = page.length*3,
+         width = page.width*page.width.multiplier,
+         height = page.length*page.length.multiplier,
          units = page.units,dpi = output.dpi,
          limitsize = FALSE)
   }

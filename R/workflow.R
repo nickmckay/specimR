@@ -15,6 +15,8 @@ spectralWorkflow <- function(directory = NA,
                              indices = c("RABD615","RABD660670","RABD845","R570R630","R590R690"),
                              overall.page.width = 30,
                              individual.page.width = 10,
+                             page.width.multiplier = 1.5,
+                             page.length.multiplier = 3,
                              plot.width = 8,
                              core.width = 4,
                              image.wavelengths = c(630,532,465),
@@ -31,6 +33,9 @@ spectralWorkflow <- function(directory = NA,
   iwString <- glue::glue("individual.page.width = {individual.page.width}")
   wmString <- glue::glue("core.width = {core.width}")
   pwString <- glue::glue("plot.width = {plot.width}")
+  pwmString <- glue::glue("page.width.multiplier = {page.width.multiplier}")
+  plmString <- glue::glue("page.length.multiplier = {page.length.multiplier}")
+
 
 
   if(all(is.na(clickDepths))){
@@ -114,6 +119,8 @@ spectralWorkflow <- function(directory = NA,
                                    index.name = indices,
                                    core.width = core.width,
                                    page.width = overall.page.width,
+                                   page.width.multiplier = page.width.multiplier,
+                                   page.length.multiplier = page.length.multiplier,
                                    plot.width = plot.width,
                                    output.file.path = file.path(normalized$outputDir,"allIndices.png"),
                                    output.dpi = 600))
@@ -127,6 +134,8 @@ spectralWorkflow <- function(directory = NA,
                                   core.width = core.width,
                                   processed.image.dir = image.dir,
                                   page.width = individual.page.width,
+                                  page.width.multiplier = page.width.multiplier,
+                                  page.length.multiplier = page.length.multiplier,
                                   plot.width = plot.width,
                                   output.file.path = file.path(normalized$outputDir,paste0(i,".png")),
                                   output.dpi = 600))
@@ -139,6 +148,8 @@ spectralWorkflow <- function(directory = NA,
                           {owString},
                           {iwString},
                             {pwString},
+                            {pwmString},
+                            {plmString},
                           {wmString})")
 
   readr::write_file(rep.command,file.path(output.dir,"reprocess.R"))
