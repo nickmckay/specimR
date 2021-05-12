@@ -14,7 +14,7 @@ calculateMeanRows <- function(normalized){
   data <- purrr::map_df(seq_len(nrow(normalized$normalized)),averageRow,normalized$normalized) %>%
     as.matrix
 
- colnames(data) <- names(normalized$spectra)
+  colnames(data) <- names(normalized$spectra)
   return(data)
 }
 
@@ -26,7 +26,7 @@ MeanRowSpectra <- function(normalized){
 
   data <- purrr::map_df(seq_len(nrow(normalized)),averageRow,normalized) %>%
     as.matrix
- colnames(data) <- names(normalized)
+  colnames(data) <- names(normalized)
   return(data)
 }
 #' get the wavelengths present in the normalized matrix
@@ -59,13 +59,13 @@ getNormWavelengthData <- function(normData,normWavelengths,wavelengthToGet,tol =
   }else if(length(ind) > 1){
     if(agg.fun == "mean"){
       if(nrow(normData) > 1){
-      return(rowMeans(normData[,ind]))
+        return(rowMeans(normData[,ind]))
       }else{
         return(mean(normData[,ind]))
       }
     }else if(agg.fun == "min"){
       if(nrow(normData) > 1){
-      return(apply(normData[,ind],1,min))
+        return(apply(normData[,ind],1,min))
       }else{
         return(min(normData[,ind]))
       }
@@ -89,9 +89,9 @@ calculateRABD <- function(normData,normWavelengths,tol = 5,trough = 665, edges =
   dHi <- max(edges) - trough
   dTot <- dLo + dHi
 
-index <- (dHi*lowVals + dLo*highVals)/(dTot*troughVals)
+  index <- (dHi*lowVals + dLo*highVals)/(dTot*troughVals)
 
-return(index)
+  return(index)
 }
 
 #' Calculate a Band Ratio
@@ -136,8 +136,9 @@ calculateIndices <- function(normalized,
   }
   if("RABD660670" %in% indices){
     outTable$RABD660670 <- calculateRABD(normData,normWavelengths, tol = 5,trough = 665,edges = c(590,730))
-    if("RABD640655" %in% indices){
-      outTable$RABD640655 <- calculateRABD(normData,normWavelengths, tol = 7.5,trough = 647.5,edges = c(590,730))
+  }
+  if("RABD640655" %in% indices){
+    outTable$RABD640655 <- calculateRABD(normData,normWavelengths, tol = 7.5,trough = 647.5,edges = c(590,730))
   }
   if("RABD845" %in% indices){
     outTable$RABD845 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 845,edges = c(790,900))
@@ -149,9 +150,9 @@ calculateIndices <- function(normalized,
   if("R590R690" %in% indices){
     outTable$R590R690 <- calculateBandRatio(normData,normWavelengths, tol = tol,top = 590, bot = 690)
   }
-    if("R950R970" %in% indices){
-      outTable$R950R970 <- calculateBandRatio(normData,normWavelengths, tol = tol,top = 950, bot = 970)
-    }
+  if("R950R970" %in% indices){
+    outTable$R950R970 <- calculateBandRatio(normData,normWavelengths, tol = tol,top = 950, bot = 970)
+  }
 
   #add running means
 
@@ -189,7 +190,7 @@ rasterRABD <- function(normalized,
                        tol = 1,
                        trough.agg.fun = "min",
                        edge.agg.fun = "mean"){
-#find wavelength indices and make rasters
+  #find wavelength indices and make rasters
 
   #low edge
   li <- getNearestWavelengthIndex(normalized$wavelengths,min(edges),tol = tol)
@@ -295,19 +296,19 @@ rasterBandRatio <- function(normalized,top = 570, bot = 630,tol = 1){
 #' @examples
 makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smooth.sigma = 3,smooth.n = 7){
   #decide what function to use to make the raster
-    #check for indices
+  #check for indices
   if("RABD615" == index){
     heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 615,edges = c(590,730))
   }
-    if("RABD660" == index){
-      heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 660,edges = c(590,730))
-    }
+  if("RABD660" == index){
+    heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 660,edges = c(590,730))
+  }
   if("RABD660670" == index){
     heatmap <- rasterRABD(normalized = normalized, tol = 5,trough = 665,edges = c(590,730))
   }
-    if("RABD845" == index){
-      heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 845,edges = c(790,900))
-    }
+  if("RABD845" == index){
+    heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 845,edges = c(790,900))
+  }
 
 
   #band ratios
