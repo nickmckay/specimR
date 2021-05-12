@@ -31,6 +31,13 @@ createCoreDepthTable <- function(cores){
     roiT <- dplyr::filter(core,position == "roiTop")$cm
     roiB <- dplyr::filter(core,position == "roiBottom")$cm
 
+    #adjust everything to make clT 0
+
+    clT <- clT - clT
+    clB <- clB - clT
+    roiT <- roiT - clT
+    roiB <- roiB <- clT
+
     #remove top gap on first core
     if(i == 1){
       prevBottomCompositeDepth <- clT-roiT
