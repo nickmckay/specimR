@@ -137,7 +137,7 @@ calculateIndices <- function(normalized,
   if("RABD660670" %in% indices){
     outTable$RABD660670 <- calculateRABD(normData,normWavelengths, tol = 5,trough = 665,edges = c(590,730))
     if("RABD640655" %in% indices){
-      outTable$RABD640655 <- calculateRABD(normData,normWavelengths,trough.agg.fun =  tol = 7.5,trough = 647.5,edges = c(590,730))
+      outTable$RABD640655 <- calculateRABD(normData,normWavelengths, tol = 7.5,trough = 647.5,edges = c(590,730))
   }
   if("RABD845" %in% indices){
     outTable$RABD845 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 845,edges = c(790,900))
