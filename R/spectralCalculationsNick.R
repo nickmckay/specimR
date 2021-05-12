@@ -136,6 +136,8 @@ calculateIndices <- function(normalized,
   }
   if("RABD660670" %in% indices){
     outTable$RABD660670 <- calculateRABD(normData,normWavelengths, tol = 5,trough = 665,edges = c(590,730))
+    if("RABD640655" %in% indices){
+      outTable$RABD640655 <- calculateRABD(normData,normWavelengths,trough.agg.fun =  tol = 7.5,trough = 647.5,edges = c(590,730))
   }
   if("RABD845" %in% indices){
     outTable$RABD845 <- calculateRABD(normData,normWavelengths, tol = tol,trough = 845,edges = c(790,900))
@@ -147,6 +149,9 @@ calculateIndices <- function(normalized,
   if("R590R690" %in% indices){
     outTable$R590R690 <- calculateBandRatio(normData,normWavelengths, tol = tol,top = 590, bot = 690)
   }
+    if("R950R970" %in% indices){
+      outTable$R950R970 <- calculateBandRatio(normData,normWavelengths, tol = tol,top = 950, bot = 970)
+    }
 
   #add running means
 

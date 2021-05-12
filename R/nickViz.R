@@ -17,6 +17,9 @@ getColorsByIndex <- function(index){
   if("RABD660670" == index){
     pall <- "Greens"
   }
+  if("RABD640655" == index){
+    pall <- "YlGn"
+  }
   if("RABD845" == index){
     pall <- "Blues"
   }
@@ -29,6 +32,10 @@ getColorsByIndex <- function(index){
 
   if("R590R690" == index){
     pall <- "Purples"
+  }
+
+  if("R950R970" == index){
+    pall <- "Oranges"
   }
 
   cols <- list(line = RColorBrewer::brewer.pal(name = pall,n = 7)[3],
