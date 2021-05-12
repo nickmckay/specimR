@@ -306,6 +306,9 @@ makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smoo
   if("RABD660670" == index){
     heatmap <- rasterRABD(normalized = normalized, tol = 5,trough = 665,edges = c(590,730))
   }
+  if("RABD640655" == index){
+    heatmap <- rasterRABD(normalized = normalized, tol = 7.5,trough = 647.5,edges = c(590,730))
+  }
   if("RABD845" == index){
     heatmap <- rasterRABD(normalized = normalized, tol = tol,trough = 845,edges = c(790,900))
   }
@@ -318,6 +321,10 @@ makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smoo
 
   if("R590R690" == index){
     heatmap <- rasterBandRatio(normalized = normalized, tol = tol,top = 590, bot = 690)
+  }
+
+  if("R950R970" == index){
+    heatmap <- rasterBandRatio(normalized = normalized, tol = tol,top = 950, bot = 970)
   }
 
   if(smooth){
