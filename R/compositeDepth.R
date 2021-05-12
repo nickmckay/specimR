@@ -36,7 +36,7 @@ createCoreDepthTable <- function(cores){
     clT <- clT - clT
     clB <- clB - clT
     roiT <- roiT - clT
-    roiB <- roiB <- clT
+    roiB <- roiB - clT
 
     #remove top gap on first core
     if(i == 1){
