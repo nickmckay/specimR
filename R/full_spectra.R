@@ -26,8 +26,6 @@ fullSpectra <- function(directory = NA,
 
 
 
-  length.out <- chunk.bot - chunk.top
-  mid.points <- seq(chunk.top + chunk.step/2,chunk.bot - chunk.step/2, by = chunk.step)
 
   # directory <- NA
   if(is.na(directory)){
@@ -116,7 +114,9 @@ fullSpectra <- function(directory = NA,
     scaleY <- coreLength(stripe = roi, length = length)
   }
 
-  #chunk into .5 cm bits, normalizate against the white dark lines, average into a single spectra.
+  if(is.na(chunk.bot)){
+    chunk.bot <- floor(max(scaleY))
+  }
 
 
   pixel.top <- ceiling(.01+chunk.top/cmPerPixel)
@@ -127,6 +127,8 @@ fullSpectra <- function(directory = NA,
 
   sub <- raster::extent(roi@xmin,roi@xmax,pixel.top,pixel.bot)
 
+  length.out <- chunk.bot - chunk.top
+  mid.points <- seq(chunk.top + chunk.step/2,chunk.bot - chunk.step/2, by = chunk.step)
 
   full.spectra <- raster::crop(filen,sub)
   new.vals <- raster::aggregate(full.spectra,
