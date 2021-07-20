@@ -6,6 +6,9 @@
 #' @param roi rasterExtent object defining region of interest. NA will allow you to choose interactively (default = NA)
 #' @param output.dir optionally save output raster by specifyign the path
 #' @param corename optionally choose the length of the core
+#' @param chunk.top top of sample (cm)
+#' @param chunk.bot bottom of sample (cm). optionally set for fixed depth or set to NA (default) to use ROI
+#' @param chunk.step chunking interval (cm)
 #'
 #' @import raster crayon
 #'
@@ -19,7 +22,7 @@ fullSpectra <- function(directory = NA,
                         output.dir = NA,
                         corename = NA,
                         chunk.top = 0,
-                        chunk.bot = 3,
+                        chunk.bot = NA,
                         chunk.step = .25){
 
 
