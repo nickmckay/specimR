@@ -1,8 +1,3 @@
- source('~/Documents/GitHub/specimR/R/roi.R')
- source('~/Documents/GitHub/specimR/R/shinyLength.R')
- source('~/Documents/GitHub/specimR/R/normalize.R')
- source('~/Documents/GitHub/specimR/R/coreImage.R')
- source('~/Documents/GitHub/specimR/R/SpectralCalculationsNick.R')
  library(shiny)
  library(raster)
  library(specimR)
@@ -11,6 +6,4 @@
  library(readr)
  library(tidyr)
  library(tibble)
- library(tictoc)
- f <- full_spectra()
-2:36
+ f <- fullSpectra(chunk.bot = NA, chunk.step = 1)
