@@ -192,7 +192,7 @@ createReferenceMeanRowLarge <- function(ref,e,outFile=NA,spectra){
 
 WhiteRef <-function(whiteRef,stripe,spectra){
 
-  whiteRow <- createReferenceMeanRow(refFile = whiteRef,e = stripe,outFile="WhiteRow.tif",spectra=spectra)
+  whiteRow <- createReferenceMeanRow(ref = whiteRef,e = stripe,outFile="WhiteRow.tif",spectra=spectra)
   names(whiteRow) <- names(stripe)
   #find length of core stripe to break up white
   len <- stripe@nrows
@@ -204,7 +204,7 @@ WhiteRef <-function(whiteRef,stripe,spectra){
 }
 
 DarkRef <- function(darkRef,stripe,spectra){
-  darkRow <- createReferenceMeanRow(refFile=darkRef,e=stripe,outFile="DarkRow.tif",spectra=spectra)
+  darkRow <- createReferenceMeanRow(ref=darkRef,e=stripe,outFile="DarkRow.tif",spectra=spectra)
   names(darkRow) <- names(stripe)
   len <- stripe@nrows
   dark.ref <- disaggregate(darkRow,fact = c(1,len))

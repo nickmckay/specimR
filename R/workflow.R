@@ -28,6 +28,10 @@ spectralWorkflow <- function(directory = NA,
                              individual.width = NA,#deprecated, kept for old scripts
                              width.mult = NA,#deprecated, kept for old scripts
                              ...){
+
+  #Set options
+  options(ragg.max_dim = 999999)
+
   indicesString <- paste0("indices = c(",paste(paste0('"',indices,'"'),collapse = ','),")")
   owString <- glue::glue("overall.page.width = {overall.page.width}")
   iwString <- glue::glue("individual.page.width = {individual.page.width}")
