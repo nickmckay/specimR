@@ -24,6 +24,7 @@ spectralWorkflow <- function(directory = NA,
                              imageRoi = NA,
                              output.dir = NA,
                              clickDepths = NA,
+                             output.dpi = 600,
                              overall.width = NA,#deprecated, kept for old scripts
                              individual.width = NA,#deprecated, kept for old scripts
                              width.mult = NA,#deprecated, kept for old scripts
@@ -127,7 +128,7 @@ spectralWorkflow <- function(directory = NA,
                                    page.length.multiplier = page.length.multiplier,
                                    plot.width = plot.width,
                                    output.file.path = file.path(normalized$outputDir,"allIndices.png"),
-                                   output.dpi = 600))
+                                   output.dpi = output.dpi))
 
   #individual indices
   for(i in indices){
@@ -142,7 +143,7 @@ spectralWorkflow <- function(directory = NA,
                                   page.length.multiplier = page.length.multiplier,
                                   plot.width = plot.width,
                                   output.file.path = file.path(normalized$outputDir,paste0(i,".png")),
-                                  output.dpi = 600))
+                                  output.dpi = output.dpi))
   }
 
   #write command to reproduce this
