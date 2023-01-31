@@ -72,13 +72,15 @@ spectra_sub <- function(raster, spectra_tbl) {
 #' For reference (white and dark) SpatRaster use only x-direction
 #'
 #' @examples
-raster_crop <- function(raster, type, roi) {
+raster_crop <- function(raster, type, roi, ref_type) {
   # If cropping entire capture SpatRaster use entire large ROI
   if (type == "capture") {
-    raster <- terra::crop(raster, roi)
+    raster <- terra::crop(raster, roi, filename = paste0(paths[["directory"]], "products/capture_cropped.tif"), overwrite = TRUE)
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
+  } else if (ref_type == "whiteref"){
+    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(paths[["directory"]], "products/whiteref_cropped.tif"), overwrite = TRUE)
   } else {
-    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)))
+    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(paths[["directory"]], "products/darkref_cropped.tif"), overwrite = TRUE)
   }
 
   # Return raster
@@ -98,15 +100,20 @@ raster_crop <- function(raster, type, roi) {
 #' Create reference SpatRaster matching capture SpatRaster extent by disaggregation
 #'
 #' @examples
-create_reference_raster <- function(raster, roi) {
+create_reference_raster <- function(raster, roi, ref_type) {
+  if (ref_type == "whiteref"){
+    name <- "whiteref"
+  } else {
+    name <- "darkref"
+  }
   # Aggregate data into one row SpatRaster, divide by number of rows
-  raster <- terra::aggregate(raster, fact = c(terra::nrow(raster), 1), fun = "mean")
+  raster <- terra::aggregate(raster, fact = c(terra::nrow(raster), 1), fun = "mean", filename = paste0(paths[["directory"]], "products/", name, "_agg.tif"), overwrite = TRUE)
 
   # Set new extent to match extent of capture SpatRaster
   terra::ext(raster) <- roi
 
   # Disaggregate data over entire extent to mach capture SpatRaster extent, multiply by ymax
-  raster <- terra::disagg(raster, fact = c(terra::ymax(raster), 1))
+  raster <- terra::disagg(raster, fact = c(terra::ymax(raster), 1), filename = paste0(paths[["directory"]], "products/", name, "_disagg.tif"), overwrite = TRUE)
 
   # Return raster
   return(raster)
@@ -165,5 +172,5 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
     terra::sds()
 
   # Apply function over the dataset and write to file
-  raster <- terra::lapp(x = dataset, fun = fun, overwrite = TRUE, filename = "test.tif")
+  raster <- terra::lapp(x = dataset, fun = fun, filename = paste0(paths[["directory"]], "products/capture_normalized.tif"), overwrite = TRUE)
 }

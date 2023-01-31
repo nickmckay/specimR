@@ -1,27 +1,35 @@
+
+
 ################################################################################
 #                                                         Normalization workflow
+# Set path so directory so temporary raster and other files are written
+# Later subsitute with path selected interactivelly with get_paths
+paths <- list()
+paths[["directory"]] <- "C:/GitHub/STL14_1A_28C_top_2022-11-11_16-30-51/"
+
+
 spectra <- c(550, 570, 590, 615, 630, 649:701, 730, 790, 845, 900)
 
-capture <- terra::rast("C:/Users/maury/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51/capture/STL14_1A_28C_top_2022-11-11_16-30-51.raw")
+capture <- terra::rast("C:/GitHub/STL14_1A_28C_top_2022-11-11_16-30-51/capture/STL14_1A_28C_top_2022-11-11_16-30-51.raw")
 big_roi <- terra::ext(c(110, 1010, 0, 16000))
 
 capture <- spectra_position(raster = capture, spectra = spectra) |>
   spectra_sub(raster = capture, spectra_tbl = _) |>
   raster_crop(raster = _, type = "capture", roi = big_roi)
 
-whiteref <- terra::rast("C:/Users/maury/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51/capture/WHITEREF_STL14_1A_28C_top_2022-11-11_16-30-51.raw")
+whiteref <- terra::rast("C:/GitHub/STL14_1A_28C_top_2022-11-11_16-30-51/capture/WHITEREF_STL14_1A_28C_top_2022-11-11_16-30-51.raw")
 
 whiteref <- spectra_position(raster = whiteref, spectra = spectra) |>
   spectra_sub(raster = whiteref, spectra_tbl = _) |>
-  raster_crop(raster = _, type = "reference", roi = big_roi) |>
-  create_reference_raster(raster = _, roi = big_roi)
+  raster_crop(raster = _, type = "reference", roi = big_roi, ref_type = "whiteref") |>
+  create_reference_raster(raster = _, roi = big_roi, ref_type = "whiteref")
 
-darkref <- terra::rast("C:/Users/maury/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51/capture/DARKREF_STL14_1A_28C_top_2022-11-11_16-30-51.raw")
+darkref <- terra::rast("C:/GitHub/STL14_1A_28C_top_2022-11-11_16-30-51/capture/DARKREF_STL14_1A_28C_top_2022-11-11_16-30-51.raw")
 
 darkref <- spectra_position(raster = darkref, spectra = spectra) |>
   spectra_sub(raster = darkref, spectra_tbl = _) |>
-  raster_crop(raster = _, type = "reference", roi = big_roi) |>
-  create_reference_raster(raster = _, roi = big_roi)
+  raster_crop(raster = _, type = "reference", roi = big_roi, ref_type = "darkref") |>
+  create_reference_raster(raster = _, roi = big_roi, ref_type = "darkref")
 
 normalized <- create_normalized_raster(capture = capture, whiteref = whiteref, darkref = darkref, fun = normalization)
 

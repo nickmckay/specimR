@@ -37,7 +37,9 @@ create_composite_drive <- function(directory = NA_character_, .tofile = TRUE) {
     # Full join
     dplyr::left_join(roi_top, by = "roi") |>
     # Composite depth
-    dplyr::mutate(composite = depth + cm, .after = depth)
+    dplyr::mutate(composite = depth + cm, .after = depth) |>
+    # Clean data frame
+    dplyr::select(depth:roi)
 
   # Should tibble be written to file
   if (.tofile == TRUE) {
