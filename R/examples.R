@@ -1,5 +1,3 @@
-
-
 ################################################################################
 #                                                         Normalization workflow
 # Set path so directory so temporary raster and other files are written
