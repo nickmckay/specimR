@@ -1,51 +1,119 @@
-#' Create composite proxy profile from multiple ROIs
+#' Read spectral indices data from directory
 #'
-#' @param directory character path to selected drive
-#' @param .tofile if TRUE write output to file
+#' @param path path to the root core directory containing the drives.
 #'
-#' @return a tibble with composite record for selected drive
+#' @return named list of spectral indices from drives within the core.
 #' @export
 #'
-#' @description If there are multiple ROIs within single drive, merge them into composite
-#' Works with purrr::map for multiple drives if directory is a vector of paths
+#' @examples
+read_hsi <- function(path) {
+  # List drives
+  drive_dirs <- fs::dir_ls(path = path, type = "directory")
+
+  # Read data in
+  data <- purrr::map(drive_dirs, \(x) fs::dir_ls(x, recurse = TRUE, glob = "*Indices.csv")) |>
+    # Read at every directory, ragged because of 1n elements
+    purrr::map_depth(.depth = 2, \(x) arrow::read_csv_arrow(x), .ragged = TRUE) |>
+    # Bind to tibble by roi
+    purrr::map_at(dplyr::where(\(x) length(x) > 1), \(x) purrr::list_rbind(x, names_to = "path")) |>
+    # Extract roi where multiple rois
+    purrr::map(\(x) dplyr::mutate(x, roi = stringr::str_extract(path, pattern = "(?<=roi-)\\d+"), .after = path)) |>
+    # Add roi if NA (1 roi case)
+    purrr::map(\(x) dplyr::mutate(x, roi = as.numeric(tidyr::replace_na(roi, "1")))) |>
+    # Arrange by roi
+    purrr::map(\(x) dplyr::arrange(x, roi))
+
+  # Test that it returned list
+  testthat::expect_type(data, type = "list")
+
+  # Return
+  return(data)
+}
+
+#' Read depth tables data from directory
+#'
+#' @param path path to the root core directory containing drives.
+#'
+#' @return named list of depth tables from drives within the core.
+#' @export
 #'
 #' @examples
-create_composite_drive <- function(directory = NA_character_, .tofile = TRUE) {
-  # List depth table files in the root drive directory
-  depth_data <- fs::dir_ls(directory, regexp = "depthTable", recurse = TRUE) |>
-    # Filter so paths to photos are not recorded
-    fs::path_filter(regexp = "photos", invert = TRUE) |>
-    # Read files
-    vroom::vroom(id = "path", .name_repair = "universal")
+read_depth <- function(path) {
+  # List drives
+  drive_dirs <- fs::dir_ls(path = path, type = "directory")
 
-  # List files with measurements in the root drive directory
-  spectral_data <- fs::dir_ls(directory, regexp = "spectralIndices", recurse = TRUE) |>
-    # Read files
-    vroom::vroom(id = "path", .name_repair = "universal")
+  # Read data in
+  data <- purrr::map(drive_dirs, \(x) fs::dir_ls(x, recurse = TRUE, glob = "*Table.csv")) |>
+    # Read at every directory, ragged because of 1n elements
+    purrr::map_depth(.depth = 2, \(x) arrow::read_csv_arrow(x), .ragged = TRUE) |>
+    # Bind to tibble by roi
+    purrr::map_at(dplyr::where(\(x) length(x) > 1), \(x) purrr::list_rbind(x, names_to = "path")) |>
+    # Extract roi where multiple rois
+    purrr::map(\(x) dplyr::mutate(x, roi = stringr::str_extract(path, pattern = "(?<=roi-)\\d+"), .after = path)) |>
+    # Add roi if NA (1 roi case)
+    purrr::map(\(x) dplyr::mutate(x, roi = as.numeric(tidyr::replace_na(roi, "1")))) |>
+    # Arrange by roi
+    purrr::map(\(x) dplyr::arrange(x, roi))
 
-  # Translate depths
-  roi_top <- depth_data |>
-    # Get only top of the ROI
-    dplyr::filter(position == "roiTop") |>
-    # Get ROI number
-    dplyr::mutate(roi = stringr::str_extract(path, pattern = "roi-[:digit:]+"))
+  # Test that it returned list
+  testthat::expect_type(data, type = "list")
 
-  # Join with the spectral indices
-  translated_data <- spectral_data |>
-    # Get ROI number
-    dplyr::mutate(roi = stringr::str_extract(path, pattern = "roi-[:digit:]+")) |>
-    # Full join
-    dplyr::left_join(roi_top, by = "roi") |>
-    # Composite depth
-    dplyr::mutate(composite = depth + cm, .after = depth) |>
-    # Clean data frame
-    dplyr::select(depth:roi)
+  # Return
+  return(data)
+}
 
-  # Should tibble be written to file
-  if (.tofile == TRUE) {
-    readr::write_csv(x = translated_data, file = paste0(directory, "/composite.csv"))
-  } else {
-    # Return data
-    return(translated_data)
-  }
+#' Create composite drive from multiple rois
+#'
+#' @param depth a named list of tibbles with depths by roi.
+#' @param indices a named list of tibble with spectral indices
+#'
+#' @return a tibble with depths translated for each drive.
+#' @export
+#'
+#' @examples
+composite_drive <- function(depth, indices) {
+  # Calculate depth shift
+  depth <- depth |>
+    # Bind to tibble by drive id
+    purrr::list_rbind(names_to = "drive") |>
+    # Nest
+    tidyr::nest(.by = c(drive, roi)) |>
+    # For each drive calculate values
+    dplyr::mutate(
+      core_top = purrr::map(data, \(x) dplyr::filter(x, position == "coreLinerTop")$cm),
+      core_bottom = purrr::map(data, \(x) dplyr::filter(x, position == "coreLinerBottom")$cm),
+      roi_top = purrr::map(data, \(x) dplyr::filter(x, position == "roiTop")$cm),
+      roi_bottom = purrr::map(data, \(x) dplyr::filter(x, position == "roiBottom")$cm)
+    ) |>
+    # Calculate distances from top
+    dplyr::mutate(
+      core_bottom = purrr::map2(core_bottom, core_top, \(x, y) x - y),
+      roi_top = purrr::map2(roi_top, core_top, \(x, y) x - y),
+      roi_bottom = purrr::map2(roi_bottom, core_top, \(x, y) x - y),
+      core_top = purrr::map2(core_top, core_top, \(x, y) x - y)
+    ) |>
+    # Drop data
+    dplyr::select(-data) |>
+    # Unnest
+    tidyr::unnest(cols = -c(drive, roi))
+
+  # Test that it returned a tibble
+  testthat::expect_s3_class(depth, class = "tbl_df")
+
+  # Get indices
+  indices <- indices |>
+    # Bind to tibble by drive id
+    purrr::list_rbind(names_to = "drive") |>
+    # Join with depth data
+    dplyr::left_join(depth, by = dplyr::join_by(drive, roi)) |>
+    # Calculate in liner depth
+    dplyr::mutate(depth_liner = depth + roi_top, .after = depth) |>
+    # Remove duplicated depths
+    dplyr::distinct(depth_liner, .keep_all = TRUE)
+
+  # Test that it returned a tibble
+  testthat::expect_s3_class(indices, class = "tbl_df")
+
+  # Return indices
+  return(indices)
 }
