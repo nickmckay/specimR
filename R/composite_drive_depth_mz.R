@@ -23,9 +23,6 @@ read_hsi <- function(path) {
     # Arrange by roi
     purrr::map(\(x) dplyr::arrange(x, roi))
 
-  # Test that it returned list
-  testthat::expect_type(data, type = "list")
-
   # Return
   return(data)
 }
@@ -54,9 +51,6 @@ read_depth <- function(path) {
     purrr::map(\(x) dplyr::mutate(x, roi = as.numeric(tidyr::replace_na(roi, "1")))) |>
     # Arrange by roi
     purrr::map(\(x) dplyr::arrange(x, roi))
-
-  # Test that it returned list
-  testthat::expect_type(data, type = "list")
 
   # Return
   return(data)
@@ -97,9 +91,6 @@ composite_drive <- function(depth, indices) {
     # Unnest
     tidyr::unnest(cols = -c(drive, roi))
 
-  # Test that it returned a tibble
-  testthat::expect_s3_class(depth, class = "tbl_df")
-
   # Get indices
   indices <- indices |>
     # Bind to tibble by drive id
@@ -110,9 +101,6 @@ composite_drive <- function(depth, indices) {
     dplyr::mutate(depth_liner = depth + roi_top, .after = depth) |>
     # Remove duplicated depths
     dplyr::distinct(depth_liner, .keep_all = TRUE)
-
-  # Test that it returned a tibble
-  testthat::expect_s3_class(indices, class = "tbl_df")
 
   # Return indices
   return(indices)

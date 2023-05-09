@@ -20,12 +20,11 @@ spectra_position <- function(raster, spectra) {
   # Create tibble with spectra of choice and respective position
   spectraIndex <- dplyr::tibble(
     spectra = spectra,
-    position = spectraIndex) |>
-    # Group by position
-    dplyr::group_by(position) |>
+    position = spectraIndex
+  ) |>
     # Keep second observation if duplicates are present
     # From experience closer to desired product
-    dplyr::slice_tail()
+    dplyr::slice_tail(.by = position)
 
   # Return values
   return(spectraIndex)
@@ -77,7 +76,7 @@ raster_crop <- function(raster, type, roi, ref_type) {
   if (type == "capture") {
     raster <- terra::crop(raster, roi, filename = paste0(paths[["directory"]], "products/capture_cropped.tif"), overwrite = TRUE)
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
-  } else if (ref_type == "whiteref"){
+  } else if (ref_type == "whiteref") {
     raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(paths[["directory"]], "products/whiteref_cropped.tif"), overwrite = TRUE)
   } else {
     raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(paths[["directory"]], "products/darkref_cropped.tif"), overwrite = TRUE)
@@ -101,7 +100,7 @@ raster_crop <- function(raster, type, roi, ref_type) {
 #'
 #' @examples
 create_reference_raster <- function(raster, roi, ref_type) {
-  if (ref_type == "whiteref"){
+  if (ref_type == "whiteref") {
     name <- "whiteref"
   } else {
     name <- "darkref"

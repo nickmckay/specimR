@@ -74,7 +74,7 @@ get_paths <- function(directory = NA) {
 filechooseR <- function(id,directory = NA){
   Filters <- matrix(c("*",".raw"),1, 2, byrow = TRUE)
   data <- file.path(directory,paste(id,".raw",sep=""))
-  if(missing(data)) data <- tcltk::tk_choose.files(caption="choose Data File",filter = Filters)
+  if(missing(data)) data <- tcltk::tk_choose.files(caption="choose Data File", filter = Filters)
   filen <- raster::brick(data)
   return(filen)
 }

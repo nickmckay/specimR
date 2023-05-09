@@ -71,7 +71,9 @@ calculate_rabd <- function(raster, edges, trough, rabd_name) {
   values(template) <- rabd
 
   # Write new raster to file based on paths stored in the environment
-  terra::writeRaster(template, filename = glue::glue({rabd_name}, ".tif"), overwrite = TRUE)
+  terra::writeRaster(template, filename = glue::glue(
+    {rabd_name}, ".tif"
+  ), overwrite = TRUE)
 }
 
 #' Calculate band ratio
@@ -86,7 +88,7 @@ calculate_rabd <- function(raster, edges, trough, rabd_name) {
 #' @description calculate band ratio of selected wavelengths
 #'
 #' @examples
-calculate_band_ratio <- function(raster, edges, ratio_name){
+calculate_band_ratio <- function(raster, edges, ratio_name) {
   # Find edge positions
   edge_positions <- spectra_position(raster = raster, spectra = edges) |>
     # Pull vector with positions
@@ -97,7 +99,9 @@ calculate_band_ratio <- function(raster, edges, ratio_name){
     terra::subset(raster, edge_positions[2])
 
   # Write new raster to file based on paths stored in the environment
-  terra::writeRaster(raster, filename = glue::glue({ratio_name}, ".tif"), overwrite = TRUE)
+  terra::writeRaster(raster, filename = glue::glue(
+    {ratio_name}, ".tif"
+  ), overwrite = TRUE)
 }
 
 #' calculate rMean
@@ -110,7 +114,7 @@ calculate_band_ratio <- function(raster, edges, ratio_name){
 #' @description calculate mean reflectance from all layers for given pixel
 #'
 #' @examples
-calculate_rmean <- function(raster){
+calculate_rmean <- function(raster) {
   # Apply mean function over entire SpatRaster
   raster <- terra::app(raster, fun = "mean")
 
@@ -119,7 +123,7 @@ calculate_rmean <- function(raster){
 }
 
 # Function: calculate RABA - to do
-calculate_raba <- function(raster){
+calculate_raba <- function(raster) {
 
 }
 
@@ -131,7 +135,7 @@ calculate_raba <- function(raster){
 #' @export
 #'
 #' @examples
-extract_profile <- function(raster){
+extract_profile <- function(raster) {
   # Aggregate SpatRaster into average rows
   profile <- terra::aggregate(raster, fact = c(1, ncol(raster)), fun = "mean") |>
     # Coerce do data frame with coordinates
@@ -148,23 +152,28 @@ proxies_settings <- list(
   "RABD655680" = list(
     edges = c(590, 730),
     trough = 655:680,
-    rabd_name = "RABD655680"),
+    rabd_name = "RABD655680"
+  ),
   "RABD845" = list(
     edges = c(590, 730),
     trough = 655:680,
-    rabd_name = "RABD845"),
+    rabd_name = "RABD845"
+  ),
   "RABD615" = list(
     edges = c(590, 730),
     trough = 655:680,
-    rabd_name = "RABD615"),
+    rabd_name = "RABD615"
+  ),
   "R570R630" = list(
     edges = c(570, 630),
-    ratio_name = "R570R630"),
+    ratio_name = "R570R630"
+  ),
   "R590R690" = list(
     edges = c(590, 730),
     ratio_name = "R590R690"
   ),
   "R950R970" = list(
     edges = c(590, 730),
-    ratio_name = "R950R970")
+    ratio_name = "R950R970"
+  )
 )
