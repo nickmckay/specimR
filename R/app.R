@@ -1,5 +1,9 @@
 # shiny app
 
+library(shiny)
+library(shinyFiles)
+library(bslib)
+
 # choose if it needs normalization - TRUE/FALSE (old/new specim)
 # if needs normalization then choose if different times for capture and reference - TRUE/FALSE (needs two times/doesn't need)
 # choose proxies
