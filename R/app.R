@@ -1,6 +1,5 @@
 # shiny app
 
-# choose capture file
 # choose if it needs normalization - TRUE/FALSE (old/new specim)
 # if needs normalization then choose if different times for capture and reference - TRUE/FALSE (needs two times/doesn't need)
 # choose proxies
@@ -22,23 +21,17 @@
 
 
 ui <- fluidPage(
-  fluidRow(
-    shiny::column(
-      4,
-      shiny::radioButtons("choice_normalize", "Do you need to normalize the data?", choices = list(Yes = "Yes", No = "No"))
-    ),
-    shiny::column(
-      4,
-      shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"))
-    ),
-    shiny::column(
-      4,
-      shiny::checkboxGroupInput("choice_proxies", "Choose proxies to calculate", choices = list(Rmean = "Rmean", RABD615 = "RABD615", RABD660670 = "RABD660-670", RABD845 = "RABD845", RABD710730 = "RABD710-730", R570R630 = "R570R630", R590R690 = "R590R690"))
-    )
-  ),
+  theme = bs_theme(version = 4, bootswatch = "flatly"),
+  shiny::sidebarLayout(
+  shiny::sidebarPanel(
+    fluidRow(shiny::radioButtons("choice_normalize", "Do you need to normalize the data?", choices = list(Yes = "Yes", No = "No"))),
+    fluidRow(shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"))),
+    shiny::fluidRow(shiny::checkboxGroupInput("choice_proxies", "Choose proxies to calculate", choices = list(Rmean = "Rmean", RABD615 = "RABD615", RABD660670 = "RABD660-670", RABD845 = "RABD845", RABD710730 = "RABD710-730", R570R630 = "R570R630", R590R690 = "R590R690"))),
   shiny::fluidRow(
-    shinyFiles::shinyDirButton("file_dir", "Select directory with captured data", title = "Select directory")
-  ),
+    strong("Select core directory"),
+    br(),
+    shinyFiles::shinyDirButton("file_dir", "Select directory with captured data", title = "Select directory"))),
+  shiny::mainPanel(
   br(),
   "Selected core directory",
   br(),
@@ -49,6 +42,7 @@ ui <- fluidPage(
   shiny::verbatimTextOutput("core_dir"),
   br(),
   shiny::plotOutput("core_plot")
+  ))
 )
 
 server <- function(input, output, session) {
