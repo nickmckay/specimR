@@ -1,6 +1,6 @@
 pick_roi_simple <- function(image) {
-  terra:plotRGB(image, axes = TRUE, stretch = "hist", main = "Raw Image")
-  cropC <- terra::draw()
+  raster:plotRGB(image, axes = TRUE, stretch = "hist", main = "Raw Image")
+  cropC <- raster::draw()
   return(cropC)
 }
 
@@ -52,29 +52,29 @@ server <- function(input, output, session) {
   dblclick$x <- 0
   dblclick$y <- 0
 
-  init.extent <- terra::ext(image)
+  init.extent <- raster::extent(image)
   init.extent[3] <- init.extent[4] - 2000
 
   brushExtent$extent <- init.extent
 
   output$plot2 <- renderPlot(
     {
-      terra::plotRGB(image, axes = FALSE, stretch = "hist", addfun = cropViewFun(click, dblclick), maxpixels = prod(dim(image)[1:2]) * (input$slider / 100))
+      raster::plotRGB(image, axes = FALSE, stretch = "hist", addfun = cropViewFun(click, dblclick), maxpixels = prod(dim(image)[1:2]) * (input$slider / 100))
     },
     width = 500
   )
 
   output$plot3 <- renderPlot({
-    terra::plotRGB(image, axes = TRUE, stretch = "hist", main = "Select Crop Corners", ext = brushExtent$extent)
+    raster::plotRGB(image, axes = TRUE, stretch = "hist", main = "Select Crop Corners", ext = brushExtent$extent)
   })
 
   # If so, zoom to the brush bounds
   observe({
     brush <- input$plot2_brush
     if (!is.null(brush)) {
-      brushExtent$extent <- terra::ext(brush$xmin, brush$xmax, brush$ymin, brush$ymax)
+      brushExtent$extent <- raster::extent(brush$xmin, brush$xmax, brush$ymin, brush$ymax)
     } else {
-      brushExtent$extent <- terra::ext(image)
+      brushExtent$extent <- raster::extent(image)
     }
 
 
@@ -123,7 +123,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$center, {
     width <- abs(click$x - dblclick$x)
-    re <- terra::ext(image)
+    re <- raster::extent(image)
     totalWidth <- re[2] - re[1]
     mid <- round(re[2] / 2)
     if (click$x >= dblclick$x) {
@@ -142,7 +142,7 @@ server <- function(input, output, session) {
     xmax <- max(click$x, dblclick$x)
     ymin <- min(click$y, dblclick$y)
     ymax <- max(click$y, dblclick$y)
-    crp <- terra::ext(c(xmin, xmax, ymin, ymax))
+    crp <- raster::extent(c(xmin, xmax, ymin, ymax))
     crpout[[newRoi]] <<- crp
   })
 
@@ -154,7 +154,7 @@ server <- function(input, output, session) {
       xmax <- max(click$x, dblclick$x)
       ymin <- min(click$y, dblclick$y)
       ymax <- max(click$y, dblclick$y)
-      crp <- terra::ext(c(xmin, xmax, ymin, ymax))
+      crp <- raster::extent(c(xmin, xmax, ymin, ymax))
       crpout[[newRoi]] <<- crp
     }
     shiny::stopApp()
@@ -291,22 +291,22 @@ big_roi_server <- function(input, output, session) {
 
   output$plot2 <- renderPlot(
     {
-      terra::plotRGB(image, axes = FALSE, stretch = "hist", addfun = cropViewFun(click, dblclick), maxpixels = prod(dim(image)[1:2]) * (input$slider / 100))
+      raster::plotRGB(image, axes = FALSE, stretch = "hist", addfun = cropViewFun(click, dblclick), maxpixels = prod(dim(image)[1:2]) * (input$slider / 100))
     },
     width = 500
   )
 
   output$plot3 <- renderPlot({
-    terra::plotRGB(image, axes = TRUE, stretch = "hist", main = "Select Crop Corners", ext = brushExtent$extent)
+    raster::plotRGB(image, axes = TRUE, stretch = "hist", main = "Select Crop Corners", ext = brushExtent$extent)
   })
 
   # If so, zoom to the brush bounds
   observe({
     brush <- input$plot2_brush
     if (!is.null(brush)) {
-      brushExtent$extent <- terra::ext(brush$xmin, brush$xmax, brush$ymin, brush$ymax)
+      brushExtent$extent <- raster::extent(brush$xmin, brush$xmax, brush$ymin, brush$ymax)
     } else {
-      brushExtent$extent <- terra::ext(image)
+      brushExtent$extent <- raster::extent(image)
     }
 
 
@@ -355,7 +355,7 @@ big_roi_server <- function(input, output, session) {
 
   observeEvent(input$center, {
     width <- abs(click$x - dblclick$x)
-    re <- terra::ext(image)
+    re <- raster::extent(image)
     totalWidth <- re[2] - re[1]
     mid <- round(re[2] / 2)
     if (click$x >= dblclick$x) {
@@ -388,7 +388,7 @@ big_roi_server <- function(input, output, session) {
       xmax <- max(click$x, dblclick$x)
       ymin <- min(click$y, dblclick$y)
       ymax <- max(click$y, dblclick$y)
-      crp <- terra::ext(c(xmin, xmax, ymin, ymax))
+      crp <- raster::extent(c(xmin, xmax, ymin, ymax))
       bigcropout <<- crp
     }
     shiny::stopApp()
@@ -396,7 +396,7 @@ big_roi_server <- function(input, output, session) {
 }
 
 
-pick_big_roi_shiny <- function(image, bigRoiTry = terra::ext(image), zh = 5000) {
+pick_big_roi_shiny <- function(image, bigRoiTry = raster::extent(image), zh = 5000) {
   # assign image into specimEnv
   assign("image", image, envir = specimEnv)
   assign("bigRoiTry", bigRoiTry, envir = specimEnv)
