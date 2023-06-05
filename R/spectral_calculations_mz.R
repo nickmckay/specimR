@@ -124,7 +124,12 @@ calculate_rmean <- function(raster) {
 
 # Function: calculate RABA - to do
 calculate_raba <- function(raster) {
-
+  # Remove continuum in a pixel
+  prospectr::continuumRemoval(df_1[, 2], df_1[, 1]) |>
+    # Coerce to tibble
+    tibble::enframe() |>
+    # Coerce band to numeric
+    dplyr::mutate(name = as.numeric(name))
 }
 
 #' Extract average proxy profile
