@@ -9,9 +9,6 @@ getColorsByIndex(index)
 \arguments{
 \item{index}{}
 }
-\value{
-
-}
 \description{
 Title
 }

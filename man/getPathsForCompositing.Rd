@@ -9,9 +9,6 @@ getPathsForCompositing(dirPath = NA)
 \arguments{
 \item{dirPath}{}
 }
-\value{
-
-}
 \description{
 Title
 }

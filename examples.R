@@ -2,13 +2,16 @@
 #                                                         Normalization workflow
 # Set path so directory so temporary raster and other files are written
 # Later subsitute with path selected interactivelly with get_paths
+
+library(terra)
+
 paths <- list()
-paths[["directory"]] <- "C:/GitHub/STL14_1A_28C_top_2022-11-11_16-30-51/"
+paths[["directory"]] <- "C:/Users/dce25/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51/"
 
 
 spectra <- c(550, 570, 590, 615, 630, 649:701, 730, 790, 845, 900)
 
-capture <- terra::rast("C:/GitHub/STL14_1A_28C_top_2022-11-11_16-30-51/capture/STL14_1A_28C_top_2022-11-11_16-30-51.raw")
+capture <- terra::rast(paste0(paths[["directory"]], "capture/STL14_1A_28C_top_2022-11-11_16-30-51.raw"))
 big_roi <- terra::ext(c(110, 1010, 0, 16000))
 
 capture <- spectra_position(raster = capture, spectra = spectra) |>

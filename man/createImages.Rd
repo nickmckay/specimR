@@ -17,9 +17,6 @@ createImages(
 \arguments{
 \item{stretch.fun}{}
 }
-\value{
-
-}
 \description{
 Create image from reflectance standardized data
 }

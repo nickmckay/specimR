@@ -14,7 +14,6 @@
 #' Find how many bands there are between trough minimum and 730
 #' Find how many bands there are between trough minimum and 590
 #'
-#' @examples
 calculate_rabd <- function(raster, edges, trough, rabd_name) {
   # Create SpatRaster template from original, select one layer
   template <- terra::subset(raster, 1)
@@ -87,7 +86,6 @@ calculate_rabd <- function(raster, edges, trough, rabd_name) {
 #'
 #' @description calculate band ratio of selected wavelengths
 #'
-#' @examples
 calculate_band_ratio <- function(raster, edges, ratio_name) {
   # Find edge positions
   edge_positions <- spectra_position(raster = raster, spectra = edges) |>
@@ -113,7 +111,6 @@ calculate_band_ratio <- function(raster, edges, ratio_name) {
 #'
 #' @description calculate mean reflectance from all layers for given pixel
 #'
-#' @examples
 calculate_rmean <- function(raster) {
   # Apply mean function over entire SpatRaster
   raster <- terra::app(raster, fun = "mean")
@@ -134,7 +131,6 @@ calculate_raba <- function(raster) {
 #' @return a data frame with XY coordinates and averaged proxy values
 #' @export
 #'
-#' @examples
 extract_profile <- function(raster) {
   # Aggregate SpatRaster into average rows
   profile <- terra::aggregate(raster, fact = c(1, ncol(raster)), fun = "mean") |>

@@ -16,9 +16,6 @@ makeHeatmap(
 \arguments{
 \item{smooth.n}{}
 }
-\value{
-
-}
 \description{
 Title
 }

@@ -9,8 +9,6 @@
 #' @description find index position of the nearest spectra (band) in the dataset.
 #' Match for the lowest difference between integer band and actual SpatRaster band.
 #' This will produce duplicates with multiple bands. Drop.
-#'
-#' @examples
 spectra_position <- function(raster, spectra) {
   # Find index (position) of selected spectra by comparing choice and names
   spectraIndex <- purrr::map(spectra, \(x) which.min(abs(x - as.numeric(names(raster))))) |>
@@ -40,7 +38,6 @@ spectra_position <- function(raster, spectra) {
 #'
 #' @description subset SpatRaster with spectra (bands) positions
 #'
-#' @examples
 spectra_sub <- function(raster, spectra_tbl) {
   # Get spectra from tibble
   spectra <- dplyr::pull(spectra_tbl, 1)
@@ -70,7 +67,6 @@ spectra_sub <- function(raster, spectra_tbl) {
 #' For capture (core) SpatRaster use full extent
 #' For reference (white and dark) SpatRaster use only x-direction
 #'
-#' @examples
 raster_crop <- function(raster, type, roi, ref_type) {
   # If cropping entire capture SpatRaster use entire large ROI
   if (type == "capture") {
@@ -98,7 +94,6 @@ raster_crop <- function(raster, type, roi, ref_type) {
 #' Create one mean reference row SpatRaster by averaging data every column by aggregation
 #' Create reference SpatRaster matching capture SpatRaster extent by disaggregation
 #'
-#' @examples
 create_reference_raster <- function(raster, roi, ref_type) {
   if (ref_type == "whiteref") {
     name <- "whiteref"
@@ -129,7 +124,6 @@ create_reference_raster <- function(raster, roi, ref_type) {
 #'
 #' @description normalize captured hyperspectral data with white and dark reference according to equation from Butz et al 2016
 #'
-#' @examples
 normalization <- function(capture = capture, whiteref = whiteref, darkref = darkref) {
   # Calculate numenator (above the bar)
   numenator <- capture - darkref
@@ -162,7 +156,6 @@ normalization <- function(capture = capture, whiteref = whiteref, darkref = dark
 #'
 #' @description apply normalization function over the combination of capture and reference SpatRasters using terra spatial dataset
 #'
-#' @examples
 create_normalized_raster <- function(capture = capture, whiteref = whiteref, darkref = darkref, fun = normalization) {
   # Create terra spatial dataset combining SpatRasters
   # Create list

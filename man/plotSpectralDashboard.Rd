@@ -13,6 +13,8 @@ plotSpectralDashboard(
   core.width = 4,
   plot.width = 8,
   page.width = 10,
+  page.width.multiplier = 1.5,
+  page.length.multiplier = 3,
   y.tick.interval = 5,
   page.units = "cm",
   tol = 1,
@@ -21,10 +23,7 @@ plotSpectralDashboard(
 )
 }
 \arguments{
-\item{tol}{}
-}
-\value{
-
+\item{output.dpi}{}
 }
 \description{
 Title

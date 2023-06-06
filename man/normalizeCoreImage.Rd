@@ -6,9 +6,6 @@
 \usage{
 normalizeCoreImage(png.path)
 }
-\value{
-
-}
 \description{
 Create a normalized core image
 }

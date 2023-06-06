@@ -9,9 +9,6 @@ findCropEdges(line, basereg = c(0.25, 0.75), cutthresh = 0.3, thresh = 3)
 \arguments{
 \item{thresh}{}
 }
-\value{
-
-}
 \description{
 Title
 }

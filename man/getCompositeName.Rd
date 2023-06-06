@@ -9,9 +9,6 @@ getCompositeName(coreNames, append = "Composite")
 \arguments{
 \item{append}{}
 }
-\value{
-
-}
 \description{
 Title
 }

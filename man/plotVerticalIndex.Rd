@@ -15,9 +15,6 @@ plotVerticalIndex(
 \arguments{
 \item{smooth.width}{}
 }
-\value{
-
-}
 \description{
 Title
 }

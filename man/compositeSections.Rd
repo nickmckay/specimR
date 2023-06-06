@@ -22,9 +22,6 @@ compositeSections(
     \item{\code{output.dpi}}{}
   }}
 }
-\value{
-
-}
 \description{
 Title
 }

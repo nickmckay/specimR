@@ -13,9 +13,9 @@ getNormWavelengthData(
 )
 }
 \arguments{
-\item{normData}{Normalized spectral data (the output of `specimR::calculateMeanRows()`)}
+\item{normData}{Normalized spectral data (the output of \code{specimR::calculateMeanRows()})}
 
-\item{normWavelengths}{A vector of wavelengths (the output of `specimR::calculateMeanRows()`)}
+\item{normWavelengths}{A vector of wavelengths (the output of \code{specimR::calculateMeanRows()})}
 
 \item{wavelengthToGet}{What wavelength to do you want to extract}
 

@@ -9,9 +9,6 @@ plotHeatmap(rasDat, depthScale, cmPerPixel, palette = "Greens")
 \arguments{
 \item{cmPerPixel}{}
 }
-\value{
-
-}
 \description{
 Title
 }

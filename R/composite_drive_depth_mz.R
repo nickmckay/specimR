@@ -5,7 +5,6 @@
 #' @return named list of spectral indices from drives within the core.
 #' @export
 #'
-#' @examples
 read_hsi <- function(path) {
   # List drives
   drive_dirs <- fs::dir_ls(path = path, type = "directory")
@@ -34,7 +33,6 @@ read_hsi <- function(path) {
 #' @return named list of depth tables from drives within the core.
 #' @export
 #'
-#' @examples
 read_depth <- function(path) {
   # List drives
   drive_dirs <- fs::dir_ls(path = path, type = "directory")
@@ -64,7 +62,6 @@ read_depth <- function(path) {
 #' @return a tibble with depths translated for each drive.
 #' @export
 #'
-#' @examples
 composite_drive <- function(depth, indices) {
   # Calculate depth shift
   depth <- depth |>

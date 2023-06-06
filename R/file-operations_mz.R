@@ -8,7 +8,6 @@
 #' @description search for an overview file (*.png) and three files of captured data
 #' core capture, white and dark references (*.raw).
 #'
-#' @examples
 get_paths <- function(directory = NA) {
   # Invoke file browser with print to console to get core directory
   if (is.na(directory)) {

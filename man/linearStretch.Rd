@@ -9,9 +9,6 @@ linearStretch(lay, na.rm = TRUE, trunc.perc = 0.02)
 \arguments{
 \item{trunc.perc}{}
 }
-\value{
-
-}
 \description{
 Title
 }

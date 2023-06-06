@@ -12,7 +12,7 @@ calculateIndices(
 )
 }
 \arguments{
-\item{normalized}{Normalized spectral data (the output of `specimR::calculateMeanRows()`)}
+\item{normalized}{Normalized spectral data (the output of \code{specimR::calculateMeanRows()})}
 
 \item{indices}{a character vector of the requested indices. Current options are: "RABD660","RABD845","R570R630"and "R590R690" (default = c("RABD660","RABD845","R570R630","R590R690"))}
 

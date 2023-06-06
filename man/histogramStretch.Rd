@@ -9,9 +9,6 @@ histogramStretch(im)
 \arguments{
 \item{im}{}
 }
-\value{
-
-}
 \description{
 Title
 }

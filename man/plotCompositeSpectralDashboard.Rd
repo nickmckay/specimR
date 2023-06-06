@@ -30,9 +30,6 @@ plotCompositeSpectralDashboard(
 
 \item{output.dpi}{}
 }
-\value{
-
-}
 \description{
 Plot composite spectral dashboard
 }

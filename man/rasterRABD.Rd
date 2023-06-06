@@ -22,9 +22,6 @@ rasterRABD(
 
 \item{tol}{tolerance for finding the nearest wavelength (default = 1)}
 }
-\value{
-
-}
 \description{
 calculate RABD over a raster
 }

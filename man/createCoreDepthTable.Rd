@@ -9,9 +9,6 @@ createCoreDepthTable(cores)
 \arguments{
 \item{cores}{A named list of coreTables export from normalize()}
 }
-\value{
-
-}
 \description{
 Create a core-depth table for depth compositing
 }

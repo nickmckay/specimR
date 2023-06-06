@@ -30,7 +30,7 @@ plotSpectralOutput(
 \item{...}{
   Arguments passed on to \code{\link[=plotSpectralDashboard]{plotSpectralDashboard}}
   \describe{
-    \item{\code{tol}}{}
+    \item{\code{output.dpi}}{}
   }}
 }
 \description{

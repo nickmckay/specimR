@@ -14,9 +14,9 @@ calculateRABD(
 )
 }
 \arguments{
-\item{normData}{Normalized spectral data (the output of `specimR::calculateMeanRows()`)}
+\item{normData}{Normalized spectral data (the output of \code{specimR::calculateMeanRows()})}
 
-\item{normWavelengths}{A vector of wavelengths (the output of `specimR::calculateMeanRows()`)}
+\item{normWavelengths}{A vector of wavelengths (the output of \code{specimR::calculateMeanRows()})}
 
 \item{tol}{Tolerance for distance from the requested wavelength. If no values are present within the tolerance, this returns an error. If multiple are present, this returns the average of those values.}
 
