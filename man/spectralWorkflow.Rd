@@ -9,6 +9,8 @@ spectralWorkflow(
   indices = c("RABD615", "RABD660670", "RABD845", "R570R630", "R590R690"),
   overall.page.width = 30,
   individual.page.width = 10,
+  page.width.multiplier = 1.5,
+  page.length.multiplier = 3,
   plot.width = 8,
   core.width = 4,
   image.wavelengths = c(630, 532, 465),
@@ -16,6 +18,7 @@ spectralWorkflow(
   imageRoi = NA,
   output.dir = NA,
   clickDepths = NA,
+  output.dpi = 600,
   overall.width = NA,
   individual.width = NA,
   width.mult = NA,
@@ -32,9 +35,6 @@ spectralWorkflow(
     \item{\code{output.dir}}{optionally save output raster by specifyign the path}
     \item{\code{corename}}{optionally choose the length of the core}
   }}
-}
-\value{
-
 }
 \description{
 Wrapper function that goes through standardization, index calculation and visualization
