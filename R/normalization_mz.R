@@ -164,5 +164,19 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
     terra::sds()
 
   # Apply function over the dataset and write to file
-  raster <- terra::lapp(x = dataset, fun = fun, filename = paste0(paths[["directory"]], "products/capture_normalized.tif"), overwrite = TRUE)
+  raster <- terra::lapp(x = dataset, fun = fun, filename = paste0(paths[["directory"]], "products/REFLECTANCE.tif"), overwrite = TRUE)
+}
+
+#' Smooth raster with focal median
+#'
+#' @param capture a terra SpatRaster of captured data
+#' @param window focal window size, default is 3
+#'
+#' @return smoothed SpatRaster
+#' @export
+#'
+median_filtering <- function(caoture = capture, window = 3){
+  # Apply terra focal statistic with 3 x 3 window
+  reflectance <- terra::sapp(capture, fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"), overwrite = TRUE)
+
 }
