@@ -32,75 +32,35 @@ allParams <- list()
 ui <- shiny::fluidPage(
   tags$head(tags$style(HTML('* {font-family: "Georgia"};'))),
   titlePanel("specimR", windowTitle = "specimR"),
-  sidebarLayout(
-  sidebarPanel(
-  shiny::fluidRow(
-    align="center",
-    shinyFiles::shinyDirButton("file_dir", "Select directory with captured data", title = "Select directory"),
-    shiny::br(),
-    shiny::br(),
-  ),
-  shiny::fluidRow(
-    shiny::column(
-      4,
-      shiny::radioButtons("choice_normalize", "Do you need to normalize the data?", choices = list(Yes = "Yes", No = "No"))
-    ),
-    shiny::column(
-      4,
-      shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"))
-    ),
-    shiny::column(
-      4,
-      shiny::checkboxGroupInput("choice_proxies", "Choose proxies to calculate", choices = list(Rmean = "Rmean", RABD615 = "RABD615", RABD660670 = "RABD660-670", RABD845 = "RABD845", RABD710730 = "RABD710-730", R570R630 = "R570R630", R590R690 = "R590R690"))
-    )
-  ),
-  shiny::fluidRow(
-
-    shiny::column(
-      12,
-    "Selected core directory",
-    shiny::br(),
-    shiny::verbatimTextOutput("core_dir_show"),
-    shiny::br(),
-    "Raster files in the directory",
-    shiny::br(),
-    shiny::verbatimTextOutput("core_dir"),
-    shiny::br(),
-    "Current Selection",
-    shiny::br(),
-    shiny::column(
-      4,
-      "xmin",
-      shiny::br(),
-      shiny::verbatimTextOutput("xmin"),
-      "xmax",
-      shiny::verbatimTextOutput("xmax"),
-    ),
-    shiny::column(
-      4,
-      "ymin",
-      shiny::br(),
-      shiny::verbatimTextOutput("ymin"),
-      "ymax",
-      shiny::verbatimTextOutput("ymax"),
-    ),
-    ),
-    shiny::column(
-      8,
-    shiny::br(),
-    shiny::br(),
-      "Analysis Regions",
-    shiny::br(),
-    shiny::tableOutput("analysisRegions"),
-
-)
-  )),
-    # Main panel for displaying outputs ----
-    mainPanel(
-
       # Output: Tabset w/ plot, summary, and table ----
       tabsetPanel(type = "tabs",
                   id = "tabset1",
+                  tabPanel("Select Data",
+                           shiny::br(),
+                           shiny::br(),
+                           shiny::fluidRow(
+                             align="center",
+                             shinyFiles::shinyDirButton("file_dir", "Select directory with captured data", title = "Select directory"),
+                             shiny::actionButton("file_dir_example", "Use example data"),
+                             shiny::br(),
+                             shiny::br(),
+                           ),
+                           shiny::fluidRow(
+
+                             shiny::column(
+                               12,
+                               "Selected core directory",
+                               shiny::br(),
+                               shiny::verbatimTextOutput("core_dir_show"),
+                               shiny::br(),
+                               "Raster files in the directory",
+                               shiny::br(),
+                               shiny::verbatimTextOutput("core_dir"),
+                               shiny::br(),
+                               shiny::actionButton("proceed_with_data", "Proceed with selected data")
+                             ),
+                           )
+                  ),
                   tabPanel("Crop Image",
                              align="center",
                              shiny::br(),
@@ -132,27 +92,44 @@ ui <- shiny::fluidPage(
                                                            ),
                            ),
                   tabPanel("Select Analysis Regions",
+                           sidebarLayout(
+                             sidebarPanel(
+                               style = "position:fixed; margin-top:150px;",
+                               width=2,
                            align="center",
-                           shiny::br(),
-                           headerPanel("select regions to analyze"),
+                           actionButton("selectAnalysisRegion", "Add selected region"),
                            shiny::br(),
                            shiny::br(),
                            shiny::fluidRow(
-                           shiny::column(
-                             4,
-                             align="left",
-                             actionButton("resetPlot", "Reset selection"),
+                             shiny::column(
+                               6,
+                               "xmin",
+                               shiny::br(),
+                               shiny::verbatimTextOutput("xmin"),
+                               "ymin",
+                               shiny::verbatimTextOutput("ymin"),
+                             ),
+                             shiny::column(
+                               6,
+                               "xmax",
+                               shiny::br(),
+                               shiny::verbatimTextOutput("xmax"),
+                               "ymax",
+                               shiny::verbatimTextOutput("ymax"),
+                             ),
                            ),
-                           shiny::column(
-                             4,
+                           shiny::fluidRow(
                              align="center",
-                             actionButton("selectAnalysisRegion", "Add selected region"),
+                             shiny::br(),
+                             "Analysis Regions",
+                             shiny::br(),
+                             shiny::tableOutput("analysisRegions"),
                            ),
-                           shiny::column(
-                             4,
+                           shiny::br(),
+                           actionButton("acceptAnalysisRegions", "Accept all selections"),
+                             ),
+                           mainPanel(
                              align="right",
-                             actionButton("acceptAnalysisRegions", "Accept and analyze"),
-                           )),
                            shiny::br(),
                            shiny::br(),
                            shinycssloaders::withSpinner(shiny::plotOutput(outputId = "cropped_plot",
@@ -166,19 +143,21 @@ ui <- shiny::fluidPage(
                                                                           )
                            )
                            ),
-                  ),
+                           ),
+                  ),),
                   tabPanel("Distance Calibration",
                            align="center",
                            shiny::br(),
                            shiny::fluidRow(
-                             shiny::column(
-                               8,
-                               align="left",
+                               align="center",
+                               style = "text-align:center; font-weight:100;",
+                               shiny::column(
+                                 3,
                            sliderInput(
                              inputId="scalermarkerPointSize",
                              label="Size of marker points",
                              min=1,
-                             max=10,
+                             max=5,
                              value=3,
                              step = 0.1,
                              round = FALSE,
@@ -191,20 +170,17 @@ ui <- shiny::fluidPage(
                              timeFormat = NULL,
                              timezone = NULL,
                              dragRange = TRUE
-                           ),
                              ),
-                           shiny::column(
-                             4,
-                             align="right",
-                             actionButton("acceptCalibration", "Accept distance calibration"),
-                           )),
+                           ),
                            shiny::column(
                              3,
+                             style = "margin-top: 10px;",
                              "distance in pixels",
                              shiny::verbatimTextOutput("scaleDist")
                            ),
                            shiny::column(
                              3,
+                             style = "margin-top: 10px;",
                              "length of scale bar in mm",
                              numericInput(inputId = "scaleLength",
                                           step = 1,
@@ -215,17 +191,35 @@ ui <- shiny::fluidPage(
                            ),
                            shiny::column(
                              3,
+                             style = "margin-top: 10px;",
                              "pixels per mm",
                              shiny::verbatimTextOutput("pixelRatio")
+                           ),
+                           ),
+                           shiny::fluidRow(
+                             align="center",
+                             actionButton("acceptCalibration", "Accept distance calibration", style = "margin-right: 10px; margin-top:10px;"),
                            ),
                            shiny::br(),
                            shiny::plotOutput(outputId = "core_plot2",width = "100%", click="plot_click")
                   ),
                   tabPanel("Analysis",
-                          "download options...")
+                           shiny::fluidRow(
+                             shiny::column(
+                               4,
+                               shiny::radioButtons("choice_normalize", "Do you need to normalize the data?", choices = list(Yes = "Yes", No = "No"))
+                             ),
+                             shiny::column(
+                               4,
+                               shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"))
+                             ),
+                             shiny::column(
+                               4,
+                               shiny::checkboxGroupInput("choice_proxies", "Choose proxies to calculate", choices = list(Rmean = "Rmean", RABD615 = "RABD615", RABD660670 = "RABD660-670", RABD845 = "RABD845", RABD710730 = "RABD710-730", R570R630 = "R570R630", R590R690 = "R590R690"))
+                             )
+                           ),
+                           )
                   )
-      )
-  ),
 )
 
 server <- function(input, output, session) {
@@ -234,10 +228,21 @@ server <- function(input, output, session) {
   volumes <- c(shinyFiles::getVolumes()())
   shinyFiles::shinyDirChoose(input, "file_dir", roots = volumes)
 
+
   #capture user directory
   user_dir <- reactive({
     shinyFiles::parseDirPath(volumes, selection = input$file_dir)
-    #shinyFiles::parseDirPath(volumes, selection = "C:/Users/dce25/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51")
+    #"C:/Users/dce25/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51"
+  })
+
+  user_dir2 <- eventReactive(input$file_dir_example, {
+    "C:/Users/dce25/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51"
+  })
+
+  observeEvent(input$proceed_with_data, {
+    updateTabsetPanel(session=session,
+                      "tabset1",
+                      selected = "Crop Image")
   })
 
   #print directory
@@ -253,6 +258,10 @@ server <- function(input, output, session) {
       user_dir() |>
         fs::dir_ls(type = "file", regexp = ".raw", recurse = TRUE)
     }
+    else if (length(user_dir2()) != 0){
+      user_dir2() |>
+        fs::dir_ls(type = "file", regexp = ".raw", recurse = TRUE)
+    }
     })
 
   # Print raster files
@@ -263,10 +272,13 @@ server <- function(input, output, session) {
     if (length(user_dir()) != 0){
       terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
     }
+    else if (length(user_dir2()) != 0){
+      terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
+    }
   })
 
   #render plot
-  output$core_plot <- renderPlot(plot1(), height = 4000, width = 600, res = 20)
+  output$core_plot <- renderPlot(plot1(), height = 3000, width = 800, res = 20)
 
   source_coords <- reactiveValues(xy=data.frame(x=c(1,1),  y=c(1,1)))
 
@@ -292,12 +304,12 @@ server <- function(input, output, session) {
 
   x_range <- function(e) {
     if(is.null(e)) return(c(0,0))
-    c(round(e$xmin, 1), round(e$xmax, 1))
+    c(round(e$xmin, 0), round(e$xmax, 0))
   }
 
   y_range <- function(e) {
     if(is.null(e)) return(c(0,0))
-    c(round(e$ymin, 1), round(e$ymax, 1))
+    c(round(e$ymin, 0), round(e$ymax, 0))
   }
 
   #output$xmin <- reactive({x_range(input$plot_brush)[1]})
@@ -332,18 +344,29 @@ server <- function(input, output, session) {
   output$cropped_plot <- renderPlot({
     terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist",
                    ext=terra::ext(allParams$cropWhole))
-      points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
+    if (sum(complete.cases(analysisRegions$DT))>0){
+      for (i in 1:nrow(analysisRegions$DT)){
+        polygon(x=c(analysisRegions$DT[i,1], analysisRegions$DT[i,2], analysisRegions$DT[i,2], analysisRegions$DT[i,1]),
+                y=c(analysisRegions$DT[i,4], analysisRegions$DT[i,4], analysisRegions$DT[i,3], analysisRegions$DT[i,3]),
+                col = rgb(red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5), lwd=3)
+      }
+    }
+
+      # points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
 
       #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
       #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
     },
-    height = 4000,
-    width = 600
+    height = 3000,
+    width = 800
     )
 
   updateTabsetPanel(session=session,
                     "tabset1",
                     selected = "Select Analysis Regions")
+
+  session$resetBrush("plotBrush")
+  brush <<- NULL
   })
 
   analysisRegions <- reactiveValues()
@@ -391,12 +414,12 @@ server <- function(input, output, session) {
     output$core_plot2 <- renderPlot({
       terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
       points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
-      points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=1, pch=19, col="white")
+      points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize/3, pch=19, col="white")
       #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
       #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
     },
-    height = 4000,
-    width = 600
+    height = 3000,
+    width = 800
     )
     ## Source
 
