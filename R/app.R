@@ -146,7 +146,7 @@ ui <- shiny::fluidPage(
                            shiny::column(
                              4,
                              align="center",
-                             actionButton("selectAnalysisRegion", "Proceed with selected region"),
+                             actionButton("selectAnalysisRegion", "Add selected region"),
                            ),
                            shiny::column(
                              4,
@@ -170,10 +170,14 @@ ui <- shiny::fluidPage(
                   tabPanel("Distance Calibration",
                            align="center",
                            shiny::br(),
+                           shiny::fluidRow(
+                             shiny::column(
+                               8,
+                               align="left",
                            sliderInput(
                              inputId="scalermarkerPointSize",
                              label="Size of marker points",
-                             min=0.1,
+                             min=1,
                              max=10,
                              value=3,
                              step = 0.1,
@@ -188,6 +192,12 @@ ui <- shiny::fluidPage(
                              timezone = NULL,
                              dragRange = TRUE
                            ),
+                             ),
+                           shiny::column(
+                             4,
+                             align="right",
+                             actionButton("acceptCalibration", "Accept distance calibration"),
+                           )),
                            shiny::column(
                              3,
                              "distance in pixels",
@@ -323,6 +333,7 @@ server <- function(input, output, session) {
     terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist",
                    ext=terra::ext(allParams$cropWhole))
       points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
+
       #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
       #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
     },
@@ -370,10 +381,17 @@ server <- function(input, output, session) {
 
   })
 
+  observeEvent(input$acceptCalibration, {
+    updateTabsetPanel(session=session,
+                      "tabset1",
+                      selected = "Analysis")
+  })
+
   observeEvent(input$acceptAnalysisRegions, {
     output$core_plot2 <- renderPlot({
       terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
       points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
+      points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=1, pch=19, col="white")
       #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
       #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
     },
