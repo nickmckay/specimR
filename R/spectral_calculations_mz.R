@@ -1,3 +1,50 @@
+#' Remove continuum from spectrum
+#'
+#' @param raster a terra SpatRaster of normalized capture data
+#'
+#' @return a terra SpatRaster of normalized capture data with continuum removed
+#' @export
+remove_continuum <- function(raster) {
+  # Extract names
+  band_names <- names(raster)
+
+  # Remove continuum in a single pixel pixel
+  remove_continuum_fun <- function(raster) {
+    new_values <- raster |>
+      # Coerce to data frame
+      as.data.frame() |>
+      # Pivot == transpose
+      tidyr::pivot_longer(dplyr::everything(),
+        names_to = "band",
+        values_to = "reflectance",
+        names_transform = as.numeric) |>
+      # Coerce to matrix
+      as.matrix() |>
+      # Remove continuum
+      (\(x) prospectr::continuumRemoval(x[, 2], x[, 1]))() |>
+      # Coerce to tibble
+      tibble::enframe() |>
+      # Coerce band to numeric
+      dplyr::mutate(
+        band = as.numeric(name),
+        reflectance = value,
+        .keep = "none") |>
+      # Get values
+      dplyr::pull(reflectance)
+  }
+  # Apply mean function over entire SpatRaster
+  raster <- terra::app(raster, fun = \(x) remove_continuum_fun(x))
+
+  # Set names
+  names(raster) <- as.character(band_names)
+
+  # Write to raster after setting names
+  terra::writeRaster(raster, filename = "REFLECTANCE_continuum_removed.tif", overwrite = TRUE)
+
+  # Return raster to the environment
+  return(raster)
+}
+
 #' Calculate Relative Absorption Band Depth (RABD)
 #'
 #' @param raster a terra SpatRaster of normalized capture data
