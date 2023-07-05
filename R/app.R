@@ -31,6 +31,13 @@ allParams <- list()
 
 ui <- shiny::fluidPage(
   tags$head(tags$style(HTML('* {font-family: "Georgia"};'))),
+  tags$style(type = "text/css", ".irs-grid-pol.small {height: 0px;}"),
+  tags$script(HTML("
+        $(document).ready(function() {setTimeout(function() {
+          supElement = document.getElementById('scalermarkerPointSize').parentElement;
+          $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
+        }, 50);})
+      ")),
   titlePanel("specimR", windowTitle = "specimR"),
       # Output: Tabset w/ plot, summary, and table ----
       tabsetPanel(type = "tabs",
@@ -97,6 +104,9 @@ ui <- shiny::fluidPage(
                                style = "position:fixed; margin-top:150px;",
                                width=2,
                            align="center",
+                           actionButton("skipSelectAnalysisRegion", "Analyze full image (skip region selection step)"),
+                           shiny::br(),
+                           shiny::br(),
                            actionButton("selectAnalysisRegion", "Add selected region"),
                            shiny::br(),
                            shiny::br(),
@@ -161,7 +171,7 @@ ui <- shiny::fluidPage(
                              value=3,
                              step = 0.1,
                              round = FALSE,
-                             ticks = TRUE,
+                             ticks = FALSE,
                              animate = FALSE,
                              width = NULL,
                              sep = ",",
@@ -173,15 +183,33 @@ ui <- shiny::fluidPage(
                              ),
                            ),
                            shiny::column(
-                             3,
+                             1,
                              style = "margin-top: 10px;",
-                             "distance in pixels",
+                             "point A (x,y)",
+                             shiny::verbatimTextOutput("distCoordA")
+                           ),
+                           shiny::column(
+                             1,
+                             style = "margin-top: 10px;",
+                             "point B (x,y)",
+                             shiny::verbatimTextOutput("distCoordB")
+                           ),
+                           shiny::column(
+                             1,
+                             style = "margin-top: 10px;",
+                             "distance along scale",
                              shiny::verbatimTextOutput("scaleDist")
                            ),
                            shiny::column(
-                             3,
+                             1,
                              style = "margin-top: 10px;",
-                             "length of scale bar in mm",
+                             "distance along y axis",
+                             shiny::verbatimTextOutput("coreDist")
+                           ),
+                           shiny::column(
+                             2,
+                             style = "margin-top: 10px;",
+                             "distance along scale bar in mm",
                              numericInput(inputId = "scaleLength",
                                           step = 1,
                                           min = 1,
@@ -190,9 +218,9 @@ ui <- shiny::fluidPage(
                                           value = 1500)
                            ),
                            shiny::column(
-                             3,
+                             2,
                              style = "margin-top: 10px;",
-                             "pixels per mm",
+                             "mm / pixel",
                              shiny::verbatimTextOutput("pixelRatio")
                            ),
                            ),
@@ -211,11 +239,11 @@ ui <- shiny::fluidPage(
                              ),
                              shiny::column(
                                4,
-                               shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"))
+                               shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"), selected = "No")
                              ),
                              shiny::column(
                                4,
-                               shiny::checkboxGroupInput("choice_proxies", "Choose proxies to calculate", choices = list(Rmean = "Rmean", RABD615 = "RABD615", RABD660670 = "RABD660-670", RABD845 = "RABD845", RABD710730 = "RABD710-730", R570R630 = "R570R630", R590R690 = "R590R690"))
+                               shiny::selectInput("choice_proxies", "Choose proxies to calculate", choices = list(Rmean = "Rmean", RABD615 = "RABD615", RABD660670 = "RABD660-670", RABD845 = "RABD845", RABD710730 = "RABD710-730", R570R630 = "R570R630", R590R690 = "R590R690"), multiple = TRUE)
                              )
                            ),
                            )
@@ -285,20 +313,37 @@ server <- function(input, output, session) {
   observeEvent(input$plot_click, {
     clickCounter$count <- clickCounter$count + 1
     if (ceiling(clickCounter$count/2) == clickCounter$count/2){
-      source_coords$xy[2,] <- c(input$plot_click$x, input$plot_click$y)
+      source_coords$xy[2,] <- c(round(input$plot_click$x), round(input$plot_click$y))
     }else{
-      source_coords$xy[1,] <- c(input$plot_click$x, input$plot_click$y)
+      source_coords$xy[1,] <- c(round(input$plot_click$x), round(input$plot_click$y))
     }
   })
 
   #measure scale bar
-  dist1 <- reactive({
-    sum(abs(source_coords$xy[1,]-source_coords$xy[2,]))
+  distTot <- reactive({
+    round(sum(abs(source_coords$xy[1,]-source_coords$xy[2,])))
   })
 
-  output$scaleDist <- renderText(dist1())
+  distY <- reactive({
+    round(abs(source_coords$xy[1,2]-source_coords$xy[2,2]))
+  })
 
-  output$pixelRatio <- renderText(dist1()/input$scaleLength)
+  pointA <- reactive({
+    which(max(source_coords$xy[,2]) == source_coords$xy[,2])
+  })
+
+  pointB <- reactive({
+    which(min(source_coords$xy[,2]) == source_coords$xy[,2])
+  })
+
+  output$distCoordA <- renderText(paste0("(", round(unlist(source_coords$xy[pointA(),])[1]), ", ", round(nrow(terra::rast(rasters()[2])[[1]]) - unlist(source_coords$xy[pointA(),])[2]), ")"))
+  output$distCoordB <- renderText(paste0("(", round(unlist(source_coords$xy[pointB(),])[1]), ", ", round(nrow(terra::rast(rasters()[2])[[1]]) - unlist(source_coords$xy[pointB(),])[2]), ")"))
+
+  output$coreDist <- renderText(distY())
+
+  output$scaleDist <- renderText(distTot())
+
+  output$pixelRatio <- renderText(input$scaleLength/distTot())
 
   #plot box selection
 
@@ -401,6 +446,21 @@ server <- function(input, output, session) {
     #reset brush
     session$resetBrush("plotBrush")
     brush <<- NULL
+
+  })
+
+  observeEvent(input$skipSelectAnalysisRegion, {
+    countRegions$count <- 0
+    analysisRegions$DT <- data.frame("xmin"=NA,
+                                     "xmax"=NA,
+                                     "ymin"=NA,
+                                     "ymax"=NA)
+    session$resetBrush("plotBrush")
+    brush <<- NULL
+
+    updateTabsetPanel(session=session,
+                      "tabset1",
+                      selected = "Distance Calibration")
 
   })
 
