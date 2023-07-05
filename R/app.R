@@ -259,7 +259,7 @@ run_core <- function(){
                              ),
                              shiny::fluidRow(
                              style = "text-align:center; font-weight:100;",
-                             actionButton('ok','OK')
+                             actionButton('ok','Save and Exit')
                              )
                              )
                     )
@@ -399,11 +399,11 @@ run_core <- function(){
     })
 
     observeEvent(input$selectPlotRegion, {
-      allParams$cropWhole <<- c(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2],
+      allParams$cropImage <<- c(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2],
                                y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
     output$cropped_plot <- renderPlot({
       terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist",
-                     ext=terra::ext(allParams$cropWhole))
+                     ext=terra::ext(allParams$cropImage))
       if (sum(complete.cases(analysisRegions$DT))>0){
         for (i in 1:nrow(analysisRegions$DT)){
           polygon(x=c(analysisRegions$DT[i,1], analysisRegions$DT[i,2], analysisRegions$DT[i,2], analysisRegions$DT[i,1]),
@@ -491,12 +491,13 @@ run_core <- function(){
       distances$pointB <- round(unlist(source_coords$xy[pointB(),]))
       distances$coreDist <- distY()
       distances$scaleDist <- distTot()
+      distances$scaleDistmm <- input$scaleLength
       distances$pixelRatio <- input$scaleLength/distTot()
 
       analysisOptions <- list()
-      analysisOptions <- input$choice_normalize
-      analysisOptions <- input$choice_integration
-      analysisOptions <- input$choice_proxies
+      analysisOptions$normalize <- input$choice_normalize
+      analysisOptions$integration <- input$choice_integration
+      analysisOptions$proxies <- input$choice_proxies
 
 
       if (length(user_dir()) != 0){
