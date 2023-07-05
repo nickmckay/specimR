@@ -115,7 +115,8 @@ run_core <- function(){
                                  style = "position:fixed; margin-top:150px;",
                                  width=2,
                              align="center",
-                             actionButton("skipSelectAnalysisRegion", "Analyze full image (skip region selection step)"),
+                             actionButton("skipSelectAnalysisRegion", "Analyze full image (skip region selection step)",
+                                          style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                              shiny::br(),
                              shiny::br(),
                              actionButton("selectAnalysisRegion", "Add selected region"),
@@ -246,11 +247,11 @@ run_core <- function(){
                              shiny::fluidRow(
                                shiny::column(
                                  4,
-                                 shiny::radioButtons("choice_normalize", "Do you need to normalize the data?", choices = list(Yes = "Yes", No = "No"))
+                                 shiny::radioButtons("choice_normalize", "Do you need to normalize the data?", choices = list(Yes = "TRUE", No = "FALSE"))
                                ),
                                shiny::column(
                                  4,
-                                 shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "Yes", No = "No"), selected = "No")
+                                 shiny::radioButtons("choice_integration", "Is your white reference scanned with different settings than core?", choices = list(Yes = "TRUE", No = "FALSE"), selected = "FALSE")
                                ),
                                shiny::column(
                                  4,
@@ -323,7 +324,13 @@ run_core <- function(){
     #render plot
     output$core_plot <- renderPlot(plot1(), height = 3000, width = 800, res = 20)
 
-    source_coords <- reactiveValues(xy=data.frame(x=c(1,1),  y=c(1,1)))
+    source_coords <- reactiveValues(
+
+        #xy=data.frame(x=c(1,1),  y=c(nrow(terra::rast(rasters()[2])[[1]]),nrow(terra::rast(rasters()[2])[[1]])))
+
+        xy=data.frame(x=c(1,1),  y=c(1,1))
+
+      )
 
     observeEvent(input$plot_click, {
       clickCounter$count <- clickCounter$count + 1
@@ -427,6 +434,7 @@ run_core <- function(){
 
     session$resetBrush("plotBrush")
     brush <<- NULL
+
     })
 
     analysisRegions <- reactiveValues()
@@ -473,6 +481,17 @@ run_core <- function(){
       session$resetBrush("plotBrush")
       brush <<- NULL
 
+      output$core_plot2 <- renderPlot({
+        terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
+        points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
+        points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize/3, pch=19, col="white")
+        #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
+        #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
+      },
+      height = 3000,
+      width = 800
+      )
+
       updateTabsetPanel(session=session,
                         "tabset1",
                         selected = "Distance Calibration")
@@ -495,8 +514,8 @@ run_core <- function(){
       distances$pixelRatio <- input$scaleLength/distTot()
 
       analysisOptions <- list()
-      analysisOptions$normalize <- input$choice_normalize
-      analysisOptions$integration <- input$choice_integration
+      analysisOptions$normalize <- as.logical(input$choice_normalize)
+      analysisOptions$integration <- as.logical(input$choice_integration)
       analysisOptions$proxies <- input$choice_proxies
 
 
@@ -508,7 +527,7 @@ run_core <- function(){
 
       allParams$analysisRegions <<- analysisRegions$DT
       allParams$distances <<- distances
-      allParams$analysis <<- analysisOptions
+      allParams$analysisOptions <<- analysisOptions
 
       stopApp(allParams)
     })
