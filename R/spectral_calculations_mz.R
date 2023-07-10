@@ -62,8 +62,8 @@ remove_continuum <- function(raster) {
 #' Find how many bands there are between trough minimum and 590
 #'
 calculate_rabd <- function(raster, edges, trough, rabd_name) {
-  # Create SpatRaster template from original, select one layer
-  template <- terra::subset(raster, 1)
+  # Create empty SpatRaster template from original cropped raster
+  template <- terra::rast(terra::ext(raster), resolution = terra::res(raster))
 
   # Set layer name based on the rabd_name argument
   names(template) <- rabd_name
