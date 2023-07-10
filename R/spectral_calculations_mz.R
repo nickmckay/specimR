@@ -166,14 +166,28 @@ calculate_rmean <- function(raster) {
   terra::writeRaster(raster, filename = "rmean.tif", overwrite = TRUE)
 }
 
-# Function: calculate RABA - to do
-calculate_raba <- function(raster) {
-  # Remove continuum in a pixel
-  prospectr::continuumRemoval(df_1[, 2], df_1[, 1]) |>
-    # Coerce to tibble
-    tibble::enframe() |>
-    # Coerce band to numeric
-    dplyr::mutate(name = as.numeric(name))
+#' Calculate Relative Absorption Band Area (RABA)
+#'
+#' @param raster a terra SpatRaster of normalized capture data
+#' @param edges a numeric vector of two for the wide calculation window
+#' @param trough a character vector of wavelenght to look for trough
+#' @param raba_name a character, name of calculated RABA
+#'
+#' @return a terra SpatRaster with one layer with calculated RABAvalues
+#' @export
+#'
+#' @description # RABD655−680max = ( X × R590 + Y × R730 X+Y ) /R655−680min
+#' Denominator: Find the lowest reflectance between 655 and 680
+#' Numenator: find reflectance at 590, find reflectance at 730
+#' Find how many bands there are between trough minimum and 730
+#' Find how many bands there are between trough minimum and 590
+#'
+calculate_raba <- function(raster, edges, trough, raba_name) {
+  # Create empty SpatRaster template from original cropped raster
+  template <- terra::rast(terra::ext(raster), resolution = terra::res(raster))
+
+  # Set layer name based on the raba_name argument
+  names(template) <- raba_name
 }
 
 #' Extract average proxy profile
