@@ -75,6 +75,10 @@ run_core <- function(){
                                  shiny::br(),
                                  shiny::verbatimTextOutput("core_dir"),
                                  shiny::br(),
+                                 "Raster details",
+                                 shiny::br(),
+                                 shiny::verbatimTextOutput("core_info"),
+                                 shiny::br(),
                                  shiny::actionButton("proceed_with_data", "Proceed with selected data")
                                ),
                              )
@@ -96,6 +100,7 @@ run_core <- function(){
                                  actionButton("selectPlotRegion", "Accept crop"),
                                ),
                                shiny::br(),
+                               shiny::verbatimTextOutput("color_warning"),
                                shiny::br(),
                                 shinycssloaders::withSpinner(shiny::plotOutput(outputId = "core_plot",
                                                                             width = "100%",
@@ -309,19 +314,62 @@ run_core <- function(){
       }
       })
 
+    dirChosen <- reactive({
+      sum(length(user_dir()), length(user_dir()))
+    })
+
+    coreImage <- reactive({
+      if (length(user_dir()) != 0){
+        terra::rast(rasters()[2])
+        }
+      else if (length(user_dir2()) != 0){
+        terra::rast(rasters()[1])
+      } else {
+          NULL
+        }
+    })
+
+    coreInfo <- reactive({
+      if (!is.null(coreImage())){
+        print(is.null(coreImage()))
+        c(paste0("width: ", ncol(coreImage()), " pixels"), paste0("height: ", nrow(coreImage()), " pixels"), paste0("layers: ", length(names(coreImage()))))
+      } else {
+        NULL
+      }
+    })
+
+    colorSelection <- reactive({
+      if (!is.null(coreImage())){
+        print(names(coreImage()))
+        all <- defineRGB(names(coreImage()))
+        print(all$flags)
+        print(all$layers)
+        if (sum(all$flags)>0){
+          colorNames <- c("red", "green", "blue")
+          flags <- c(paste0("Warning, false color image due to lack of ", colorNames[as.logical(all$flags)], " layers."), paste0("Using: ", names(coreImage())[all$layers[all$flags]], " nm"))
+        }
+      } else {
+        NULL
+      }
+    })
+
+    RGBlayers <- reactive({
+      defineRGB(names(coreImage()))$layers
+    })
+
+    output$color_warning <- renderText(colorSelection())
+
+
+
     # Print raster files
     output$core_dir <- renderPrint(rasters())
 
+    # Print core info
+    output$core_info <- renderText(coreInfo(), sep = "\n")
+
     #make plot
     plot1 <- reactive({
-      print(length(user_dir()) != 0)
-      if (length(user_dir()) != 0){
-        print("completed 318")
-        terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
-      }
-      else if (length(user_dir2()) != 0){
-        terra::plotRGB(x = terra::rast(rasters()[1]), r = 2, g = 4, b = 6, stretch = "hist")
-      }
+        terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist")
     })
 
     #render plot
@@ -363,8 +411,8 @@ run_core <- function(){
       which(min(source_coords$xy[,2]) == source_coords$xy[,2])
     })
 
-    output$distCoordA <- renderText(paste0("(", round(unlist(source_coords$xy[pointA(),])[1]), ", ", round(nrow(terra::rast(rasters()[2])[[1]]) - unlist(source_coords$xy[pointA(),])[2]), ")"))
-    output$distCoordB <- renderText(paste0("(", round(unlist(source_coords$xy[pointB(),])[1]), ", ", round(nrow(terra::rast(rasters()[2])[[1]]) - unlist(source_coords$xy[pointB(),])[2]), ")"))
+    output$distCoordA <- renderText(paste0("(", round(unlist(source_coords$xy[pointA(),])[1]), ", ", round(nrow(coreImage()[[1]]) - unlist(source_coords$xy[pointA(),])[2]), ")"))
+    output$distCoordB <- renderText(paste0("(", round(unlist(source_coords$xy[pointB(),])[1]), ", ", round(nrow(coreImage()[[1]]) - unlist(source_coords$xy[pointB(),])[2]), ")"))
 
     output$coreDist <- renderText(distY())
 
@@ -411,12 +459,13 @@ run_core <- function(){
     })
 
     observeEvent(input$selectPlotRegion, {
+      print(nrow(terra::rast(rasters()[2])))
       allParams$cropImage <<- c(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2],
                                y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
     output$cropped_plot <- renderPlot({
       print(allParams$cropImage)
       print(terra::ext(allParams$cropImage))
-      terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist",
+      terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist",
                      ext=terra::ext(allParams$cropImage)
                      )
       print(sum(complete.cases(analysisRegions$DT))>0)
@@ -493,7 +542,7 @@ run_core <- function(){
       brush <<- NULL
 
       output$core_plot2 <- renderPlot({
-        terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
+        terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist")
         points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
         points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize/3, pch=19, col="white")
         #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
@@ -545,7 +594,7 @@ run_core <- function(){
 
     observeEvent(input$acceptAnalysisRegions, {
       output$core_plot2 <- renderPlot({
-        terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
+        terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist")
         points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
         points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize/3, pch=19, col="white")
         #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
