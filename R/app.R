@@ -280,7 +280,8 @@ run_core <- function(){
     })
 
     user_dir2 <- eventReactive(input$file_dir_example, {
-      "C:/Users/dce25/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51"
+      #"C:/Users/dce25/Downloads/STL14_1A_28C_top_2022-11-11_16-30-51"
+      "data"
     })
 
     observeEvent(input$proceed_with_data, {
@@ -304,7 +305,7 @@ run_core <- function(){
       }
       else if (length(user_dir2()) != 0){
         user_dir2() |>
-          fs::dir_ls(type = "file", regexp = ".raw", recurse = TRUE)
+          fs::dir_ls(type = "file", regexp = ".tif", recurse = TRUE)
       }
       })
 
@@ -313,11 +314,13 @@ run_core <- function(){
 
     #make plot
     plot1 <- reactive({
+      print(length(user_dir()) != 0)
       if (length(user_dir()) != 0){
+        print("completed 318")
         terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
       }
       else if (length(user_dir2()) != 0){
-        terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist")
+        terra::plotRGB(x = terra::rast(rasters()[1]), r = 2, g = 4, b = 6, stretch = "hist")
       }
     })
 
@@ -334,7 +337,9 @@ run_core <- function(){
 
     observeEvent(input$plot_click, {
       clickCounter$count <- clickCounter$count + 1
+      print(ceiling(clickCounter$count/2) == clickCounter$count/2)
       if (ceiling(clickCounter$count/2) == clickCounter$count/2){
+        print("completed 339")
         source_coords$xy[2,] <- c(round(input$plot_click$x), round(input$plot_click$y))
       }else{
         source_coords$xy[1,] <- c(round(input$plot_click$x), round(input$plot_click$y))
@@ -409,10 +414,15 @@ run_core <- function(){
       allParams$cropImage <<- c(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2],
                                y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
     output$cropped_plot <- renderPlot({
+      print(allParams$cropImage)
+      print(terra::ext(allParams$cropImage))
       terra::plotRGB(x = terra::rast(rasters()[2]), r = 50, g = 75, b = 100, stretch = "hist",
-                     ext=terra::ext(allParams$cropImage))
+                     ext=terra::ext(allParams$cropImage)
+                     )
+      print(sum(complete.cases(analysisRegions$DT))>0)
       if (sum(complete.cases(analysisRegions$DT))>0){
         for (i in 1:nrow(analysisRegions$DT)){
+          print("completed 417")
           polygon(x=c(analysisRegions$DT[i,1], analysisRegions$DT[i,2], analysisRegions$DT[i,2], analysisRegions$DT[i,1]),
                   y=c(analysisRegions$DT[i,4], analysisRegions$DT[i,4], analysisRegions$DT[i,3], analysisRegions$DT[i,3]),
                   col = rgb(red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5), lwd=3)
@@ -459,6 +469,7 @@ run_core <- function(){
                                                                         y_range(input$plotBrush)[1], y_range(input$plotBrush)[2]))
 
       if (countRegions$count == 1){
+        print("completed 464")
         analysisRegions$DT <- analysisRegions$DT[-1,]
         colnames(analysisRegions$DT) <- c("xmin", "xmax", "ymin", "ymax")
       }
