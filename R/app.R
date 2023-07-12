@@ -36,6 +36,7 @@
 run_core <- function(){
 
   library(shiny)
+  library(DT)
   allParams <- list()
 
   runApp(
@@ -96,10 +97,16 @@ run_core <- function(){
                                  "Raster details",
                                  shiny::br(),
                                  shiny::verbatimTextOutput("core_info"),
-                                 shiny::br(),
-                                 shiny::actionButton("proceed_with_data", "Proceed with selected data")
                                ),
-                             )
+                             ),
+                             shiny::br(),
+                             "Choose layers to subset raster (skip this step to use all)",
+                             wellPanel(
+                             DTOutput("layerTable1"),
+                             ),
+                             shiny::br(),
+                             shiny::actionButton("proceed_with_data", "Proceed with selected data")
+
                     ),
                     tabPanel("Crop Image",
                                align="center",
@@ -387,6 +394,9 @@ run_core <- function(){
     })
 
     observeEvent(input$proceed_with_data, {
+
+      allParams$layers <<- as.numeric(names(coreImage())[input$layerTable1_rows_selected])
+
       updateTabsetPanel(session=session,
                         "tabset1",
                         selected = "Crop Image")
@@ -411,20 +421,23 @@ run_core <- function(){
       }
       })
 
-    dirChosen <- reactive({
-      sum(length(user_dir()), length(user_dir()))
-    })
 
     coreImage <- reactive({
+      #print(input$layerTable1_rows_selected)
       if (length(user_dir()) != 0){
-        terra::rast(rasters()[2])
+        img1 <- terra::rast(rasters()[2])
         }
       else if (length(user_dir2()) != 0){
-        terra::rast(rasters()[1])
+        img1 <- terra::rast(rasters()[1])
       } else {
-          NULL
-        }
+        img1 <- NULL
+      }
+      # if (!is.null(input$layerTable1_rows_selected)){
+      #   img1 <- img1[input$layerTable1_rows_selected]
+      # }
+      img1
     })
+
 
     coreInfo <- reactive({
       if (!is.null(coreImage())){
@@ -433,6 +446,12 @@ run_core <- function(){
         NULL
       }
     })
+
+    layersTable <- reactive({
+      data.table::data.table(index=1:length(names(coreImage())), wavelength=as.numeric(names(coreImage())))
+    })
+
+    output$layerTable1 <- renderDT(layersTable(), height = 100)
 
     colorSelection <- reactive({
       if (!is.null(coreImage())){
@@ -598,13 +617,12 @@ run_core <- function(){
                                y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
 
     zoomedPlot <- reactive({
-      print(brush)
       if (!is.null(brush)){
         plotsmall <- terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist",
                        ext=terra::ext(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2], y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
         )
       } else {
-        plotsmall <- print("no selection")
+        plotsmall <- "No Selection"
       }
       plotsmall
     })
