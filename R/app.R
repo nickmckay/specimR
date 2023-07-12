@@ -711,8 +711,8 @@ run_core <- function(){
         #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
         #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
       },
-      height = 3000,
-      width = 800
+      height = imgDistH,
+      width = imgDistW
       )
 
       updateTabsetPanel(session=session,
