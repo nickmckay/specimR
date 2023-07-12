@@ -49,6 +49,24 @@ run_core <- function(){
             $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
           }, 50);})
         ")),
+    tags$script(HTML("
+          $(document).ready(function() {setTimeout(function() {
+            supElement = document.getElementById('scaleOrigImg').parentElement;
+            $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
+          }, 50);})
+        ")),
+    tags$script(HTML("
+          $(document).ready(function() {setTimeout(function() {
+            supElement = document.getElementById('scaleDistImg').parentElement;
+            $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
+          }, 50);})
+        ")),
+    tags$script(HTML("
+          $(document).ready(function() {setTimeout(function() {
+            supElement = document.getElementById('selectionSize').parentElement;
+            $(supElement).find('span.irs-max, span.irs-min, span.irs-single, span.irs-from, span.irs-to').remove();
+          }, 50);})
+        ")),
     titlePanel("specimR", windowTitle = "specimR"),
         # Output: Tabset w/ plot, summary, and table ----
         tabsetPanel(type = "tabs",
@@ -99,6 +117,26 @@ run_core <- function(){
                                  align="right",
                                  actionButton("selectPlotRegion", "Accept crop"),
                                ),
+                             shiny::fluidRow(
+                               sliderInput(
+                                 inputId="scaleOrigImg",
+                                 label="Size of Image",
+                                 min=-2,
+                                 max=2,
+                                 value=0,
+                                 step = 0.1,
+                                 round = FALSE,
+                                 ticks = FALSE,
+                                 animate = FALSE,
+                                 width = NULL,
+                                 sep = ",",
+                                 pre = NULL,
+                                 post = NULL,
+                                 timeFormat = NULL,
+                                 timezone = NULL,
+                                 dragRange = TRUE
+                               ),
+                             ),
                                shiny::br(),
                                shiny::verbatimTextOutput("color_warning"),
                                shiny::br(),
@@ -116,6 +154,7 @@ run_core <- function(){
                              ),
                     tabPanel("Select Analysis Regions",
                              sidebarLayout(
+                               fluid = FALSE,
                                sidebarPanel(
                                  style = "position:fixed; margin-top:150px;",
                                  width=2,
@@ -156,11 +195,16 @@ run_core <- function(){
                              actionButton("acceptAnalysisRegions", "Accept all selections"),
                                ),
                              mainPanel(
-                               align="right",
                              shiny::br(),
                              shiny::br(),
+                             fixedRow(
+                               column(
+                                 6,
+                                 wellPanel(
+                                   id = "fullCorePanel",style = "overflow-y:visible; overflow-x:scroll; max-width: 800px",
+                                 "Full Core",
                              shinycssloaders::withSpinner(shiny::plotOutput(outputId = "cropped_plot",
-                                                                            width = "100%",
+                                                                            inline = TRUE,
                                                                             brush = brushOpts(
                                                                               id = "plotBrush",
                                                                               delay = 5000,
@@ -171,6 +215,38 @@ run_core <- function(){
                              )
                              ),
                              ),
+                               ),
+                             column(
+                               6,
+                               wellPanel(
+                                 id = "currentselectionPanel",style = "overflow-y:visible; overflow-x:scroll; max-width: 1600px",
+                               "Current Selection (Note image scrollbar below image)",
+                               sliderInput(
+                                 inputId="selectionSize",
+                                 label="Size of image",
+                                 min=0.5,
+                                 max=10,
+                                 value=1,
+                                 step = 0.5,
+                                 round = FALSE,
+                                 ticks = FALSE,
+                                 animate = FALSE,
+                                 width = NULL,
+                                 sep = ",",
+                                 pre = NULL,
+                                 post = NULL,
+                                 timeFormat = NULL,
+                                 timezone = NULL,
+                                 dragRange = TRUE
+                               ),
+                             shinycssloaders::withSpinner(shiny::plotOutput(outputId = "selection_plot",
+                                                                            inline = TRUE,
+                             )
+                             ),
+                             ),
+                             ),
+                             ),
+                             ),
                     ),),
                     tabPanel("Distance Calibration",
                              align="center",
@@ -179,7 +255,7 @@ run_core <- function(){
                                  align="center",
                                  style = "text-align:center; font-weight:100;",
                                  shiny::column(
-                                   3,
+                                   2,
                              sliderInput(
                                inputId="scalermarkerPointSize",
                                label="Size of marker points",
@@ -197,6 +273,27 @@ run_core <- function(){
                                timeFormat = NULL,
                                timezone = NULL,
                                dragRange = TRUE
+                               ),
+                             ),
+                             shiny::column(
+                               2,
+                               sliderInput(
+                                 inputId="scaleDistImg",
+                                 label="Size of Image",
+                                 min=-2,
+                                 max=2,
+                                 value=0,
+                                 step = 0.1,
+                                 round = FALSE,
+                                 ticks = FALSE,
+                                 animate = FALSE,
+                                 width = NULL,
+                                 sep = ",",
+                                 pre = NULL,
+                                 post = NULL,
+                                 timeFormat = NULL,
+                                 timezone = NULL,
+                                 dragRange = TRUE
                                ),
                              ),
                              shiny::column(
@@ -331,7 +428,6 @@ run_core <- function(){
 
     coreInfo <- reactive({
       if (!is.null(coreImage())){
-        print(is.null(coreImage()))
         c(paste0("width: ", ncol(coreImage()), " pixels"), paste0("height: ", nrow(coreImage()), " pixels"), paste0("layers: ", length(names(coreImage()))))
       } else {
         NULL
@@ -340,18 +436,19 @@ run_core <- function(){
 
     colorSelection <- reactive({
       if (!is.null(coreImage())){
-        print(names(coreImage()))
         all <- defineRGB(names(coreImage()))
-        print(all$flags)
-        print(all$layers)
+        colorNames <- c("red", "green", "blue")
         if (sum(all$flags)>0){
-          colorNames <- c("red", "green", "blue")
-          flags <- c(paste0("Warning, false color image due to lack of ", colorNames[as.logical(all$flags)], " layers."), paste0("Using: ", names(coreImage())[all$layers[all$flags]], " nm"))
+          flags <- c(paste0("Warning, false color image due to lack of ", colorNames[as.logical(all$flags)], " layers."), paste0("Using: ", names(coreImage())[all$layers[as.logical(all$flags)]], " nm"))
+        } else {
+        flags <- "Using: "
+        for (ii in 1:3){
+          flags <- paste(flags, paste0(names(coreImage())[all$layers[ii]], " nm for ", colorNames[ii]), sep="\n")
         }
-      } else {
-        NULL
       }
-    })
+      flags
+      }
+      })
 
     RGBlayers <- reactive({
       defineRGB(names(coreImage()))$layers
@@ -359,6 +456,21 @@ run_core <- function(){
 
     output$color_warning <- renderText(colorSelection())
 
+    imgH <- reactive({
+      nrow(coreImage()) * 10^(input$scaleOrigImg)
+    })
+
+    imgW <- reactive({
+      ncol(coreImage()) * 10^(input$scaleOrigImg)
+    })
+
+    imgDistH <- reactive({
+      nrow(coreImage()) * 10^(input$scaleDistImg)
+    })
+
+    imgDistW <- reactive({
+      ncol(coreImage()) * 10^(input$scaleDistImg)
+    })
 
 
     # Print raster files
@@ -373,7 +485,7 @@ run_core <- function(){
     })
 
     #render plot
-    output$core_plot <- renderPlot(plot1(), height = 3000, width = 800, res = 20)
+    output$core_plot <- renderPlot(plot1(), height = imgH, width = imgW, res = 20)
 
     source_coords <- reactiveValues(
 
@@ -385,9 +497,7 @@ run_core <- function(){
 
     observeEvent(input$plot_click, {
       clickCounter$count <- clickCounter$count + 1
-      print(ceiling(clickCounter$count/2) == clickCounter$count/2)
       if (ceiling(clickCounter$count/2) == clickCounter$count/2){
-        print("completed 339")
         source_coords$xy[2,] <- c(round(input$plot_click$x), round(input$plot_click$y))
       }else{
         source_coords$xy[1,] <- c(round(input$plot_click$x), round(input$plot_click$y))
@@ -447,6 +557,7 @@ run_core <- function(){
 
     observeEvent(input$plotBrush, {
       brush <<- input$plotBrush
+
     })
 
     observeEvent(input$clearBrush, {
@@ -458,34 +569,69 @@ run_core <- function(){
       brush <<- NULL
     })
 
+    croppedH <- reactive({
+      abs(allParams$cropImage[4] - allParams$cropImage[3])/2
+    })
+
+    croppedW <- reactive({
+      abs(allParams$cropImage[2] - allParams$cropImage[1])/2
+    })
+
+    selectionH <- reactive({
+      if (abs(y_range(input$plotBrush)[1] - y_range(input$plotBrush)[2]) < 50){
+        500 * input$selectionSize
+      } else {
+        abs(y_range(input$plotBrush)[1] - y_range(input$plotBrush)[2]) * input$selectionSize
+      }
+    })
+
+    selectionW <- reactive({
+      if (abs(x_range(input$plotBrush)[1] - x_range(input$plotBrush)[2]) < 50){
+        500 * input$selectionSize
+      } else {
+        abs(x_range(input$plotBrush)[1] - x_range(input$plotBrush)[2]) * input$selectionSize
+      }
+    })
+
     observeEvent(input$selectPlotRegion, {
-      print(nrow(terra::rast(rasters()[2])))
       allParams$cropImage <<- c(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2],
                                y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
+
+    zoomedPlot <- reactive({
+      print(brush)
+      if (!is.null(brush)){
+        plotsmall <- terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist",
+                       ext=terra::ext(x_range(input$plotBrush)[1], x_range(input$plotBrush)[2], y_range(input$plotBrush)[1], y_range(input$plotBrush)[2])
+        )
+      } else {
+        plotsmall <- print("no selection")
+      }
+      plotsmall
+    })
+
     output$cropped_plot <- renderPlot({
-      print(allParams$cropImage)
-      print(terra::ext(allParams$cropImage))
       terra::plotRGB(x = coreImage(), r = RGBlayers()[1], g = RGBlayers()[2], b = RGBlayers()[3], stretch = "hist",
                      ext=terra::ext(allParams$cropImage)
                      )
-      print(sum(complete.cases(analysisRegions$DT))>0)
       if (sum(complete.cases(analysisRegions$DT))>0){
         for (i in 1:nrow(analysisRegions$DT)){
-          print("completed 417")
           polygon(x=c(analysisRegions$DT[i,1], analysisRegions$DT[i,2], analysisRegions$DT[i,2], analysisRegions$DT[i,1]),
                   y=c(analysisRegions$DT[i,4], analysisRegions$DT[i,4], analysisRegions$DT[i,3], analysisRegions$DT[i,3]),
                   col = rgb(red = 0.5, green = 0.5, blue = 0.5, alpha = 0.5), lwd=3)
         }
       }
-
-        # points(y=source_coords$xy[,2], x=source_coords$xy[,1], cex=input$scalermarkerPointSize, pch=19)
-
-        #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
-        #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
       },
-      height = 3000,
-      width = 800
+      height = croppedH,
+      width = croppedW
       )
+
+    output$selection_plot <- renderPlot({
+      zoomedPlot()
+    },
+    height = selectionH,
+    width = selectionW
+    )
+
 
     updateTabsetPanel(session=session,
                       "tabset1",
@@ -518,7 +664,6 @@ run_core <- function(){
                                                                         y_range(input$plotBrush)[1], y_range(input$plotBrush)[2]))
 
       if (countRegions$count == 1){
-        print("completed 464")
         analysisRegions$DT <- analysisRegions$DT[-1,]
         colnames(analysisRegions$DT) <- c("xmin", "xmax", "ymin", "ymax")
       }
@@ -600,8 +745,8 @@ run_core <- function(){
         #points( source_coords$xy[1,1], source_coords$xy[1,2], cex=3, pch=intToUtf8(8962))
         #text(source_coords$xy[2,1], source_coords$xy[2,2], paste0("Distance=", dist1), cex=3)
       },
-      height = 3000,
-      width = 800
+      height = imgDistH,
+      width = imgDistW
       )
       ## Source
 
