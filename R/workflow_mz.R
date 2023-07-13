@@ -8,3 +8,16 @@
 # Set workflow mode 4: normalize subset of layers
 # Set workflow mode 5: different white reference capture time
 #
+
+# Get raster files into the environment
+prepare_core <- function(path = choices$directory, .normalize = choices$analysisOptions$normalize) {
+  # List data files in the directory
+  files <- fs::dir_ls(paste0(path, "/capture"))
+
+  # Check if file needs to be normalized
+  if (.normalize == TRUE) {
+    files <- fs::path_filter(files, regexp = ".raw")
+  } else {
+    reflectance <- fs::path_filter(files, regexp = "REFLECTANCE")
+  }
+}
