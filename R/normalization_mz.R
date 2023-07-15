@@ -18,11 +18,10 @@ spectra_position <- function(raster, spectra) {
   # Create tibble with spectra of choice and respective position
   spectraIndex <- dplyr::tibble(
     spectra = spectra,
-    position = spectraIndex
-  ) |>
+    position = spectraIndex) |>
     # Keep second observation if duplicates are present
     # From experience closer to desired product
-    dplyr::slice_tail(.by = position)
+    dplyr::slice_tail(by = position)
 
   # Return values
   return(spectraIndex)
