@@ -69,12 +69,12 @@ spectra_sub <- function(raster, spectra_tbl) {
 raster_crop <- function(raster, type, roi) {
   # If cropping entire capture SpatRaster use entire large ROI
   if (type == "capture") {
-    raster <- terra::crop(raster, roi, filename = paste0(paths[["directory"]], "products/capture_cropped.tif"), overwrite = TRUE)
+    raster <- terra::crop(raster, roi, filename = paste0(path, "products/capture_cropped.tif"), overwrite = TRUE)
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
   } else if (type == "whiteref") {
-    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(paths[["directory"]], "products/whiteref_cropped.tif"), overwrite = TRUE)
+    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(path, "products/whiteref_cropped.tif"), overwrite = TRUE)
   } else if (type == "darkref") {
-    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(paths[["directory"]], "products/darkref_cropped.tif"), overwrite = TRUE)
+    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(path, "products/darkref_cropped.tif"), overwrite = TRUE)
   }
 
   # Return raster

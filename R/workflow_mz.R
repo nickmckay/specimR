@@ -19,25 +19,43 @@
 #' @export
 #'
 prepare_core <- function(path = choices$directory, .normalize = choices$analysisOptions$normalize) {
+  # Create products directory
+  products <- fs::dir_create(paste0(path, "/products"))
+
   # List data files in the directory
   files <- fs::dir_ls(paste0(path, "/capture"))
+
+  # Crop area == big_roi
+  big_roi <- choices$cropImage
 
   # Check if file needs to be normalized from .raw
   if (.normalize == TRUE) {
     # List files: CAPTURE, DARKREF and WHITEREF
     files <- fs::path_filter(files, regexp = ".raw")
 
+    # SpatRaster types
+    types <- c("darkref", "capture", "whiteref")
+
     # Read SpatRasters
     rasters <- files |>
       # Load SpatRasters
       purrr::map(\(x) terra::rast(x))
 
-    # Get band positions - must be the same for all three SpatRasters
+    # Get band positions - the same for all three SpatRasters
     band_position <- specimR::spectra_position(rasters[[1]], choices$layers)
 
-    # Subset bands
+    # Subset bands in the SpatRasters
     rasters_subset <- rasters |>
-      purrr::map(\(x) specimR::spectra_sub(raster = x, spectra_tbl = band_position))
+      purrr::pmap(\(x) specimR::spectra_sub(raster = x, spectra_tbl = band_position))
+
+    # Crop SpatRasters
+    rasters_cropped <- list(raster = rasters,
+                            roi = big_roi,
+                            type = types)
+      # Crop
+      # 3 rasters, 3 rois, 3 outputs
+      purrr::map(\(x) specimR::raster_crop(x, type ))
+
   } else {
     reflectance <- fs::path_filter(files, regexp = "REFLECTANCE")
   }
