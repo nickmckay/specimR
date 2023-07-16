@@ -66,15 +66,34 @@ spectra_sub <- function(raster, spectra_tbl) {
 #' For capture (core) SpatRaster use full extent
 #' For reference (white and dark) SpatRaster use only x-direction
 #'
-raster_crop <- function(raster, type, roi) {
+raster_crop <- function(raster, type, roi, ...) {
+  # Store additional parameters
+  params <- list(...)
+
   # If cropping entire capture SpatRaster use entire large ROI
   if (type == "capture") {
-    raster <- terra::crop(raster, roi, filename = paste0(path, "products/capture_cropped.tif"), overwrite = TRUE)
+    raster <- terra::crop(raster, roi,
+                          filename = paste0(params$path, "/products/", basename(params$path), "_cropped.tif"),
+                          overwrite = TRUE)
+
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
+    # White reference SpatRaster
   } else if (type == "whiteref") {
-    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(path, "products/whiteref_cropped.tif"), overwrite = TRUE)
+    raster <- terra::crop(raster, c(terra::xmin(roi),
+                                    terra::xmax(roi),
+                                    terra::ymin(raster),
+                                    terra::ymax(raster)),
+                          filename = paste0(params$path, "/products/WHITEREF_", basename(params$path), "_cropped.tif"),
+                          overwrite = TRUE)
+
+    # Dark reference SpatRaster
   } else if (type == "darkref") {
-    raster <- terra::crop(raster, c(terra::xmin(roi), terra::xmax(roi), terra::ymin(raster), terra::ymax(raster)), filename = paste0(path, "products/darkref_cropped.tif"), overwrite = TRUE)
+    raster <- terra::crop(raster, c(terra::xmin(roi),
+                                    terra::xmax(roi),
+                                    terra::ymin(raster),
+                                    terra::ymax(raster)),
+                          filename = paste0(params$path, "/products/DARKREF_", basename(params$path), "_cropped.tif"),
+                          overwrite = TRUE)
   }
 
   # Return raster
@@ -93,20 +112,29 @@ raster_crop <- function(raster, type, roi) {
 #' Create one mean reference row SpatRaster by averaging data every column by aggregation
 #' Create reference SpatRaster matching capture SpatRaster extent by disaggregation
 #'
-create_reference_raster <- function(raster, roi, ref_type) {
+create_reference_raster <- function(raster, roi, ref_type, ...) {
+  # Store additional parameters
+  params <- list(...)
+
   if (ref_type == "whiteref") {
-    name <- "whiteref"
+    name <- "WHITEREF"
   } else {
-    name <- "darkref"
+    name <- "DARKREF"
   }
   # Aggregate data into one row SpatRaster, divide by number of rows
-  raster <- terra::aggregate(raster, fact = c(terra::nrow(raster), 1), fun = "mean", overwrite = TRUE)
+  raster <- terra::aggregate(raster,
+                             fact = c(terra::nrow(raster), 1),
+                             fun = "mean",
+                             overwrite = TRUE)
 
   # Set new extent to match extent of capture SpatRaster
   terra::ext(raster) <- roi
 
   # Disaggregate data over entire extent to mach capture SpatRaster extent, multiply by ymax
-  raster <- terra::disagg(raster, fact = c(terra::ymax(raster), 1), overwrite = TRUE)
+  raster <- terra::disagg(raster,
+                          fact = c(terra::ymax(raster), 1),
+                          filename = paste0(params$path, "/products/", name, "_", basename(params$path), "_disaggregated.tif"),
+                          overwrite = TRUE)
 
   # Return raster
   return(raster)
@@ -155,7 +183,10 @@ normalization <- function(capture = capture, whiteref = whiteref, darkref = dark
 #'
 #' @description apply normalization function over the combination of capture and reference SpatRasters using terra spatial dataset
 #'
-create_normalized_raster <- function(capture = capture, whiteref = whiteref, darkref = darkref, fun = normalization) {
+create_normalized_raster <- function(capture = capture, whiteref = whiteref, darkref = darkref, fun = normalization, ...) {
+  # Store additional parameters
+  params <- list(...)
+
   # Create terra spatial dataset combining SpatRasters
   # Create list
   dataset <- list(capture, whiteref, darkref) |>
@@ -163,7 +194,9 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
     terra::sds()
 
   # Apply function over the dataset and write to file
-  raster <- terra::lapp(x = dataset, fun = fun, filename = paste0(paths[["directory"]], "products/REFLECTANCE.tif"), overwrite = TRUE)
+  raster <- terra::lapp(x = dataset, fun = fun,
+                        filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), ".tif"),
+                        overwrite = TRUE)
 }
 
 #' Smooth raster with focal median
