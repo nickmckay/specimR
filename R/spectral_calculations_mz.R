@@ -4,12 +4,18 @@
 #'
 #' @return a terra SpatRaster of normalized capture data with continuum removed
 #' @export
-remove_continuum <- function(raster) {
+remove_continuum <- function(raster, ...) {
+  # Store additional parameters
+  params <- list(...)
+
   # Extract names
   band_names <- names(raster)
 
   # Remove continuum in a single pixel pixel
-  remove_continuum_fun <- function(raster) {
+  remove_continuum_fun <- function(raster, ...) {
+    # Store additional parameters
+    params <- list(...)
+
     new_values <- raster |>
       # Coerce to data frame
       as.data.frame() |>
@@ -32,14 +38,17 @@ remove_continuum <- function(raster) {
       # Get values
       dplyr::pull(reflectance)
   }
-  # Apply mean function over entire SpatRaster
-  raster <- terra::app(raster, fun = \(x) remove_continuum_fun(x))
+
+  # Apply function over entire SpatRaster
+  raster <- terra::app(raster, fun = \(x) remove_continuum_fun(x),
+                       filename = paste0(params$path, "/products/REFLECTANCE_CONT_REMOVED_", basename(params$path), ".tif"),
+                       overwrite = TRUE)
 
   # Set names
   names(raster) <- as.character(band_names)
 
-  # Write to raster after setting names
-  terra::writeRaster(raster, filename = "REFLECTANCE_continuum_removed.tif", overwrite = TRUE)
+  # Update names on disk
+  update(raster, names = TRUE)
 
   # Return raster to the environment
   return(raster)
