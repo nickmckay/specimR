@@ -228,6 +228,21 @@ median_filtering <- function(capture = capture, window = 3){
 #' @return A filtered terra SpatRaster.
 #' @export
 #'
-filter_sgolay <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1, filename){
-  raster <- terra::app(raster, fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts), filename = filename)
+filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
+  # Extract names
+  band_names <- names(raster)
+
+  # Apply Savitzky-Golay filter
+  raster <- terra::app(raster, fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
+                       filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL", basename(params$path), ".tif"),
+                       overwrite = TRUE)
+
+  # Set names
+  names(raster) <- as.character(band_names)
+
+  # Update names on disk
+  update(raster, names = TRUE)
+
+  # Return raster to the environment
+  return(raster)
 }
