@@ -223,7 +223,6 @@ median_filtering <- function(capture = capture, window = 3){
 #' @param n filter length (must be odd).
 #' @param m return the m-th derivative of the filter coefficients.
 #' @param ts time scaling factor.
-#' @param filename naming scheme for output SpatRaster.
 #'
 #' @return A filtered terra SpatRaster.
 #' @export
@@ -234,7 +233,7 @@ filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
 
   # Apply Savitzky-Golay filter
   raster <- terra::app(raster, fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
-                       filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL", basename(params$path), ".tif"),
+                       filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL_", basename(params$path), ".tif"),
                        overwrite = TRUE)
 
   # Set names
