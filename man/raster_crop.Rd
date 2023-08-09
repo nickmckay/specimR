@@ -4,7 +4,7 @@
 \alias{raster_crop}
 \title{Raster crop}
 \usage{
-raster_crop(raster, type, roi)
+raster_crop(raster, type, roi, ...)
 }
 \arguments{
 \item{raster}{a terra SpatRaster to be cropped}

@@ -8,7 +8,8 @@ create_normalized_raster(
   capture = capture,
   whiteref = whiteref,
   darkref = darkref,
-  fun = normalization
+  fun = normalization,
+  ...
 )
 }
 \arguments{

@@ -4,7 +4,7 @@
 \alias{remove_continuum}
 \title{Remove continuum from spectrum}
 \usage{
-remove_continuum(raster)
+remove_continuum(raster, ...)
 }
 \arguments{
 \item{raster}{a terra SpatRaster of normalized capture data}

@@ -4,12 +4,12 @@
 \alias{median_filtering}
 \title{Smooth raster with focal median}
 \usage{
-median_filtering(caoture = capture, window = 3)
+median_filtering(capture = capture, window = 3)
 }
 \arguments{
-\item{window}{focal window size, default is 3}
+\item{capture}{a terra SpatRaster of captured data.}
 
-\item{capture}{a terra SpatRaster of captured data}
+\item{window}{focal window size, default is 3.}
 }
 \value{
 smoothed SpatRaster

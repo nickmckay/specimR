@@ -4,7 +4,7 @@
 \alias{create_reference_raster}
 \title{Create reference raster}
 \usage{
-create_reference_raster(raster, roi, ref_type)
+create_reference_raster(raster, roi, ref_type, ...)
 }
 \arguments{
 \item{raster}{a terra SpatRaster of the captured reference}

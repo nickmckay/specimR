@@ -201,14 +201,33 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
 
 #' Smooth raster with focal median
 #'
-#' @param capture a terra SpatRaster of captured data
-#' @param window focal window size, default is 3
+#' @param capture a terra SpatRaster of captured data.
+#' @param window focal window size, default is 3.
 #'
 #' @return smoothed SpatRaster
 #' @export
 #'
-median_filtering <- function(caoture = capture, window = 3){
+median_filtering <- function(capture = capture, window = 3){
   # Apply terra focal statistic with 3 x 3 window
   reflectance <- terra::sapp(capture, fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"), overwrite = TRUE)
 
+}
+
+#' Apply a Savitzky-Golay smoothing filter
+#'
+#' @description
+#' Smooth data with a Savitzky-Golay smoothing filter using \code{\link[signal]{sgolayfilt}}.
+#'
+#' @param raster a terra SpatRaster of normalized data
+#' @param p filter order.
+#' @param n filter length (must be odd).
+#' @param m return the m-th derivative of the filter coefficients.
+#' @param ts time scaling factor.
+#' @param filename naming scheme for output SpatRaster.
+#'
+#' @return A filtered terra SpatRaster.
+#' @export
+#'
+filter_sgolay <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1, filename){
+  raster <- terra::app(raster, fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts), filename = filename)
 }
