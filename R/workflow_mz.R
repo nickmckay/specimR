@@ -18,7 +18,11 @@
 #' @return
 #' @export
 #'
-prepare_core <- function(path = choices$directory, .normalize = choices$analysisOptions$normalize) {
+prepare_core <- function(core, .normalize = TRUE) {
+
+  # Get path
+  path <- core$directory
+
   cli::cli_h1("{basename(path)}")
 
   # Create products directory and store path
@@ -36,9 +40,9 @@ prepare_core <- function(path = choices$directory, .normalize = choices$analysis
     types <- list("darkref", "capture", "whiteref")
 
     # Extent
-    big_roi <- terra::ext(choices$cropImage)
+    big_roi <- terra::ext(core$cropImage)
 
-    cli::cli_alert_info("{format(Sys.time())}: reading rasters")
+    cli::cli_alert_info("{format(Sys.time())}: reading rasters.")
 
     # Read SpatRasters
     rasters <- files |>
@@ -46,7 +50,7 @@ prepare_core <- function(path = choices$directory, .normalize = choices$analysis
       purrr::map(\(x) terra::rast(x))
 
     # Get band positions - the same for all three SpatRasters
-    band_position <- specimR::spectra_position(rasters[[1]], choices$layers)
+    band_position <- specimR::spectra_position(rasters[[1]], core$layers)
 
     cli::cli_alert_info("{format(Sys.time())}: subsetting layers.")
 
@@ -54,7 +58,7 @@ prepare_core <- function(path = choices$directory, .normalize = choices$analysis
     rasters_subset <- rasters |>
       purrr::map(\(x) specimR::spectra_sub(raster = x, spectra_tbl = band_position))
 
-    cli::cli_alert_info("{format(Sys.time())}: cropping rasters")
+    cli::cli_alert_info("{format(Sys.time())}: cropping rasters.")
 
     # Crop
     rasters_cropped <- purrr::map2(rasters_subset, types, \(x, y) specimR::raster_crop(x, y, big_roi, path = path))
