@@ -100,8 +100,9 @@ run_core <- function(){
                                ),
                              ),
                              shiny::br(),
-                             "Choose layers to subset raster (skip this step to use all)",
+                             "Choose layers to subset raster",
                              wellPanel(
+                             checkboxInput("dt_sel", "select/deselect all", value = FALSE),
                              DTOutput("layerTable1"),
                              ),
                              shiny::br(),
@@ -210,6 +211,24 @@ run_core <- function(){
                                  wellPanel(
                                    id = "fullCorePanel",style = "overflow-y:visible; overflow-x:scroll; max-width: 800px",
                                  "Full Core",
+                                 sliderInput(
+                                   inputId="selectionSize2",
+                                   label="Size of image",
+                                   min=0.5,
+                                   max=10,
+                                   value=1,
+                                   step = 0.5,
+                                   round = FALSE,
+                                   ticks = FALSE,
+                                   animate = FALSE,
+                                   width = NULL,
+                                   sep = ",",
+                                   pre = NULL,
+                                   post = NULL,
+                                   timeFormat = NULL,
+                                   timezone = NULL,
+                                   dragRange = TRUE
+                                 ),
                              shinycssloaders::withSpinner(shiny::plotOutput(outputId = "cropped_plot",
                                                                             inline = TRUE,
                                                                             brush = brushOpts(
@@ -381,6 +400,17 @@ run_core <- function(){
     volumes <- c(shinyFiles::getVolumes()())
     shinyFiles::shinyDirChoose(input, "file_dir", roots = volumes)
 
+
+    #checkbox to select all layers
+    dt_proxy <- DT::dataTableProxy("layerTable1")
+    observeEvent(input$dt_sel, {
+      if (isTRUE(input$dt_sel)) {
+        DT::selectRows(dt_proxy, input$layerTable1_rows_all)
+      } else {
+        DT::selectRows(dt_proxy, NULL)
+      }
+    })
+    output$selected_rows <- renderPrint(print(input$dt_rows_selected))
 
     #capture user directory
     user_dir <- reactive({
@@ -589,11 +619,11 @@ run_core <- function(){
     })
 
     croppedH <- reactive({
-      abs(allParams$cropImage[4] - allParams$cropImage[3])/2
+      (abs(allParams$cropImage[4] - allParams$cropImage[3])/2)*input$selectionSize2
     })
 
     croppedW <- reactive({
-      abs(allParams$cropImage[2] - allParams$cropImage[1])/2
+      (abs(allParams$cropImage[2] - allParams$cropImage[1])/2)*input$selectionSize2
     })
 
     selectionH <- reactive({
