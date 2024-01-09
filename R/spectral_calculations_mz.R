@@ -40,8 +40,9 @@ remove_continuum <- function(raster, ...) {
   }
 
   # Apply function over entire SpatRaster
-  raster <- terra::app(raster, fun = \(x) remove_continuum_fun(x),
-                       filename = paste0(params$path, "/products/REFLECTANCE_CONT_REMOVED_", basename(params$path), ".tif"),
+  raster <- terra::app(raster,
+                       fun = \(x) remove_continuum_fun(x),
+                       filename = paste0(params$path, "/products/REFLECTANCE_CONTINUUM_REMOVED_", basename(params$path), ".tif"),
                        overwrite = TRUE)
 
   # Set names
@@ -72,7 +73,8 @@ remove_continuum <- function(raster, ...) {
 #'
 calculate_rabd <- function(raster, edges, trough, rabd_name) {
   # Create empty SpatRaster template from original cropped raster
-  template <- terra::rast(terra::ext(raster), resolution = terra::res(raster))
+  template <- terra::rast(terra::ext(raster),
+                          resolution = terra::res(raster))
 
   # Set layer name based on the rabd_name argument
   names(template) <- rabd_name
@@ -208,7 +210,9 @@ calculate_raba <- function(raster, edges, trough, raba_name) {
 #'
 extract_profile <- function(raster) {
   # Aggregate SpatRaster into average rows
-  profile <- terra::aggregate(raster, fact = c(1, ncol(raster)), fun = "mean") |>
+  profile <- terra::aggregate(raster,
+                              fact = c(1, ncol(raster)),
+                              fun = "mean") |>
     # Coerce do data frame with coordinates
     terra::as.data.frame(xy = TRUE)
 
@@ -248,3 +252,6 @@ proxies_settings <- list(
     ratio_name = "R950R970"
   )
 )
+
+# Function to stack all calculated rasters and RGB channels
+stack_raster <- function(data){}

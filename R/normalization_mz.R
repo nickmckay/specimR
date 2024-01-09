@@ -72,26 +72,29 @@ raster_crop <- function(raster, type, roi, ...) {
 
   # If cropping entire capture SpatRaster use entire large ROI
   if (type == "capture") {
-    raster <- terra::crop(raster, roi,
+    raster <- terra::crop(raster,
+                          roi,
                           filename = paste0(params$path, "/products/", basename(params$path), "_cropped.tif"),
                           overwrite = TRUE)
 
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
     # White reference SpatRaster
   } else if (type == "whiteref") {
-    raster <- terra::crop(raster, c(terra::xmin(roi),
-                                    terra::xmax(roi),
-                                    terra::ymin(raster),
-                                    terra::ymax(raster)),
+    raster <- terra::crop(raster,
+                          c(terra::xmin(roi),
+                            terra::xmax(roi),
+                            terra::ymin(raster),
+                            terra::ymax(raster)),
                           filename = paste0(params$path, "/products/WHITEREF_", basename(params$path), "_cropped.tif"),
                           overwrite = TRUE)
 
     # Dark reference SpatRaster
   } else if (type == "darkref") {
-    raster <- terra::crop(raster, c(terra::xmin(roi),
-                                    terra::xmax(roi),
-                                    terra::ymin(raster),
-                                    terra::ymax(raster)),
+    raster <- terra::crop(raster,
+                          c(terra::xmin(roi),
+                            terra::xmax(roi),
+                            terra::ymin(raster),
+                            terra::ymax(raster)),
                           filename = paste0(params$path, "/products/DARKREF_", basename(params$path), "_cropped.tif"),
                           overwrite = TRUE)
   }
@@ -194,7 +197,8 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
     terra::sds()
 
   # Apply function over the dataset and write to file
-  raster <- terra::lapp(x = dataset, fun = fun,
+  raster <- terra::lapp(x = dataset,
+                        fun = fun,
                         filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), ".tif"),
                         overwrite = TRUE)
 }
@@ -209,7 +213,8 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
 #'
 median_filtering <- function(capture = capture, window = 3){
   # Apply terra focal statistic with 3 x 3 window
-  reflectance <- terra::sapp(capture, fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"), overwrite = TRUE)
+  reflectance <- terra::sapp(capture,
+                             fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"), overwrite = TRUE)
 
 }
 
@@ -232,7 +237,8 @@ filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
   band_names <- names(raster)
 
   # Apply Savitzky-Golay filter
-  raster <- terra::app(raster, fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
+  raster <- terra::app(raster,
+                       fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
                        filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL_", basename(params$path), ".tif"),
                        overwrite = TRUE)
 
