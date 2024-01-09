@@ -18,6 +18,7 @@ Imports:
     imager,
     patchwork,
     prospectr,
+    purrr,
     raster,
     shiny,
     shinycssloaders,

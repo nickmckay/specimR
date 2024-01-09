@@ -75,7 +75,7 @@ raster_crop <- function(raster, type, roi, ...) {
     raster <- terra::crop(raster,
                           roi,
                           filename = paste0(params$path, "/products/", basename(params$path), "_cropped.tif"),
-                          overwrite = TRUE)
+                          overwrite = TRUE, verbose = TRUE)
 
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
     # White reference SpatRaster
@@ -86,7 +86,8 @@ raster_crop <- function(raster, type, roi, ...) {
                             terra::ymin(raster),
                             terra::ymax(raster)),
                           filename = paste0(params$path, "/products/WHITEREF_", basename(params$path), "_cropped.tif"),
-                          overwrite = TRUE)
+                          overwrite = TRUE,
+                          verbose = TRUE)
 
     # Dark reference SpatRaster
   } else if (type == "darkref") {
@@ -96,7 +97,8 @@ raster_crop <- function(raster, type, roi, ...) {
                             terra::ymin(raster),
                             terra::ymax(raster)),
                           filename = paste0(params$path, "/products/DARKREF_", basename(params$path), "_cropped.tif"),
-                          overwrite = TRUE)
+                          overwrite = TRUE,
+                          verbose = TRUE)
   }
 
   # Return raster
@@ -128,7 +130,8 @@ create_reference_raster <- function(raster, roi, ref_type, ...) {
   raster <- terra::aggregate(raster,
                              fact = c(terra::nrow(raster), 1),
                              fun = "mean",
-                             overwrite = TRUE)
+                             overwrite = TRUE,
+                             verbose = TRUE)
 
   # Set new extent to match extent of capture SpatRaster
   terra::ext(raster) <- roi
@@ -137,7 +140,8 @@ create_reference_raster <- function(raster, roi, ref_type, ...) {
   raster <- terra::disagg(raster,
                           fact = c(terra::ymax(raster), 1),
                           filename = paste0(params$path, "/products/", name, "_", basename(params$path), "_disaggregated.tif"),
-                          overwrite = TRUE)
+                          overwrite = TRUE,
+                          verbose = TRUE)
 
   # Return raster
   return(raster)
@@ -200,7 +204,8 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
   raster <- terra::lapp(x = dataset,
                         fun = fun,
                         filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), ".tif"),
-                        overwrite = TRUE)
+                        overwrite = TRUE,
+                        verbose = TRUE)
 }
 
 #' Smooth raster with focal median
@@ -214,7 +219,9 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
 median_filtering <- function(capture = capture, window = 3){
   # Apply terra focal statistic with 3 x 3 window
   reflectance <- terra::sapp(capture,
-                             fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"), overwrite = TRUE)
+                             fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"),
+                             overwrite = TRUE,
+                             verbose = TRUE)
 
 }
 
@@ -240,7 +247,8 @@ filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
   raster <- terra::app(raster,
                        fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
                        filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL_", basename(params$path), ".tif"),
-                       overwrite = TRUE)
+                       overwrite = TRUE,
+                       verbose = TRUE)
 
   # Set names
   names(raster) <- as.character(band_names)
