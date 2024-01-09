@@ -27,10 +27,14 @@ plot_raster_proxy <- function(data, hsi_index){
 }
 
 # RGB plot of the object
-plot_raster_rgb
+plot_raster_rgb <- function(data){
+
+}
 
 # Overlay color plot of proxy on RGB
-plot_raster_overlay
+plot_raster_overlay <- function(data, hsi_index){
+
+}
 
 # Composite plots
 plot_raster_composite <- function(plots){
@@ -45,5 +49,4 @@ plot_raster_composite <- function(plots){
 
 # Plots of profiles
 plot_profile_proxy <- function(data, hsi_index){
-  data
 }
