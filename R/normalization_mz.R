@@ -211,9 +211,7 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
   raster <- terra::lapp(x = dataset,
                         fun = fun,
                         filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), ".tif"),
-                        overwrite = TRUE,
-                        wopt = list(verbose = TRUE,
-                                    steps = terra::nrow(dataset$capture)))
+                        overwrite = TRUE)
 }
 
 #' Smooth raster with focal median
@@ -228,9 +226,7 @@ median_filtering <- function(capture = capture, window = 3){
   # Apply terra focal statistic with 3 x 3 window
   reflectance <- terra::sapp(capture,
                              fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"),
-                             overwrite = TRUE,
-                             wopt = list(verbose = TRUE,
-                                         steps = terra::nrow(capture)))
+                             overwrite = TRUE)
 
 }
 
@@ -256,9 +252,7 @@ filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
   raster <- terra::app(raster,
                        fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
                        filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL_", basename(params$path), ".tif"),
-                       overwrite = TRUE,
-                       wopt = list(verbose = TRUE,
-                                   steps = terra::nrow(raster)))
+                       overwrite = TRUE)
 
   # Set names
   names(raster) <- as.character(band_names)
