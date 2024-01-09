@@ -77,7 +77,7 @@ raster_crop <- function(raster, type, roi, ...) {
                           filename = paste0(params$path, "/products/", basename(params$path), "_cropped.tif"),
                           overwrite = TRUE,
                           verbose = TRUE,
-                          steps = 1000)
+                          steps = terra::nrow(raster))
 
     # If cropping reference SpatRaster use only xmin and xmax from large ROI
     # White reference SpatRaster
@@ -90,7 +90,7 @@ raster_crop <- function(raster, type, roi, ...) {
                           filename = paste0(params$path, "/products/WHITEREF_", basename(params$path), "_cropped.tif"),
                           overwrite = TRUE,
                           verbose = TRUE,
-                          steps = 1000)
+                          steps = terra::nrow(raster))
 
     # Dark reference SpatRaster
   } else if (type == "darkref") {
@@ -102,7 +102,7 @@ raster_crop <- function(raster, type, roi, ...) {
                           filename = paste0(params$path, "/products/DARKREF_", basename(params$path), "_cropped.tif"),
                           overwrite = TRUE,
                           verbose = TRUE,
-                          steps = 1000)
+                          steps = terra::nrow(raster))
   }
 
   # Return raster
@@ -131,23 +131,24 @@ create_reference_raster <- function(raster, roi, ref_type, ...) {
     name <- "DARKREF"
   }
   # Aggregate data into one row SpatRaster, divide by number of rows
+
   raster <- terra::aggregate(raster,
                              fact = c(terra::nrow(raster), 1),
                              fun = "mean",
                              overwrite = TRUE,
                              verbose = TRUE,
-                             steps = 1000)
+                             steps = terra::nrow(raster))
 
   # Set new extent to match extent of capture SpatRaster
   terra::ext(raster) <- roi
 
-  # Disaggregate data over entire extent to mach capture SpatRaster extent, multiply by ymax
+  # Disaggregate data over entire extent to match capture SpatRaster extent, multiply by ymax
   raster <- terra::disagg(raster,
                           fact = c(terra::ymax(raster), 1),
                           filename = paste0(params$path, "/products/", name, "_", basename(params$path), "_disaggregated.tif"),
                           overwrite = TRUE,
                           verbose = TRUE,
-                          steps = 1000)
+                          steps = terra::nrow(raster))
 
   # Return raster
   return(raster)
@@ -211,8 +212,8 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
                         fun = fun,
                         filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), ".tif"),
                         overwrite = TRUE,
-                        verbose = TRUE,
-                        steps = 1000)
+                        wopt = list(verbose = TRUE,
+                                    steps = terra::nrow(dataset$capture)))
 }
 
 #' Smooth raster with focal median
@@ -228,8 +229,8 @@ median_filtering <- function(capture = capture, window = 3){
   reflectance <- terra::sapp(capture,
                              fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"),
                              overwrite = TRUE,
-                             verbose = TRUE,
-                             steps = 1000)
+                             wopt = list(verbose = TRUE,
+                                         steps = terra::nrow(capture)))
 
 }
 
@@ -256,8 +257,8 @@ filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
                        fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
                        filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL_", basename(params$path), ".tif"),
                        overwrite = TRUE,
-                       verbose = TRUE,
-                       steps = 1000)
+                       wopt = list(verbose = TRUE,
+                                   steps = terra::nrow(raster)))
 
   # Set names
   names(raster) <- as.character(band_names)
