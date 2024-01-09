@@ -15,6 +15,7 @@ Imports:
     DT,
     fs,
     ggplot2,
+    imager,
     patchwork,
     prospectr,
     raster,
