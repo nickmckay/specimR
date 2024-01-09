@@ -201,6 +201,7 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
   # Store additional parameters
   params <- list(...)
 
+  # Named list with write options
   wopts <- list(verbose = TRUE, steps = terra::nrow(capture))
 
   # Create terra spatial dataset combining SpatRasters
@@ -225,14 +226,20 @@ create_normalized_raster <- function(capture = capture, whiteref = whiteref, dar
 #' @return smoothed SpatRaster
 #' @export
 #'
-median_filtering <- function(capture = capture, window = 3){
+median_filtering <- function(capture = capture, window = 3, ...){
+  # Store additional parameters
+  params <- list(...)
+
+  # Named list with write options
   wopts <- list(verbose = TRUE, steps = terra::nrow(capture))
 
   # Apply terra focal statistic with 3 x 3 window
-  reflectance <- terra::sapp(capture,
-                             fun = \(x) terra::focal(x, w = window, fun = \(x) median(x)), filename = paste0(paths[["directory"]], "products/REFLECTANCE_smooth.tif"),
-                             overwrite = TRUE,
-                             wopt = wopts)
+  reflectance <- terra::focal(capture,
+                              w = window,
+                              fun = \(x) median(x),
+                              filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), "_MEDIAN.tif"),
+                              overwrite = TRUE,
+                              wopt = wopts)
 
 }
 
@@ -251,6 +258,10 @@ median_filtering <- function(capture = capture, window = 3){
 #' @export
 #'
 filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
+  # Store additional parameters
+  params <- list(...)
+
+  # Named list with write options
   wopts <- list(verbose = TRUE, steps = terra::nrow(capture))
 
   # Extract names
@@ -259,7 +270,7 @@ filter_savgol <- function(raster, p = 3, n = p + 3 - p%%2, m = 0, ts = 1){
   # Apply Savitzky-Golay filter
   raster <- terra::app(raster,
                        fun = \(raster) signal::sgolayfilt(raster, p = p, n = n, m = m, ts = ts),
-                       filename = paste0(params$path, "/products/REFLECTANCE_SAVGOL_", basename(params$path), ".tif"),
+                       filename = paste0(params$path, "/products/REFLECTANCE_", basename(params$path), "_SAVGOL.tif"),
                        overwrite = TRUE,
                        wopt = wopts)
 
