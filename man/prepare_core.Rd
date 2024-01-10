@@ -4,10 +4,7 @@
 \alias{prepare_core}
 \title{Prepare core based on shiny output}
 \usage{
-prepare_core(
-  path = choices$directory,
-  .normalize = choices$analysisOptions$normalize
-)
+prepare_core(core, .normalize = TRUE)
 }
 \arguments{
 \item{.normalize}{}
