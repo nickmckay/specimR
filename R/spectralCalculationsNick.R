@@ -294,7 +294,7 @@ rasterBandRatio <- function(normalized,top = 570, bot = 630,tol = 1){
 #' @export
 #'
 #' @examples
-makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = TRUE, smooth.sigma = 3,smooth.n = 7){
+makeHeatmap <- function(normalized,index = "RABD660",tol = 1,smooth = FALSE, smooth.sigma = 3,smooth.n = 7){
   #decide what function to use to make the raster
   #check for indices
   if("RABD615" == index){
